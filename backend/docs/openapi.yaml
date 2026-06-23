@@ -1,0 +1,1684 @@
+openapi: 3.0.3
+info:
+  title: Ubhi Backend API
+  version: 1.0.0
+  description: >
+    API for the Ubhi brand site. Powers the public storefront (workshops, shop,
+    gallery, journal, bookings, orders, newsletter and snail-mail signups) and
+    the back-office admin dashboard (auth, users, customers, settings).
+    Stateless JWT auth; role + per-section permission model. Storage is
+    pluggable (zero-config JSON file store by default, PostgreSQL when
+    DATABASE_URL is set).
+  license:
+    name: UNLICENSED
+servers:
+  - url: http://localhost:8090
+    description: Local development
+
+tags:
+  - name: System
+  - name: Auth
+  - name: Users
+  - name: Orders
+  - name: Bookings
+  - name: Subscribers
+  - name: Newsletter
+  - name: Customers
+  - name: Workshops
+  - name: Shop
+  - name: Gallery
+  - name: Journal
+  - name: Settings
+  - name: Payments
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+    Ok:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+    Health:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        store:
+          type: string
+          enum: [json, postgres]
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/AdminUser'
+    ChangePasswordRequest:
+      type: object
+      required: [current, next]
+      properties:
+        current:
+          type: string
+        next:
+          type: string
+          minLength: 8
+    AdminUser:
+      type: object
+      description: password_hash is never returned.
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        role:
+          type: string
+          enum: [owner, staff]
+        permissions:
+          type: array
+          items:
+            type: string
+        name:
+          type: string
+        active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+    CreateUserRequest:
+      type: object
+      required: [email, password, role]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        role:
+          type: string
+          enum: [owner, staff]
+        permissions:
+          type: array
+          items:
+            type: string
+        name:
+          type: string
+    UpdateUserRequest:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [owner, staff]
+        permissions:
+          type: array
+          items:
+            type: string
+        name:
+          type: string
+        active:
+          type: boolean
+    PasswordRequest:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+          minLength: 8
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: string
+          nullable: true
+        name:
+          type: string
+        price:
+          type: number
+        qty:
+          type: integer
+    CreateOrderRequest:
+      type: object
+      required: [customer_email]
+      properties:
+        customer_email:
+          type: string
+          format: email
+        customer_name:
+          type: string
+        phone:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        ship_street:
+          type: string
+        ship_city:
+          type: string
+        ship_postcode:
+          type: string
+        ship_country:
+          type: string
+        stripe_session_id:
+          type: string
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        order_ref:
+          type: string
+        customer_name:
+          type: string
+        customer_email:
+          type: string
+        phone:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        subtotal:
+          type: number
+        shipping:
+          type: number
+        total:
+          type: number
+        status:
+          type: string
+        ship_street:
+          type: string
+        ship_city:
+          type: string
+        ship_postcode:
+          type: string
+        ship_country:
+          type: string
+        stripe_session_id:
+          type: string
+          nullable: true
+        paid:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+    CreateBookingRequest:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        workshop_id:
+          type: string
+        workshop_title:
+          type: string
+        session_date:
+          type: string
+        price:
+          type: number
+        note:
+          type: string
+    Booking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        workshop_id:
+          type: string
+          nullable: true
+        workshop_title:
+          type: string
+        session_date:
+          type: string
+        price:
+          type: number
+        note:
+          type: string
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    CreateSubscriberRequest:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        contact:
+          type: string
+        plan:
+          type: string
+        price:
+          type: number
+        address:
+          type: string
+        date_subscribed:
+          type: string
+        last_sent_cycle:
+          type: string
+    Subscriber:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+        contact:
+          type: string
+        status:
+          type: string
+          enum: [Active, Inactive]
+        plan:
+          type: string
+        price:
+          type: number
+        address:
+          type: string
+        date_subscribed:
+          type: string
+        last_sent_cycle:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    UpdateSubscriberRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        contact:
+          type: string
+        status:
+          type: string
+          enum: [Active, Inactive]
+        plan:
+          type: string
+        price:
+          type: number
+        address:
+          type: string
+        date_subscribed:
+          type: string
+        last_sent_cycle:
+          type: string
+    CreateNewsletterRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        interest:
+          type: string
+    NewsletterSignup:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+        interest:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    CreateCustomerRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        name:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        postcode:
+          type: string
+        country:
+          type: string
+        marketing_opt_in:
+          type: boolean
+    UpdateCustomerRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        postcode:
+          type: string
+        country:
+          type: string
+        marketing_opt_in:
+          type: boolean
+        active:
+          type: boolean
+        password:
+          type: string
+          minLength: 8
+    Customer:
+      type: object
+      description: password_hash is never returned.
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        postcode:
+          type: string
+        country:
+          type: string
+        marketing_opt_in:
+          type: boolean
+        active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+    Workshop:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        blurb:
+          type: string
+        session_date:
+          type: string
+        price:
+          type: number
+        spots:
+          type: integer
+        image:
+          type: string
+        published:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+    WorkshopInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        blurb:
+          type: string
+        session_date:
+          type: string
+        price:
+          type: number
+        spots:
+          type: integer
+        image:
+          type: string
+        published:
+          type: boolean
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        blurb:
+          type: string
+        price:
+          type: number
+        stock:
+          type: integer
+        image:
+          type: string
+        published:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+    ProductInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        blurb:
+          type: string
+        price:
+          type: number
+        stock:
+          type: integer
+        image:
+          type: string
+        published:
+          type: boolean
+    GalleryItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        image:
+          type: string
+        caption:
+          type: string
+        published:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+    GalleryItemInput:
+      type: object
+      required: [image]
+      properties:
+        image:
+          type: string
+        caption:
+          type: string
+        published:
+          type: boolean
+    JournalPost:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        slug:
+          type: string
+        body:
+          type: string
+        author:
+          type: string
+        published:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+    JournalPostInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        slug:
+          type: string
+        body:
+          type: string
+        author:
+          type: string
+        published:
+          type: boolean
+    Setting:
+      type: object
+      properties:
+        key:
+          type: string
+        value: {}
+    SettingInput:
+      type: object
+      required: [value]
+      properties:
+        value: {}
+  responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Missing or invalid token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Insufficient role or permission
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+paths:
+  /api/health:
+    get:
+      tags: [System]
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in (rate-limited 10 / 15 min per IP)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Token and user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          description: Too many login attempts
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Current authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/AdminUser'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/auth/change-password:
+    post:
+      tags: [Auth]
+      summary: Change own password
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/users:
+    get:
+      tags: [Users]
+      summary: List admin users (owner only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdminUser'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Users]
+      summary: Create an admin user (owner only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUser'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/users/{id}:
+    patch:
+      tags: [Users]
+      summary: Update an admin user (owner only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUser'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Users]
+      summary: Delete an admin user (owner only; cannot delete last owner or self)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/users/{id}/password:
+    post:
+      tags: [Users]
+      summary: Set a user's password (owner only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/orders:
+    post:
+      tags: [Orders]
+      summary: Create an order (public checkout; totals computed server-side)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Created order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    get:
+      tags: [Orders]
+      summary: List orders (section 'orders')
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/orders/{id}:
+    get:
+      tags: [Orders]
+      summary: Get an order (section 'orders')
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Orders]
+      summary: Update an order (section 'orders')
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Orders]
+      summary: Delete an order (section 'orders')
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+
+  /api/bookings:
+    post:
+      tags: [Bookings]
+      summary: Create a booking (public reserve)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+      responses:
+        '201':
+          description: Created booking
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    get:
+      tags: [Bookings]
+      summary: List bookings (section 'bookings')
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/bookings/{id}:
+    get:
+      tags: [Bookings]
+      summary: Get a booking (section 'bookings')
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Booking
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Bookings]
+      summary: Update a booking (section 'bookings')
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Bookings]
+      summary: Delete a booking (section 'bookings')
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+
+  /api/subscribers:
+    post:
+      tags: [Subscribers]
+      summary: Join the snail-mail list (public)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSubscriberRequest'
+      responses:
+        '201':
+          description: Created subscriber
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscriber'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    get:
+      tags: [Subscribers]
+      summary: List subscribers (section 'subscribers')
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Subscribers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Subscriber'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/subscribers/{id}:
+    patch:
+      tags: [Subscribers]
+      summary: Update a subscriber (section 'subscribers')
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSubscriberRequest'
+      responses:
+        '200':
+          description: Updated subscriber
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscriber'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Subscribers]
+      summary: Delete a subscriber (section 'subscribers')
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+
+  /api/updates:
+    post:
+      tags: [Newsletter]
+      summary: Newsletter signup (public)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNewsletterRequest'
+      responses:
+        '201':
+          description: Created signup
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewsletterSignup'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    get:
+      tags: [Newsletter]
+      summary: List newsletter signups (section 'subscribers')
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Signups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NewsletterSignup'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/updates/{id}:
+    delete:
+      tags: [Newsletter]
+      summary: Delete a newsletter signup (section 'subscribers')
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+
+  /api/customers:
+    post:
+      tags: [Customers]
+      summary: Register a storefront account (public)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerRequest'
+      responses:
+        '201':
+          description: Created customer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    get:
+      tags: [Customers]
+      summary: List customers (section 'customers')
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/customers/{id}:
+    patch:
+      tags: [Customers]
+      summary: Update a customer (section 'customers')
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCustomerRequest'
+      responses:
+        '200':
+          description: Updated customer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Customers]
+      summary: Delete a customer (section 'customers')
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+
+  /api/workshops:
+    get:
+      tags: [Workshops]
+      summary: List published workshops (public)
+      responses:
+        '200':
+          description: Published workshops
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Workshop'
+    post:
+      tags: [Workshops]
+      summary: Create a workshop (section 'workshops')
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkshopInput'
+      responses:
+        '201':
+          description: Created workshop
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workshop'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/workshops/all:
+    get:
+      tags: [Workshops]
+      summary: List all workshops incl. unpublished (section 'workshops')
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: All workshops
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Workshop'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/workshops/{id}:
+    patch:
+      tags: [Workshops]
+      summary: Update a workshop (section 'workshops')
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkshopInput'
+      responses:
+        '200':
+          description: Updated workshop
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workshop'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Workshops]
+      summary: Delete a workshop (section 'workshops')
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+
+  /api/shop:
+    get:
+      tags: [Shop]
+      summary: List published products (public)
+      responses:
+        '200':
+          description: Published products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+    post:
+      tags: [Shop]
+      summary: Create a product (section 'shop')
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '201':
+          description: Created product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/shop/all:
+    get:
+      tags: [Shop]
+      summary: List all products incl. unpublished (section 'shop')
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: All products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/shop/{id}:
+    patch:
+      tags: [Shop]
+      summary: Update a product (section 'shop')
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '200':
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Shop]
+      summary: Delete a product (section 'shop')
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+
+  /api/gallery:
+    get:
+      tags: [Gallery]
+      summary: List published gallery items (public)
+      responses:
+        '200':
+          description: Published items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GalleryItem'
+    post:
+      tags: [Gallery]
+      summary: Create a gallery item (section 'gallery')
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GalleryItemInput'
+      responses:
+        '201':
+          description: Created item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GalleryItem'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/gallery/all:
+    get:
+      tags: [Gallery]
+      summary: List all gallery items incl. unpublished (section 'gallery')
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: All items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GalleryItem'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/gallery/{id}:
+    patch:
+      tags: [Gallery]
+      summary: Update a gallery item (section 'gallery')
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GalleryItemInput'
+      responses:
+        '200':
+          description: Updated item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GalleryItem'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Gallery]
+      summary: Delete a gallery item (section 'gallery')
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+
+  /api/journal:
+    get:
+      tags: [Journal]
+      summary: List published journal posts (public)
+      responses:
+        '200':
+          description: Published posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JournalPost'
+    post:
+      tags: [Journal]
+      summary: Create a journal post (section 'journal')
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JournalPostInput'
+      responses:
+        '201':
+          description: Created post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JournalPost'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/journal/all:
+    get:
+      tags: [Journal]
+      summary: List all journal posts incl. unpublished (section 'journal')
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: All posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JournalPost'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/journal/{id}:
+    patch:
+      tags: [Journal]
+      summary: Update a journal post (section 'journal')
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JournalPostInput'
+      responses:
+        '200':
+          description: Updated post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JournalPost'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Journal]
+      summary: Delete a journal post (section 'journal')
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+
+  /api/settings/{key}:
+    get:
+      tags: [Settings]
+      summary: Read a setting (owner only; public for safe allowlisted keys)
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Setting
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Setting'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Settings]
+      summary: Upsert a setting (owner only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingInput'
+      responses:
+        '200':
+          description: Stored setting
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Setting'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/checkout/session:
+    post:
+      tags: [Payments]
+      summary: Create a Stripe Checkout session (public)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/OrderItem'
+      responses:
+        '200':
+          description: >
+            Checkout session URL, or { configured: false } when no Stripe key
+            is set.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  configured:
+                    type: boolean
+                  url:
+                    type: string
+                  id:
+                    type: string
+
+  /api/stripe/webhook:
+    post:
+      tags: [Payments]
+      summary: Stripe webhook (raw body, signature verified)
+      description: >
+        Receives the raw request body so the Stripe signature can be verified.
+        On a successful checkout event, marks the matching order paid.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Event acknowledged
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+        '400':
+          $ref: '#/components/responses/BadRequest'

@@ -1,0 +1,6 @@
+# Ubhi.in — robots.txt
+# DEVELOPER: update the Sitemap URL if the domain changes at deploy.
+User-agent: *
+Allow: /
+
+Sitemap: https://ubhi.in/sitemap.xml

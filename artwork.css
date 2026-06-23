@@ -1,0 +1,2055 @@
+/* ════════════════════════════════════════════════════════════════
+   THE UBHI ALMANAC · artwork.css
+   Styles the hand-drawn art ported from EXPMT. Purely additive —
+   placed in the margins so it never collides with content. Loaded
+   after world.css.
+   ════════════════════════════════════════════════════════════════ */
+:root {
+  --art-ink:   var(--ink);        /* #2b2018 */
+  --art-soft:  var(--ink-soft);   /* #46372a */
+  --art-sage:  var(--sage);       /* #4a7060 */
+  --art-rose:  var(--madder);     /* #a14e5e */
+  --art-gold:  var(--ochre);      /* #a6741f */
+  --art-terra: #a64d24;           /* terracotta — already paper-palette */
+}
+
+/* ── accents: absolutely placed, never in the way ─────────────── */
+.art-accent {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.88;
+  line-height: 0;
+}
+.art-accent svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.acc-faint { opacity: 0.42; }
+
+/* sizes */
+.sz-mandala { width: clamp(74px, 9vw, 122px); }
+.sz-stem    { width: clamp(46px, 5vw, 72px); }
+.sz-med     { width: clamp(140px, 17vw, 196px); }
+.sz-med2    { width: clamp(150px, 18vw, 210px); }
+.sz-sm      { width: clamp(48px, 5.5vw, 74px); }
+.sz-spk     { width: clamp(16px, 2vw, 26px); }
+.sz-snail   { width: clamp(96px, 11vw, 138px); }
+.sz-book    { width: clamp(110px, 13vw, 156px); }
+.sz-tea     { width: clamp(80px, 9vw, 120px); }
+
+/* positions (within their position:relative section) */
+.acc-tr   { top: clamp(82px, 12vh, 132px); right: clamp(10px, 3vw, 48px); }
+.acc-tr2  { top: clamp(40px, 8vh, 92px);   right: clamp(12px, 4vw, 60px); }
+.acc-bl   { bottom: clamp(18px, 5vh, 56px); left: clamp(8px, 2.5vw, 42px); }
+.acc-bl2  { bottom: clamp(18px, 5vh, 54px); left: clamp(10px, 3vw, 52px); }
+.acc-spk1 { top: 26%; left: 7%; }
+.acc-spk2 { top: 16%; right: 11%; }
+.acc-spk3 { bottom: 22%; left: 14%; }
+.acc-snail   { top: clamp(86px, 13vh, 150px); right: clamp(18px, 7vw, 110px); }
+.acc-book    { top: clamp(78px, 11vh, 120px); right: clamp(16px, 5vw, 70px); transform: rotate(-5deg); }
+.acc-tea     { bottom: clamp(30px, 6vh, 70px); right: clamp(20px, 6vw, 90px); }
+.acc-about   { bottom: clamp(24px, 5vh, 60px); right: clamp(18px, 5vw, 80px); }
+
+/* ── gentle ambient motion (respects reduced-motion below) ────── */
+@keyframes art-drift { 0%,100% { transform: translate(0,0) rotate(0); } 50% { transform: translate(9px,-13px) rotate(3deg); } }
+@keyframes art-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes art-sway  { 0%,100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+@keyframes art-spin  { to { transform: rotate(360deg); } }
+@keyframes art-steam { 0%,100% { opacity: .35; transform: translateY(2px); } 50% { opacity: .85; transform: translateY(-3px); } }
+@keyframes cart-nudge { 0%,100% { transform: none; } 30% { transform: translateY(-5px) rotate(-8deg); } 65% { transform: translateY(0) rotate(5deg); } }
+
+.drift     { animation: art-drift 14s ease-in-out infinite; }
+.float     { animation: art-float 7s  ease-in-out infinite; }
+.sway      { animation: art-sway 6s ease-in-out infinite; transform-origin: top center; }
+.spin-slow { animation: art-spin 90s linear infinite; transform-origin: center; }  /* wins over .drift via source order */
+.art-steam { animation: art-steam 3.4s ease-in-out infinite; }
+
+/* ── the mini "this month's parcel" collage (Snail Mail) ──────── */
+.art-collage {
+  position: absolute;
+  z-index: 1;
+  width: clamp(140px, 15vw, 166px);
+  aspect-ratio: 1.08;
+  top: clamp(-6px, 0.5vh, 4px);
+  left: clamp(4px, 1.2vw, 20px);
+  pointer-events: none;
+  transform: rotate(-3deg);
+}
+.art-collage span { position: absolute; }
+.art-collage .ac-card {
+  inset: 14% 10% 18% 16%;
+  background: linear-gradient(170deg, #fdfaf0, #f4ead2);
+  border: 1px solid rgba(120, 96, 60, 0.28);
+  box-shadow: 0 10px 22px -14px rgba(60, 42, 28, 0.5);
+  transform: rotate(3deg);
+}
+.art-collage .ac-env   { width: 58%; bottom: 6%; left: 2%; transform: rotate(-4deg); }
+.art-collage .ac-stamp { width: 26%; top: 0; right: 10%; transform: rotate(8deg); filter: drop-shadow(1px 2px 1px rgba(60,42,28,.3)); }
+.art-collage .ac-sprig { width: 22%; top: 6%; left: -2%; transform: rotate(-8deg); }
+.art-collage .ac-cap   { right: 6%; bottom: -6%; font-family: "Caveat", cursive; font-size: 1.05rem; color: var(--ink-faded); transform: rotate(-2deg); }
+.art-collage svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.art-collage .art-wax {
+  width: 46px; height: 46px; right: 4%; bottom: 16%;
+  display: grid; place-items: center;
+}
+
+/* ── wax seals now read "UBHI" ────────────────────────────────── */
+.wax-ubhi, .art-wax {
+  font-family: "Fraunces", serif !important;
+  font-style: normal !important;
+  font-size: 0.6rem !important;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+.art-wax {
+  border-radius: 47% 53% 50% 50% / 55% 48% 52% 45%;
+  color: rgba(255, 226, 214, 0.7);
+  background: radial-gradient(circle at 36% 30%, #c2503c 0%, #a23a2c 46%, #7c2a20 100%);
+  box-shadow: inset 0 -3px 7px rgba(74,22,16,.7), inset 0 3px 6px rgba(255,180,160,.3), 0 6px 13px rgba(70,30,22,.4);
+  text-shadow: 0 -1px 1px rgba(80,24,18,.6);
+}
+
+/* ── cart: swap the amulet glyph for a hand-drawn basket + nudge ─ */
+.floating-cart-btn.has-art-basket .cart-amulet-geo { display: none; }
+.cart-basket {
+  position: absolute;
+  inset: 22%;
+  color: var(--ink);
+  pointer-events: none;
+}
+.cart-basket svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.floating-cart-btn.cart-nudge { animation: cart-nudge 0.55s ease; }
+
+/* ── phones: keep only the lightest accents, drop the big scenes ─ */
+@media (max-width: 760px) {
+  .sz-med, .sz-med2, .sz-snail, .sz-book, .art-collage,
+  .acc-bl, .acc-bl2, .acc-tea { display: none; }
+  .sz-mandala { width: 64px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* ambient drift/float/sway/spin kept on — owner wants the motion */
+}
+
+/* ════════════════════════════════════════════════════════════════
+   STEP CHANGES 1–5
+   ════════════════════════════════════════════════════════════════ */
+
+/* 1 · "Reserve a space" → a little madder stamped ticket (the ochre
+      outline washed out on cream) */
+.nav-cta {
+  border: 0 !important;
+  background: linear-gradient(165deg, #b4596d 0%, #a14e5e 58%, #88424f 100%) !important;
+  color: #fbf0e6 !important;
+  font-weight: 500;
+  letter-spacing: 0.16em !important;
+  padding: 11px 22px !important;
+  border-radius: 3px !important;
+  transform: rotate(-1.4deg);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 238, 225, 0.3),
+    0 2px 0 rgba(80, 36, 46, 0.5),
+    0 11px 20px -11px rgba(120, 60, 72, 0.65) !important;
+  transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
+}
+.nav-cta:hover {
+  background: linear-gradient(165deg, #bf6577, #ad566c 58%, #95485a 100%) !important;
+  color: #fff6ee !important;
+  transform: rotate(0deg) translateY(-2px);
+}
+
+/* 2 · the cart — new hand-drawn mark, moved to bottom-right so it can
+      never hide behind the header on scroll */
+#header-cart-btn.floating-cart-btn {
+  position: fixed !important;
+  top: auto !important; left: auto !important;
+  bottom: clamp(18px, 3vw, 30px) !important;
+  right: clamp(18px, 3vw, 30px) !important;
+  width: 62px !important; height: 62px !important;
+  z-index: 200 !important;
+  background:
+    radial-gradient(62% 56% at 35% 28%, #fffaf0, transparent 70%),
+    linear-gradient(165deg, #f7efd8, #ead9b8) !important;
+  border: 1px solid rgba(120, 96, 60, 0.42) !important;
+  border-radius: 50% !important;
+  box-shadow: 0 12px 24px -10px rgba(60, 42, 28, 0.55), inset 0 1px 0 rgba(255,255,255,0.6) !important;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+#header-cart-btn.floating-cart-btn:hover { transform: translateY(-3px) rotate(-3deg); }
+.floating-cart-btn .cart-badge-count-container {
+  position: absolute !important;
+  top: -5px !important; right: -5px !important;
+  min-width: 22px; height: 22px;
+  padding: 0 4px;
+  background: #9e3429 !important;
+  color: #fdeee2 !important;
+  border: 1.5px solid #f7efd8 !important;
+  border-radius: 999px !important;
+  display: grid; place-items: center;
+  font-size: 0.62rem; font-weight: 600;
+  box-shadow: 0 3px 7px -2px rgba(70, 28, 20, 0.5);
+}
+.cart-basket { inset: 20% !important; color: var(--ink); }
+
+/* Phones: a slightly smaller cart so it sits lighter over the content */
+@media (max-width: 600px) {
+  #header-cart-btn.floating-cart-btn {
+    width: 48px !important; height: 48px !important;
+    bottom: 14px !important; right: 14px !important;
+  }
+  .floating-cart-btn .cart-badge-count-container {
+    min-width: 18px; height: 18px;
+    top: -4px !important; right: -4px !important;
+    font-size: 0.55rem;
+  }
+}
+
+/* 3 · wax seals — depth, gloss, a pressed rim (they were flat & dull) */
+.wax, .art-wax,
+#page-home .hero-content::before,
+.plan-wax-seal, [class*="wax-seal"] {
+  background:
+    radial-gradient(42% 38% at 32% 26%, rgba(255, 198, 178, 0.62), transparent 62%),
+    radial-gradient(circle at 52% 56%, #bb4a3d 0%, #9e3429 52%, #6f221b 100%) !important;
+  box-shadow:
+    inset 0 -5px 11px rgba(70, 18, 14, 0.7),
+    inset 0 5px 9px rgba(255, 188, 168, 0.42),
+    inset 0 0 0 2px rgba(120, 42, 32, 0.42),
+    0 7px 16px rgba(70, 28, 20, 0.45) !important;
+  border-radius: 46% 54% 49% 51% / 53% 47% 53% 47% !important;
+  color: rgba(255, 226, 214, 0.72) !important;
+  text-shadow: 0 -1px 1px rgba(80, 24, 18, 0.75), 0 1px 0 rgba(255, 196, 176, 0.3) !important;
+}
+
+/* 5 · the colophon heart */
+.colophon-heart { display: inline-block; width: 15px; vertical-align: -3px; line-height: 0; }
+.colophon-heart svg { width: 100%; height: auto; display: inline-block; }
+.colophon-heart svg path { fill: var(--madder); stroke: var(--madder); stroke-width: 1.4; }
+
+/* ════ 6 · EMAIL UPDATES — "keep me posted" ═══════════════════════ */
+.subscribe-section { display: flex; justify-content: center; }
+.subscribe-card {
+  position: relative;
+  width: min(700px, 100%);
+  text-align: center;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 243, 0.92), rgba(243, 234, 206, 0.86)),
+    var(--paper-cream);
+  border: 1px solid rgba(120, 96, 60, 0.26);
+  border-radius: 4px;
+  padding: clamp(34px, 5vw, 58px) clamp(22px, 5vw, 62px);
+  box-shadow: 0 26px 56px -32px rgba(60, 42, 28, 0.5);
+}
+.subscribe-card .eyebrow { display: inline-flex; justify-content: center; }
+.subscribe-copy { max-width: 48ch; margin: 4px auto 26px; color: var(--mist); }
+.subscribe-form {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  justify-content: center; align-items: stretch;
+  max-width: 600px; margin: 0 auto;
+}
+.subscribe-input {
+  flex: 1 1 190px; min-width: 0;
+  padding: 13px 16px !important;
+  border-radius: 2px;
+  font-size: 0.95rem;
+}
+.subscribe-interest { flex: 1 1 150px; cursor: pointer; }
+.subscribe-btn { flex: 0 0 auto; }
+.subscribe-msg {
+  min-height: 1.4em; margin: 16px 0 0;
+  font-family: "Caveat", cursive; font-size: 1.34rem; line-height: 1.2;
+}
+.subscribe-msg.is-ok { color: var(--sage); }
+.subscribe-msg.is-error { color: var(--madder); }
+.subscribe-unsub {
+  display: inline-block; margin-top: 8px; padding: 2px 4px;
+  background: none; border: 0; cursor: pointer;
+  font-family: "EB Garamond", sans-serif; font-size: 0.7rem; letter-spacing: 0.06em;
+  color: var(--ink-faded); text-decoration: underline; text-underline-offset: 3px;
+  text-decoration-color: rgba(120, 96, 60, 0.4);
+  transition: color .15s ease;
+}
+.subscribe-unsub:hover { color: var(--madder); text-decoration-color: var(--madder); }
+
+/* ════════════════════════════════════════════════════════════════
+   STEP 7 · WORKSHOPS — the slider stays; tiles become pinned tickets
+   ════════════════════════════════════════════════════════════════ */
+#page-workshops .page-hero h1 { font-style: italic; }
+/* the ticker (the slider you like) — kept, just dressed for paper */
+#page-workshops .workshops-ticker {
+  border-top: 1px solid rgba(90, 68, 42, 0.28);
+  border-bottom: 1px solid rgba(90, 68, 42, 0.28);
+  background: rgba(216, 193, 154, 0.22);
+}
+#page-workshops .workshops-ticker-track span { color: var(--ink-soft); }
+
+#page-workshops .workshop-grid { gap: clamp(26px, 3.4vw, 46px); }
+
+/* the tile → a pinned paper ticket */
+#page-workshops .workshop-card {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 243, 0.72), rgba(243, 234, 206, 0.5)),
+    var(--paper-cream) !important;
+  border: 1px solid rgba(120, 96, 60, 0.22) !important;
+  border-radius: 255px 10px 225px 12px / 12px 225px 10px 255px !important;
+  box-shadow: 0 16px 34px -22px rgba(60, 42, 28, 0.5) !important;
+  overflow: visible !important;
+  backdrop-filter: none !important;
+  padding-top: 16px;
+  transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease;
+}
+#page-workshops .workshop-card:nth-child(3n+1) { transform: rotate(-0.8deg); }
+#page-workshops .workshop-card:nth-child(3n+2) { transform: rotate(0.7deg); }
+#page-workshops .workshop-card:nth-child(3n)   { transform: rotate(-0.4deg); }
+#page-workshops .workshop-card:hover {
+  transform: rotate(0deg) translateY(-8px);
+  box-shadow: 0 28px 52px -24px rgba(60, 42, 28, 0.6) !important;
+}
+/* washi tape pinning the ticket to the page */
+#page-workshops .workshop-card::before {
+  content: ""; position: absolute; top: -12px; left: 50%;
+  width: 108px; height: 26px; transform: translateX(-50%) rotate(-2deg);
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.16) 0 6px, transparent 6px 12px), rgba(176, 120, 132, 0.5);
+  -webkit-mask: linear-gradient(90deg, transparent, #000 5px, #000 calc(100% - 5px), transparent);
+          mask: linear-gradient(90deg, transparent, #000 5px, #000 calc(100% - 5px), transparent);
+  opacity: 0.9; mix-blend-mode: multiply; box-shadow: 0 2px 4px rgba(60, 42, 28, 0.14); z-index: 3;
+}
+
+/* photo / art → a tea-toned mounted print */
+#page-workshops .card-image-wrap,
+#page-workshops .workshop-card .product-art {
+  margin: 6px clamp(12px, 2vw, 18px) 0 !important;
+  border: 6px solid #fdfaf0 !important;
+  border-radius: 2px !important;
+  box-shadow: 0 10px 22px -14px rgba(60, 42, 28, 0.5);
+  overflow: hidden;
+  height: auto;
+  min-height: 150px;
+}
+#page-workshops .card-image-wrap img { filter: sepia(0.34) saturate(0.85) contrast(0.97) brightness(1.03); }
+#page-workshops .card-image-glow { display: none; }
+
+#page-workshops .card-body { padding: clamp(16px, 2.4vw, 26px); }
+#page-workshops .workshop-card .eyebrow { color: var(--madder); }
+#page-workshops .workshop-card h3 { color: var(--ink); font-style: italic; }
+
+/* the details → a torn-off ticket stub */
+#page-workshops .workshop-card dl {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 26px, rgba(120, 96, 60, 0.06) 26px 27px),
+    rgba(222, 205, 168, 0.38);
+  border: 1.4px dashed rgba(138, 106, 63, 0.5);
+  border-radius: 3px;
+  padding: 13px 16px;
+  margin: 16px 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px;
+}
+#page-workshops .workshop-card dl > div { display: flex; flex-direction: column; }
+#page-workshops .workshop-card dt { font-size: 0.56rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ochre-ink); margin: 0 0 2px; }
+#page-workshops .workshop-card dd { margin: 0; font-family: "Fraunces", serif; font-size: 1.15rem; line-height: 1; color: var(--ink); }
+#page-workshops .spaces-counter { font-family: "Caveat", cursive; font-size: 1.15rem; color: var(--sage); }
+#page-workshops .spaces-counter.few-left { color: var(--madder); }
+#page-workshops .spaces-counter.sold-out { color: var(--ink-faded); }
+
+/* ════════════════════════════════════════════════════════════════
+   STEP 8 · SHOP — page scrolls as one; tiles become curated objects
+   ════════════════════════════════════════════════════════════════ */
+/* release the inner scroll box so the whole page scrolls together */
+#page-shop .shop-scroll-container {
+  max-height: none !important;
+  overflow: visible !important;
+  background: none !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+#page-shop .page-hero h1 { font-style: italic; }
+#page-shop .shop-ticker {
+  border-top: 1px solid rgba(90, 68, 42, 0.28);
+  border-bottom: 1px solid rgba(90, 68, 42, 0.28);
+  background: rgba(216, 193, 154, 0.22);
+}
+#page-shop .shop-ticker-track span { color: var(--ink-soft); }
+
+#page-shop .product-grid { gap: clamp(24px, 3vw, 44px); }
+
+/* the tile → a curated object, taped to the page with a written price */
+#page-shop .product-card {
+  background:
+    linear-gradient(180deg, rgba(255, 252, 243, 0.72), rgba(243, 234, 206, 0.5)),
+    var(--paper-cream) !important;
+  border: 1px solid rgba(120, 96, 60, 0.22) !important;
+  border-radius: 3px !important;
+  box-shadow: 0 16px 32px -22px rgba(60, 42, 28, 0.5) !important;
+  overflow: visible !important;
+  backdrop-filter: none !important;
+  transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease;
+}
+#page-shop .product-card:nth-child(3n+1) { transform: rotate(-0.6deg); }
+#page-shop .product-card:nth-child(3n+2) { transform: rotate(0.5deg); }
+#page-shop .product-card:nth-child(3n)   { transform: rotate(-0.3deg); }
+#page-shop .product-card:hover {
+  transform: rotate(0deg) translateY(-7px);
+  box-shadow: 0 26px 48px -24px rgba(60, 42, 28, 0.6) !important;
+}
+/* a strip of sage washi tape (different from the workshops' rose) */
+#page-shop .product-card::after {
+  content: ""; position: absolute; top: -11px; right: 22px;
+  width: 80px; height: 24px; transform: rotate(5deg);
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.16) 0 6px, transparent 6px 12px), rgba(108, 138, 116, 0.5);
+  -webkit-mask: linear-gradient(90deg, transparent, #000 5px, #000 calc(100% - 5px), transparent);
+          mask: linear-gradient(90deg, transparent, #000 5px, #000 calc(100% - 5px), transparent);
+  opacity: 0.9; mix-blend-mode: multiply; box-shadow: 0 2px 4px rgba(60, 42, 28, 0.14); z-index: 4;
+}
+
+/* visual → mounted print / pressed-motif swatch */
+#page-shop .product-image-wrap,
+#page-shop .product-art {
+  border: 6px solid #fdfaf0 !important;
+  border-radius: 2px !important;
+  box-shadow: 0 10px 20px -14px rgba(60, 42, 28, 0.5);
+  margin: 12px 12px 0 !important;
+  overflow: hidden;
+}
+#page-shop .product-image-wrap img { filter: sepia(0.32) saturate(0.86) contrast(0.97) brightness(1.03); }
+
+#page-shop .product-body { padding: clamp(14px, 2vw, 22px); }
+#page-shop .product-card .eyebrow { color: var(--madder); }
+#page-shop .product-card h3 { color: var(--ink); font-style: italic; }
+#page-shop .product-footer {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-top: 14px; padding-top: 12px;
+  border-top: 1.4px dashed rgba(138, 106, 63, 0.45);
+}
+#page-shop .product-footer strong {
+  font-family: "Caveat", cursive; font-size: 1.8rem; line-height: 1;
+  color: var(--ink); font-weight: 600;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   STEP 9 · JOURNAL — tiles become little bound notebooks
+   ════════════════════════════════════════════════════════════════ */
+#page-journal .page-hero h1 { font-style: italic; }
+#page-journal .journal-ticker {
+  border-top: 1px solid rgba(90, 68, 42, 0.28);
+  border-bottom: 1px solid rgba(90, 68, 42, 0.28);
+  background: rgba(216, 193, 154, 0.22);
+}
+#page-journal .journal-ticker-track span { color: var(--ink-soft); }
+#page-journal .journal-sub-author { font-family: "Caveat", cursive !important; color: var(--ink-faded) !important; font-size: 1.5rem !important; text-transform: none !important; letter-spacing: normal !important; }
+
+#page-journal .journal-grid,
+#page-journal #journal-posts-container { gap: clamp(24px, 3vw, 42px); }
+
+/* the tile → a bound notebook with a stitched spine */
+#page-journal .journal-card {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 243, 0.72), rgba(243, 234, 206, 0.5)),
+    var(--paper-cream) !important;
+  border: 1px solid rgba(120, 96, 60, 0.22) !important;
+  border-left: 7px solid var(--spine-color, var(--ochre)) !important;
+  border-radius: 2px 4px 4px 2px !important;
+  box-shadow: 0 16px 32px -22px rgba(60, 42, 28, 0.5) !important;
+  overflow: visible !important;
+  backdrop-filter: none !important;
+  transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease;
+}
+#page-journal .journal-card::before {            /* stitching down the spine */
+  content: ""; position: absolute; left: -2px; top: 16px; bottom: 16px; width: 7px;
+  background: repeating-linear-gradient(180deg, rgba(255, 250, 235, 0.55) 0 4px, transparent 4px 10px);
+  z-index: 2;
+}
+#page-journal .journal-card:nth-child(2n)   { transform: rotate(0.5deg); }
+#page-journal .journal-card:nth-child(2n+1) { transform: rotate(-0.5deg); }
+#page-journal .journal-card:hover {
+  transform: rotate(0deg) translateY(-7px);
+  box-shadow: 0 26px 48px -24px rgba(60, 42, 28, 0.6) !important;
+}
+
+/* art → a pressed-motif print */
+#page-journal .journal-card-art {
+  border: 6px solid #fdfaf0 !important;
+  border-radius: 2px !important;
+  margin: 12px 14px 0 !important;
+  box-shadow: 0 8px 18px -12px rgba(60, 42, 28, 0.45);
+  overflow: hidden;
+}
+#page-journal .journal-card-body { padding: clamp(14px, 2vw, 22px); }
+#page-journal .journal-card-meta { color: var(--ochre-ink); }
+#page-journal .journal-card-meta .tag { color: var(--madder); }
+#page-journal .journal-card-title { color: var(--ink); font-style: italic; }
+#page-journal .card-desc { color: var(--mist); }
+#page-journal .read-more-link { color: var(--ochre-ink); font-weight: 500; }
+
+/* ════════════════════════════════════════════════════════════════
+   SNAIL MAIL · richer postal redesign
+   (ticker slider, letters gallery, testimonials & floating envelopes
+    are all kept — everything else is dressed up)
+   ════════════════════════════════════════════════════════════════ */
+#page-snail-mail .snail-section-title { font-family: "Fraunces", serif; font-style: italic; font-weight: 300; color: var(--ink); margin-bottom: 8px; }
+#page-snail-mail .snail-section-sub { color: var(--ink-faded); max-width: 560px; margin: 0 auto 30px; font-family: "EB Garamond", serif; line-height: 1.6; }
+
+/* — hero letter → opened mail — */
+#page-snail-mail .snail-letter-story { position: relative; overflow: visible; }
+/* a franked postage stamp in the corner */
+#page-snail-mail .snail-letter-stamp {
+  position: absolute; top: -14px; left: 16px; width: 56px; z-index: 6;
+  transform: rotate(-8deg); pointer-events: none;
+  filter: drop-shadow(1px 2px 1px rgba(60, 42, 28, 0.3));
+}
+#page-snail-mail .snail-letter-stamp svg { width: 100%; height: auto; display: block; }
+/* a wax seal, broken in two — the letter has been opened */
+#page-snail-mail .snail-letter-wax {
+  position: absolute; left: 50%; top: -24px; width: 62px; height: 58px; z-index: 6;
+  transform: translateX(-50%) rotate(-4deg); pointer-events: none;
+}
+#page-snail-mail .snail-letter-wax .wax-half {
+  position: absolute; top: 0; height: 58px; width: 31px;
+  background: radial-gradient(circle at 38% 32%, #c2503c 0%, #9e3429 56%, #6f221b 100%);
+  box-shadow: inset 0 -3px 7px rgba(74, 22, 16, 0.6), 0 4px 9px rgba(70, 28, 20, 0.4);
+}
+#page-snail-mail .snail-letter-wax .wax-l {
+  left: 0; transform: rotate(-7deg) translateX(-2px);
+  clip-path: polygon(0 0, 100% 0, 80% 16%, 100% 33%, 82% 52%, 100% 70%, 84% 100%, 0 100%);
+}
+#page-snail-mail .snail-letter-wax .wax-r {
+  right: 0; transform: rotate(7deg) translateX(2px);
+  clip-path: polygon(20% 0, 100% 0, 100% 100%, 16% 100%, 18% 70%, 0 52%, 18% 33%, 20% 16%);
+}
+/* the floating envelopes drift gently (kept — just alive now);
+   `translate` composes with their existing rotation */
+#page-snail-mail .snail-envelope-floating { animation: env-drift 17s ease-in-out infinite; }
+#page-snail-mail .snail-envelope-floating:nth-child(even) { animation-duration: 22s; animation-delay: -4s; }
+@keyframes env-drift { 0%, 100% { translate: 0 0; } 50% { translate: 7px -11px; } }
+
+/* — "Anatomy of the Envelope" → a taped flat-lay — */
+#page-snail-mail .snail-anatomy-grid { gap: clamp(24px, 3vw, 46px); }
+#page-snail-mail .snail-anatomy-card {
+  position: relative;
+  background: var(--paper-cream);
+  border: 1px solid rgba(120, 96, 60, 0.2);
+  border-radius: 3px;
+  padding: clamp(22px, 2.6vw, 32px);
+  box-shadow: 0 16px 32px -22px rgba(60, 42, 28, 0.5);
+  transition: transform .35s ease, box-shadow .35s ease;
+}
+#page-snail-mail .snail-anatomy-card:nth-child(1) { transform: rotate(-1.2deg); }
+#page-snail-mail .snail-anatomy-card:nth-child(2) { transform: rotate(0.8deg); }
+#page-snail-mail .snail-anatomy-card:nth-child(3) { transform: rotate(-0.6deg); }
+#page-snail-mail .snail-anatomy-card:hover { transform: rotate(0deg) translateY(-7px); box-shadow: 0 26px 48px -24px rgba(60, 42, 28, 0.6); }
+#page-snail-mail .snail-anatomy-card::before {
+  content: ""; position: absolute; top: -12px; left: 50%; width: 96px; height: 26px;
+  transform: translateX(-50%) rotate(-2deg);
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.16) 0 6px, transparent 6px 12px), rgba(196, 156, 84, 0.5);
+  -webkit-mask: linear-gradient(90deg, transparent, #000 5px, #000 calc(100% - 5px), transparent);
+          mask: linear-gradient(90deg, transparent, #000 5px, #000 calc(100% - 5px), transparent);
+  opacity: 0.9; mix-blend-mode: multiply; box-shadow: 0 2px 4px rgba(60, 42, 28, 0.14);
+}
+#page-snail-mail .snail-anatomy-art { color: var(--sage); }
+#page-snail-mail .snail-anatomy-card h3 { font-family: "Fraunces", serif; font-style: italic; color: var(--ink); }
+#page-snail-mail .snail-anatomy-card p { color: var(--mist); font-family: "EB Garamond", serif; }
+
+/* — NEW · "Peek inside the last letter" (folds open) — */
+#page-snail-mail .snail-peek-section { text-align: center; }
+.snail-peek-letter { max-width: 600px; margin: 0 auto; }
+.snail-peek-paper {
+  position: relative; text-align: left;
+  background: repeating-linear-gradient(180deg, transparent 0 29px, rgba(120, 96, 60, 0.07) 29px 30px), var(--paper-cream);
+  border: 1px solid rgba(120, 96, 60, 0.24); border-radius: 3px;
+  padding: clamp(24px, 3vw, 40px);
+  box-shadow: 0 20px 44px -26px rgba(60, 42, 28, 0.5);
+  max-height: 240px; overflow: hidden;
+  transition: max-height .7s ease;
+  -webkit-mask: linear-gradient(180deg, #000 68%, transparent);
+          mask: linear-gradient(180deg, #000 68%, transparent);
+}
+.snail-peek-letter.is-open .snail-peek-paper { max-height: 1200px; -webkit-mask: none; mask: none; }
+.snail-peek-vol { display: block; font-family: "EB Garamond", serif; font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ochre-ink); margin-bottom: 14px; }
+.snail-peek-excerpt p { font-family: "EB Garamond", serif; color: var(--ink-soft); font-size: 1.08rem; line-height: 1.75; margin: 0 0 14px; }
+.snail-peek-sign { display: block; margin-top: 6px; font-family: "Caveat", cursive; font-size: 1.7rem; color: var(--indigo); }
+.snail-peek-btn {
+  margin-top: 18px; background: none; cursor: pointer;
+  border: 1.5px dashed rgba(138, 106, 63, 0.6); color: var(--ink-soft);
+  font-family: "EB Garamond", serif; font-size: 0.84rem; letter-spacing: 0.08em;
+  padding: 9px 20px; border-radius: 2px; transition: border-color .2s ease, color .2s ease;
+}
+.snail-peek-btn:hover { border-color: var(--madder); color: var(--madder); }
+.snail-peek-letter.is-open .snail-peek-btn { display: none; }
+
+/* — plans → "choose your correspondence" (postage-stamp cards) — */
+#page-snail-mail .snail-plan-card {
+  position: relative; background: var(--paper-cream);
+  border: 1px solid rgba(120, 96, 60, 0.24); border-radius: 2px;
+  box-shadow: 0 14px 28px -20px rgba(60, 42, 28, 0.45);
+  transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+}
+#page-snail-mail .snail-plan-card::after {
+  content: ""; position: absolute; inset: 6px; border: 1.2px dashed rgba(138, 106, 63, 0.35); border-radius: 2px; pointer-events: none;
+}
+#page-snail-mail .snail-plan-card:hover { transform: translateY(-6px); box-shadow: 0 24px 44px -22px rgba(60, 42, 28, 0.55); }
+#page-snail-mail .snail-plan-card.is-active { border-color: var(--madder); box-shadow: 0 0 0 2px rgba(161, 78, 94, 0.4), 0 24px 44px -22px rgba(60, 42, 28, 0.55); }
+#page-snail-mail .snail-plan-term { font-family: "EB Garamond", serif; font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ochre-ink); }
+#page-snail-mail .snail-plan-price { font-family: "Fraunces", serif; font-size: clamp(2rem, 3vw, 2.5rem); color: var(--ink); line-height: 1; }
+#page-snail-mail .snail-plan-period { color: var(--ink-faded); font-family: "EB Garamond", serif; }
+#page-snail-mail .snail-plan-saving { display: inline-block; margin-top: 8px; font-family: "Caveat", cursive; font-size: 1.25rem; color: var(--sage); }
+#page-snail-mail .snail-plan-desc { color: var(--mist); font-family: "EB Garamond", serif; font-size: 0.86rem; }
+
+/* ── featured 12-month hero card · gilt, standalone, premium ───── */
+#page-snail-mail .snail-plan-featured {
+  border: 2px solid var(--art-gold);
+  background: linear-gradient(180deg, #f9f2dc 0%, #f4ebcf 100%);
+  border-radius: 6px;
+  padding: 26px 16px 22px;
+  transform: translateY(-10px);
+  z-index: 2;
+  box-shadow: 0 18px 38px -16px rgba(166, 116, 31, 0.45);
+}
+#page-snail-mail .snail-plan-featured:hover {
+  transform: translateY(-14px);
+  border-color: var(--art-gold);
+}
+#page-snail-mail .snail-plan-featured.is-active {
+  border-color: var(--art-gold);
+  background: linear-gradient(180deg, #f6edd2 0%, #f1e6c8 100%);
+  box-shadow:
+    0 0 0 2px rgba(166, 116, 31, 0.5),
+    0 22px 44px -16px rgba(166, 116, 31, 0.5);
+}
+#page-snail-mail .snail-plan-featured .snail-plan-price {
+  font-size: 2rem;
+}
+#page-snail-mail .snail-featured-ribbon {
+  display: inline-block;
+  font-family: "EB Garamond", serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #6b4f1c;
+  background: rgba(166, 116, 31, 0.18);
+  border: 1px solid rgba(166, 116, 31, 0.42);
+  padding: 5px 14px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+}
+@media (max-width: 920px) {
+  #page-snail-mail .snail-plan-featured { transform: none; }
+  #page-snail-mail .snail-plan-featured:hover { transform: translateY(-4px); }
+}
+
+/* ════ TASK 1 · the letter sits in an opened envelope ════════════ */
+#page-snail-mail .snail-letter-mount { position: relative; }
+#page-snail-mail .snail-letter-mount .env-back {
+  position: absolute; left: -16px; right: -16px; top: 16px; bottom: -56px; z-index: 0;
+  background: linear-gradient(168deg, #ddc7a1 0%, #cdb486 52%, #c2a87a 100%);
+  border-radius: 6px;
+  box-shadow: 0 24px 46px -22px rgba(60, 42, 28, 0.55), inset 0 1px 0 rgba(255, 250, 235, 0.3);
+  pointer-events: none;
+}
+#page-snail-mail .snail-letter-mount .env-back::after {     /* the front-flap V seam at the base */
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 72px;
+  background: linear-gradient(180deg, transparent, rgba(110, 84, 44, 0.16));
+  clip-path: polygon(0 100%, 50% 8%, 100% 100%);
+}
+#page-snail-mail .snail-letter-mount .env-flap {            /* the open flap, folded back above */
+  position: absolute; left: 8%; right: 8%; top: -30px; height: 42px; z-index: 0;
+  background: linear-gradient(180deg, #d6c096, #c5ab7c);
+  clip-path: polygon(0 100%, 50% 0, 100% 100%);
+  box-shadow: 0 -3px 6px -3px rgba(60, 42, 28, 0.25);
+  pointer-events: none;
+}
+#page-snail-mail .snail-letter-story { position: relative; z-index: 2; }
+
+/* ════ TASK 2 · the peek letter shows in full (no fold bar) ══════ */
+.snail-peek-paper { max-height: none !important; overflow: visible !important; -webkit-mask: none !important; mask: none !important; }
+.snail-peek-btn { display: none !important; }
+
+/* ════ TASK 3 · subscription tiles — seamless & inviting ═════════ */
+#page-snail-mail .snail-plans-footer { display: none !important; }   /* replaced by per-tile subscribe */
+#page-snail-mail .snail-plan-card { padding-bottom: 68px; cursor: pointer; }
+/* per-tile subscribe button (injected by artwork.js) */
+#page-snail-mail .snail-plan-subscribe {
+  position: absolute; left: 14px; right: 14px; bottom: 14px; z-index: 2;
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 10px 14px; border: 0; border-radius: 3px; cursor: pointer;
+  background: linear-gradient(165deg, #b4596d, #a14e5e 60%, #88424f);
+  color: #fbf0e6; font-family: "EB Garamond", serif; font-size: 0.74rem; letter-spacing: 0.14em; text-transform: uppercase;
+  box-shadow: inset 0 0 0 1px rgba(255, 238, 225, 0.25), 0 6px 14px -8px rgba(120, 60, 72, 0.6);
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+}
+#page-snail-mail .snail-plan-subscribe:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(165deg, #bf6577, #ad566c 60%, #95485a);
+  box-shadow: inset 0 0 0 1px rgba(255, 238, 225, 0.32), 0 11px 20px -8px rgba(120, 60, 72, 0.72);
+}
+#page-snail-mail .snail-plan-subscribe .heart { color: #ffd9cf; font-size: 0.95rem; line-height: 1; }
+/* "most loved" ribbon on the best-value (first) card */
+#page-snail-mail .snail-plans-grid > .snail-plan-card:first-child::before {
+  content: "♥ most loved"; position: absolute; top: -13px; left: 50%; z-index: 5;
+  transform: translateX(-50%) rotate(-2deg);
+  background: var(--sage); color: #f7f0da;
+  font-family: "Caveat", cursive; font-size: 1.05rem; line-height: 1;
+  padding: 4px 16px; border-radius: 20px; white-space: nowrap;
+  box-shadow: 0 5px 12px -5px rgba(60, 42, 28, 0.5);
+}
+
+/* ════ TASK 4 · Art & Journal search — compact & creative ═══════ */
+#page-journal .journal-search-wrap {
+  max-width: 330px !important; margin: 0 auto !important;
+  position: relative;
+}
+#page-journal .journal-search-input {
+  padding: 9px 16px 9px 40px !important;
+  font-size: 0.9rem !important;
+  border-radius: 999px !important;
+  border: 1.4px solid rgba(120, 96, 60, 0.4) !important;
+  background:
+    radial-gradient(circle at 16px 50%, transparent 9px, transparent 9px),
+    var(--paper-cream) !important;
+  box-shadow: inset 0 1px 3px rgba(60, 42, 28, 0.08);
+}
+#page-journal .journal-search-wrap svg,
+#page-journal .journal-search-wrap .search-icon {
+  width: 17px !important; height: 17px !important; left: 14px !important;
+}
+
+/* ════ the snail-mail letter is now hand-written & compact ═══════ */
+#page-snail-mail .snail-letter-story { max-width: 440px !important; width: 100%; }
+#page-snail-mail .snail-letter-salutation {
+  font-family: "Caveat", cursive !important;
+  font-size: clamp(1.9rem, 3.6vw, 2.4rem) !important; font-weight: 600;
+  color: var(--ink) !important; letter-spacing: 0;
+}
+#page-snail-mail .snail-letter-date { font-family: "Caveat", cursive !important; font-size: 1.25rem !important; }
+#page-snail-mail .snail-letter-body p {
+  font-family: "Caveat", cursive !important;
+  font-size: 1.52rem !important; line-height: 1.5 !important;
+  color: var(--ink-soft) !important; margin-bottom: 0.7em;
+}
+#page-snail-mail .snail-letter-signature {
+  font-family: "Caveat", cursive !important;
+  font-size: 1.95rem !important; color: var(--indigo) !important; line-height: 1.2;
+}
+
+/* ════ CTAs in sage — the pink didn't suit the cards ════════════ */
+.nav-cta {
+  background: linear-gradient(165deg, #5f8369 0%, #4a7060 58%, #3a5a4c 100%) !important;
+  color: #f6f0e0 !important;
+  box-shadow: inset 0 0 0 1px rgba(246, 240, 224, 0.28), 0 2px 0 rgba(40, 62, 50, 0.5), 0 11px 20px -11px rgba(58, 90, 76, 0.6) !important;
+}
+.nav-cta:hover {
+  background: linear-gradient(165deg, #6a8f74, #547c6a 58%, #426552 100%) !important;
+  color: #fcf7ec !important;
+}
+#page-snail-mail .snail-plan-subscribe {
+  background: linear-gradient(165deg, #5f8369, #4a7060 58%, #3a5a4c) !important;
+  box-shadow: inset 0 0 0 1px rgba(246, 240, 224, 0.25), 0 6px 14px -8px rgba(58, 90, 76, 0.6) !important;
+}
+#page-snail-mail .snail-plan-subscribe:hover {
+  background: linear-gradient(165deg, #6a8f74, #547c6a 58%, #426552) !important;
+  box-shadow: inset 0 0 0 1px rgba(246, 240, 224, 0.32), 0 11px 20px -8px rgba(58, 90, 76, 0.72) !important;
+}
+#page-snail-mail .snail-plan-subscribe .heart { color: #f4dba0 !important; }
+/* keep the "most loved" ribbon distinct from the sage buttons → gilt */
+#page-snail-mail .snail-plans-grid > .snail-plan-card:first-child::before {
+  background: linear-gradient(165deg, #c2902f, #a6741f) !important; color: #fbf3df !important;
+}
+
+/* ════ more art woven through the floating envelopes ════════════ */
+.sz-heart { width: clamp(18px, 2.4vw, 28px); }
+.sz-bird  { width: clamp(34px, 4.2vw, 56px); }
+.snail-heart-a { top: 17%; left: 6%; }
+.snail-heart-b { bottom: 25%; right: 8%; }
+.snail-bird    { top: 9%; right: 15%; }
+.snail-star    { top: 41%; right: 5%; }
+.snail-spk-a   { bottom: 15%; left: 12%; }
+.art-accent use[href="#art-heart"] { color: var(--madder); }
+
+/* ════════════════════════════════════════════════════════════════
+   BIG FLOATING ENVELOPE → click the Ubhi wax seal → letter pops out
+   (progressive enhancement: with no JS the letter simply shows)
+   ════════════════════════════════════════════════════════════════ */
+.snail-closed-envelope { display: none; }
+.snail-letter-mount.js-envelope .snail-closed-envelope { display: block; }
+
+/* the old letter-in-envelope decoration & the letter's own wax are
+   superseded — the wax now lives on the closed envelope */
+.snail-letter-mount .env-back, .snail-letter-mount .env-flap { display: none !important; }
+#page-snail-mail .snail-letter-wax { display: none !important; }
+
+/* CLOSED: envelope shows; the letter is removed from flow.
+   OPEN: the letter pops in (display + keyframe — reliable, unlike a
+   max-height transition). */
+.snail-letter-mount.js-envelope { position: relative; flex: 0 0 auto; width: min(460px, 92vw); margin: 0 auto; min-height: 400px; }
+.snail-letter-mount.js-envelope:not(.is-open) .snail-letter-story { display: none; }
+.snail-letter-mount.js-envelope.is-open .snail-letter-story {
+  display: block; animation: letterPop .6s cubic-bezier(.2, .8, .2, 1) both;
+}
+@keyframes letterPop {
+  from { opacity: 0; transform: scale(.92) translateY(30px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* the big floating envelope */
+.snail-closed-envelope {
+  position: absolute; top: 24px; left: 50%; transform: translateX(-50%);
+  width: min(440px, 94%); height: 300px; padding: 0;
+  background: linear-gradient(158deg, #bccab0 0%, #a3b795 52%, #86a077 100%);
+  border: 1px solid rgba(70, 92, 56, 0.34); border-radius: 8px;
+  box-shadow: 0 32px 64px -28px rgba(36, 50, 30, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  cursor: pointer; overflow: visible;
+  transition: opacity .55s ease, transform .55s ease, box-shadow .3s ease;
+  animation: env-bob 6s ease-in-out infinite;
+}
+@keyframes env-bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -10px; } }
+.snail-closed-envelope:hover { box-shadow: 0 36px 72px -26px rgba(60, 42, 28, 0.66); }
+.snail-closed-envelope:hover .ce-flap { transform: rotateX(-16deg); }
+.snail-closed-envelope::before {                /* the front lower V */
+  content: ""; position: absolute; left: 0; right: 0; top: 44%; bottom: 0; z-index: 1;
+  background: linear-gradient(158deg, #b0c1a2, #8da77e);
+  clip-path: polygon(0 100%, 50% 0, 100% 100%); border-radius: 0 0 8px 8px;
+}
+.snail-closed-envelope::after {                 /* inner shadow under the flap */
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 52%; z-index: 0;
+  background: linear-gradient(180deg, rgba(38, 56, 32, 0.18), transparent);
+  clip-path: polygon(0 0, 50% 100%, 100% 0);
+}
+.ce-flap {                                       /* the closed top flap (swings open) */
+  position: absolute; left: 0; right: 0; top: 0; height: 54%; z-index: 3;
+  background: linear-gradient(158deg, #b4c4a6, #8fa980);
+  clip-path: polygon(0 0, 100% 0, 50% 100%); border-radius: 8px 8px 0 0;
+  box-shadow: 0 8px 12px -8px rgba(60, 42, 28, 0.45);
+  transform-origin: top center; transition: transform .6s ease; backface-visibility: hidden;
+}
+.ce-wax {                                        /* the Ubhi wax seal */
+  position: absolute; left: 50%; top: 47%; transform: translate(-50%, -50%) rotate(-4deg); z-index: 5;
+  width: 68px; height: 66px; display: grid; place-items: center;
+  font-family: "Fraunces", serif; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em;
+  color: rgba(255, 226, 214, 0.72);
+  background: radial-gradient(circle at 38% 30%, #c2503c 0%, #9e3429 56%, #6f221b 100%);
+  border-radius: 47% 53% 50% 50% / 55% 48% 52% 45%;
+  box-shadow: inset 0 -4px 9px rgba(74, 22, 16, 0.7), inset 0 4px 8px rgba(255, 180, 160, 0.32), 0 7px 16px rgba(70, 30, 22, 0.4);
+  text-shadow: 0 -1px 1px rgba(80, 24, 18, 0.6);
+  transition: opacity .4s ease, transform .5s ease;
+}
+.ce-hint {
+  position: absolute; left: 0; right: 0; bottom: -36px; z-index: 5; text-align: center;
+  font-family: "Caveat", cursive; font-size: 1.4rem; color: var(--ink-faded); transition: opacity .3s ease;
+}
+.ce-hint em { color: var(--madder); font-style: normal; }
+
+/* OPEN: flap swings up, envelope fades & lifts away */
+.snail-letter-mount.is-open .snail-closed-envelope { opacity: 0; transform: translate(-50%, -28px) scale(.94); pointer-events: none; }
+.snail-letter-mount.is-open .ce-flap { transform: rotateX(-155deg); }
+.snail-letter-mount.is-open .ce-wax { opacity: 0; transform: translate(-50%, -50%) scale(1.45) rotate(10deg); }
+.snail-letter-mount.is-open .ce-hint { opacity: 0; }
+
+/* snail envelope open/peek motion kept on — owner wants the motion */
+
+/* ════ Snail-mail polish · keep the open sections to the page's reading width ════
+   The anatomy & peek sections sit OUTSIDE .snail-mail-layout, so on a wide monitor
+   their tiles stretched edge-to-edge and ballooned. Cap them to match the rest. */
+#page-snail-mail .snail-anatomy-section,
+#page-snail-mail .snail-peek-section {
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(16px, 4vw, 32px);
+  padding-right: clamp(16px, 4vw, 32px);
+}
+/* a sensible per-card ceiling so 3 cards never feel oversized on huge screens */
+#page-snail-mail .snail-anatomy-grid { max-width: 980px; margin-inline: auto; }
+.subscribe-deco { position: absolute; pointer-events: none; opacity: 0.9; line-height: 0; }
+.subscribe-deco svg { width: 100%; height: auto; display: block; overflow: visible; }
+.subscribe-sprig { width: 50px; left: -8px; bottom: -16px; transform: rotate(-12deg); }
+.subscribe-stamp { width: 58px; top: -24px; right: clamp(18px, 5vw, 44px); transform: rotate(7deg); filter: drop-shadow(1px 2px 1px rgba(60, 42, 28, 0.3)); }
+
+/* admin · email-updates panel */
+.admin-stat {
+  display: inline-block; font-size: 0.86rem; color: var(--ink-soft);
+  background: rgba(166, 116, 31, 0.1); border: 1px solid rgba(166, 116, 31, 0.32);
+  border-radius: 2px; padding: 6px 13px;
+}
+.admin-stat strong { color: var(--ochre-ink); font-weight: 600; }
+.admin-mini-del {
+  background: none; border: 1px solid rgba(161, 78, 94, 0.45); color: var(--madder);
+  border-radius: 3px; width: 27px; height: 27px; cursor: pointer; line-height: 1;
+  transition: background .15s ease, color .15s ease;
+}
+.admin-mini-del:hover { background: var(--madder); color: #fdeee2; }
+
+@media (max-width: 600px) {
+  .subscribe-deco { display: none; }
+  .subscribe-btn { flex: 1 1 100%; }
+}
+
+
+/* ════ Peek redesign · the Unfolded Artifact ═════════════════
+   Replaces the flat ruled card with a torn, rotated, leaned-over letter.
+   Lives in artwork.css (loaded last). !important is used ONLY to re-clamp
+   the TASK-2 rules at lines 608-609 that forced .snail-peek-paper open. */
+#page-snail-mail .snail-peek-section { text-align: center; padding-top: 8px; }
+#page-snail-mail .snail-peek-letter { max-width: 600px; margin: 0 auto; padding: 18px 10px 34px; }
+
+/* the sheet — rotated, deckle-torn, leaned-over on the desk */
+#page-snail-mail .snail-peek-paper {
+  position: relative; text-align: left;
+  transform: rotate(-1.4deg);
+  background:
+    repeating-linear-gradient(180deg, transparent 0 31px, rgba(120,96,60,0.08) 31px 32px),
+    linear-gradient(180deg, rgba(255,252,243,0.9), rgba(243,234,206,0.55)),
+    var(--paper-cream);
+  border: 1px solid rgba(120,96,60,0.24);
+  border-radius: 2px;
+  padding: clamp(34px,4vw,54px) clamp(26px,3.4vw,46px) clamp(42px,4vw,58px);
+  box-shadow: 0 24px 50px -26px rgba(60,42,28,0.55), inset 0 1px 0 rgba(255,250,235,0.5);
+  /* neutralise the TASK-2 !important flatten + re-clamp to full/visible */
+  max-height: none !important; overflow: visible !important;
+  -webkit-mask: none !important; mask: none !important;
+  /* deckled / torn top + right edges */
+  -webkit-clip-path: polygon(0 6px,3% 2px,8% 7px,14% 1px,21% 6px,29% 2px,37% 7px,46% 1px,55% 6px,64% 2px,73% 7px,82% 2px,90% 6px,96% 2px,100% 7px,100% 100%,0 100%);
+          clip-path: polygon(0 6px,3% 2px,8% 7px,14% 1px,21% 6px,29% 2px,37% 7px,46% 1px,55% 6px,64% 2px,73% 7px,82% 2px,90% 6px,96% 2px,100% 7px,100% 100%,0 100%);
+}
+/* soft desk shadow beneath the leaned sheet */
+#page-snail-mail .snail-peek-paper::after {
+  content: ""; position: absolute; left: 6%; right: 4%; bottom: -18px; height: 30px;
+  background: radial-gradient(ellipse at center, rgba(60,42,28,0.28), transparent 70%);
+  transform: rotate(1.4deg); z-index: -1; pointer-events: none;
+}
+
+/* horizontal fold crease */
+#page-snail-mail .snail-peek-fold {
+  position: absolute; left: 4%; right: 4%; top: 58%; height: 8px; pointer-events: none;
+  background: linear-gradient(180deg, rgba(120,96,60,0.16), rgba(255,252,243,0.5));
+  box-shadow: 0 1px 0 rgba(255,252,243,0.6); opacity: 0.7;
+}
+
+/* washi tape, top-left (gradient lifted verbatim from .snail-anatomy-card::before) */
+#page-snail-mail .snail-peek-tape {
+  content: ""; position: absolute; top: -10px; left: 26px; width: 92px; height: 26px; z-index: 4;
+  transform: rotate(-7deg); pointer-events: none;
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.16) 0 6px, transparent 6px 12px), rgba(196,156,84,0.5);
+  -webkit-mask: linear-gradient(90deg, transparent, #000 5px, #000 calc(100% - 5px), transparent);
+          mask: linear-gradient(90deg, transparent, #000 5px, #000 calc(100% - 5px), transparent);
+  mix-blend-mode: multiply; box-shadow: 0 2px 4px rgba(60,42,28,0.14);
+}
+
+/* franked postage stamp, pinned top-right */
+#page-snail-mail .snail-peek-stamp {
+  position: absolute; top: -16px; right: 18px; width: 64px; z-index: 4;
+  transform: rotate(7deg); pointer-events: none;
+  filter: drop-shadow(1px 2px 1px rgba(60,42,28,0.3));
+}
+#page-snail-mail .snail-peek-stamp svg { width: 100%; height: auto; display: block; color: var(--vermilion); }
+/* circular postmark (pm-arc structure grafted from the Postcard approach) */
+#page-snail-mail .snail-peek-postmark {
+  position: absolute; top: 24px; right: 12px; z-index: 5;
+  width: 62px; height: 62px; border-radius: 50%;
+  border: 1.4px solid var(--vermilion); color: var(--vermilion);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; transform: rotate(-9deg); opacity: 0.75;
+  mix-blend-mode: multiply; pointer-events: none; font-family: "EB Garamond", serif; line-height: 1.05;
+}
+#page-snail-mail .snail-peek-postmark .pm-arc { font-size: 0.4rem; letter-spacing: 0.1em; text-transform: uppercase; }
+#page-snail-mail .snail-peek-postmark .pm-vol { font-family: "Fraunces", serif; font-style: italic; font-size: 0.72rem; margin: 1px 0; }
+
+#page-snail-mail .snail-peek-vol {
+  display: block; font-family: "EB Garamond", serif; font-size: 0.7rem;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--aurora-gold); margin-bottom: 16px;
+}
+/* opening line — Fraunces-italic pull-quote (grafted from the Plaque) */
+#page-snail-mail .snail-peek-excerpt .snail-peek-lede {
+  font-family: "Fraunces", serif !important; font-style: italic; font-weight: 300;
+  color: var(--ink); font-size: clamp(1.32rem, 2.6vw, 1.7rem); line-height: 1.4;
+  text-wrap: balance; margin: 0 0 18px;
+}
+/* the rest of the note — Caveat handwriting in fountain-pen indigo on the ruled sheet */
+#page-snail-mail .snail-peek-excerpt .snail-peek-more {
+  font-family: "Caveat", cursive !important;
+  color: var(--indigo); font-size: 1.42rem; line-height: 1.5; margin: 0 0 14px;
+}
+#page-snail-mail .snail-peek-excerpt em { font-style: italic; color: var(--madder); }
+#page-snail-mail .snail-peek-sign {
+  display: block; margin-top: 10px; font-family: "Caveat", cursive;
+  font-size: 1.85rem; color: var(--indigo); text-align: right; padding-right: 12%;
+}
+
+/* pressed bloom tucked at the lower fold */
+#page-snail-mail .snail-peek-bloom {
+  position: absolute; left: 14px; bottom: 14px; width: 56px; z-index: 3;
+  transform: rotate(-12deg); opacity: 0.92; pointer-events: none;
+  color: var(--sage); filter: drop-shadow(0 4px 5px rgba(60,42,28,0.22));
+}
+#page-snail-mail .snail-peek-bloom svg { width: 100%; height: auto; display: block; }
+
+/* terracotta weight holding the page down */
+#page-snail-mail .snail-peek-weight {
+  position: absolute; right: 8px; bottom: -8px; width: 50px; z-index: 5;
+  transform: rotate(6deg); pointer-events: none;
+  filter: drop-shadow(2px 5px 5px rgba(60,42,28,0.34));
+}
+#page-snail-mail .snail-peek-weight svg { width: 100%; height: auto; display: block; }
+
+/* marginalia keeps the existing ink-hand styling; just nudge into the margins */
+#page-snail-mail .snail-peek-note { z-index: 3; }
+#page-snail-mail .snail-peek-note.note-top-right { position: absolute; top: 92px; right: -6px; max-width: 130px; transform: rotate(2deg); }
+#page-snail-mail .snail-peek-note.note-bottom-left { position: absolute; bottom: 18px; left: 60px; max-width: 150px; transform: rotate(-1.5deg); }
+
+/* belt-and-braces: hide any leftover old fold/Read-more button */
+#page-snail-mail .snail-peek-btn { display: none !important; }
+
+@media (max-width: 600px) {
+  #page-snail-mail .snail-peek-paper { transform: rotate(-0.8deg); padding: 32px 22px 46px; }
+  #page-snail-mail .snail-peek-excerpt .snail-peek-lede { font-size: 1.24rem; }
+  #page-snail-mail .snail-peek-excerpt .snail-peek-more { font-size: 1.26rem; }
+  #page-snail-mail .snail-peek-note { display: none; }
+  #page-snail-mail .snail-peek-stamp { width: 52px; right: 10px; }
+  #page-snail-mail .snail-peek-postmark { width: 52px; height: 52px; right: 8px; top: 20px; }
+  #page-snail-mail .snail-peek-weight { width: 42px; }
+}
+/* snail peek decorative transforms kept on — owner wants the motion */
+
+/* ════ Snail-mail hero · subscribe-first CTA ══════════════════ */
+#page-snail-mail .snail-hero-cta {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  margin: 22px auto 18px; max-width: 470px;
+}
+#page-snail-mail .snail-hero-subscribe {
+  position: relative; display: inline-flex; align-items: center; gap: 12px;
+  padding: 14px 26px 14px 18px; cursor: pointer; border: 0; border-radius: 4px;
+  background: linear-gradient(165deg, #b4596d, var(--madder) 58%, #88424f);
+  color: #fbf0e6; font-family: "EB Garamond", serif; font-size: 1.04rem; letter-spacing: 0.02em;
+  box-shadow: inset 0 0 0 1px rgba(255,238,225,0.28), 0 12px 24px -12px rgba(120,60,72,0.7);
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+}
+/* dashed ‘postage’ perforation echoing the plan-card tiles */
+#page-snail-mail .snail-hero-subscribe::after {
+  content: ""; position: absolute; inset: 5px; border: 1.2px dashed rgba(255,238,225,0.45);
+  border-radius: 3px; pointer-events: none;
+}
+#page-snail-mail .snail-hero-subscribe:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(165deg, #bf6577, #ad566c 58%, #95485a);
+  box-shadow: inset 0 0 0 1px rgba(255,238,225,0.34), 0 18px 30px -12px rgba(120,60,72,0.78);
+}
+#page-snail-mail .snail-hero-subscribe:focus-visible { outline: 2px solid var(--gilt); outline-offset: 3px; }
+#page-snail-mail .snail-hero-subscribe .shs-stamp { width: 30px; height: 35px; flex: none; }
+#page-snail-mail .snail-hero-subscribe .shs-stamp svg { width: 100%; height: 100%; display: block; color: #fbe7da; filter: drop-shadow(0 1px 1px rgba(74,22,16,0.4)); }
+#page-snail-mail .snail-hero-subscribe .shs-label em { font-style: italic; opacity: 0.92; }
+#page-snail-mail .snail-hero-cta-note { font-family: "Caveat", cursive; font-size: 1.2rem; color: var(--ink-faded); }
+/* brief highlight when the CTA lands the viewer on the plans */
+#page-snail-mail .snail-plans-flash { animation: snail-plans-flash 1.4s ease; }
+@keyframes snail-plans-flash {
+  0%, 100% { box-shadow: none; }
+  30% { box-shadow: 0 0 0 3px rgba(161,78,94,0.35), 0 0 38px -6px rgba(161,78,94,0.4); }
+}
+/* snail subscribe hover + plans flash kept on — owner wants the motion */
+/* Phones: give the hero CTA + its reassurance line comfortable side margins
+   (the Caveat line was sitting almost edge-to-edge at 375px). */
+@media (max-width: 480px) {
+  #page-snail-mail .snail-hero-cta { max-width: 320px; }
+  #page-snail-mail .snail-hero-cta-note { font-size: 1.02rem; line-height: 1.35; }
+  #page-snail-mail .snail-hero-subscribe { font-size: 0.96rem; padding: 13px 18px; }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   HOME HERO · fit the whole section (heading + copy + 3 tiles) on the
+   FIRST screen for laptops, so nothing is cut off below the fold.
+   Only engages on short, wide screens (laptops ≤860px tall); tall
+   desktop monitors are untouched. Loaded last so it wins cleanly.
+   ════════════════════════════════════════════════════════════════ */
+@media (min-width: 901px) and (max-height: 860px) {
+  #page-home .hero { padding-top: 92px; padding-bottom: 22px; }
+  #page-home .hero-content { padding-top: 26px; padding-bottom: 24px; }
+  #page-home .hero .eyebrow { margin-bottom: 6px; }
+  #page-home .hero-content h1 {
+    font-size: clamp(2.6rem, 3.8vw, 3.7rem);
+    line-height: 1.03; margin-bottom: 6px;
+  }
+  #page-home .hero-copy {
+    margin-bottom: 12px; line-height: 1.5;
+    font-size: clamp(0.88rem, 0.95vw, 1rem);
+  }
+  #page-home .hero-pathways { margin-top: 14px; gap: 14px; }
+  #page-home .pathway-card { min-height: 0; padding: 13px 15px; }
+  #page-home .pathway-icon { width: 36px; height: 36px; margin-bottom: 7px; }
+  #page-home .pathway-body h3 { margin-bottom: 2px; }
+  /* keep each tile's blurb to two lines so the tiles stay short */
+  #page-home .pathway-body p {
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; font-size: 0.82rem; line-height: 1.4;
+  }
+  #page-home .pathway-arrow { margin-top: 7px; }
+}
+/* Even shorter screens (small laptops ~768px tall): trim a little more. */
+@media (min-width: 901px) and (max-height: 720px) {
+  #page-home .hero { padding-top: 86px; padding-bottom: 16px; }
+  #page-home .hero-content h1 { font-size: clamp(2.3rem, 3.3vw, 3.2rem); }
+  #page-home .pathway-body p { -webkit-line-clamp: 1; }
+  #page-home .hero-pathways { margin-top: 10px; }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   HOME HERO · a contained photo beside the text (not a full-screen
+   background), and a content-height section — so the studio image is a
+   normal "standard" image and the scrolling mantra strip below it is
+   visible the moment you land, without scrolling. Laptops/desktops only;
+   the desktop 1920 view keeps the same calm proportions.
+   ════════════════════════════════════════════════════════════════ */
+@media (min-width: 901px) {
+  #page-home .hero {
+    min-height: 0 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0,1.04fr) minmax(0,0.96fr);
+    align-items: center;
+    gap: clamp(30px, 4vw, 62px);
+    max-width: 1260px;
+    margin-inline: auto;
+    overflow: visible;
+    padding: clamp(120px, 15vh, 144px) clamp(20px,5vw,64px) clamp(40px,5vh,60px) !important;
+  }
+  #page-home .hero > .particles-canvas,
+  #page-home .hero > .hero-overlay,
+  #page-home .hero > .hero-geo,
+  #page-home .hero > .hero-ephemera { display: none !important; }
+  #page-home .hero-content {
+    order: 1;
+    width: auto !important;
+    transform: rotate(-0.6deg);
+  }
+  #page-home .hero-image {
+    order: 2;
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 4 / 3.4;
+    max-height: 470px;
+    object-fit: cover;
+    object-position: center 35%;
+    border-radius: 6px;
+    z-index: 0 !important;
+    box-shadow: 0 26px 52px -30px rgba(60,42,28,.55);
+    transform: rotate(0.6deg);
+  }
+  /* The card is now ~half width, so compact the content (at every height, not
+     just short screens) — 2-line heading, short tiles — to keep the hero around
+     ~660px so the mantra strip shows on a desktop monitor too. */
+  #page-home .hero-content h1 {
+    font-size: clamp(2.5rem, 3.3vw, 3.5rem) !important;
+    line-height: 1.05; margin-bottom: 8px;
+  }
+  #page-home .hero-copy { margin-bottom: 14px; }
+  #page-home .hero-pathways { margin-top: 16px; gap: 14px; }
+  #page-home .pathway-card { min-height: 0 !important; padding: 14px 16px !important; }
+  #page-home .pathway-icon { width: 40px !important; height: 40px !important; margin-bottom: 8px !important; }
+  #page-home .pathway-body h3 { margin-bottom: 2px; }
+  #page-home .pathway-body p {
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; font-size: 0.84rem; line-height: 1.4; min-height: 0;
+  }
+  #page-home .pathway-arrow { margin-top: 7px; }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   HOME INTRO ("A sanctuary…") · fit this section on one screen on
+   laptops, so one scroll down from the hero reveals the whole thing
+   (no second scroll). Trims the section padding + heading on short
+   screens; tall desktop monitors keep their generous spacing.
+   ════════════════════════════════════════════════════════════════ */
+@media (min-width: 901px) and (max-height: 860px) {
+  #page-home .intro.section-pad { padding-top: 44px; padding-bottom: 44px; }
+  #page-home .intro-lead { margin-bottom: 18px; }
+  #page-home .intro-lead h2 { font-size: clamp(1.9rem, 2.7vw, 2.5rem); }
+  #page-home .intro-copy p { line-height: 1.6; }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   NEWSLETTER ("Word from the studio") · horizontal & compact.
+   Text on the left, form on the right — roughly half the height of the
+   old stacked card. Stacks back to centred on phones (<760px).
+   ════════════════════════════════════════════════════════════════ */
+@media (min-width: 760px) {
+  .subscribe-card {
+    width: min(1040px, 100%);
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    align-items: center;
+    gap: clamp(32px, 4.5vw, 64px);
+    text-align: left;
+    padding: clamp(30px, 3.4vw, 46px) clamp(34px, 4vw, 56px);
+  }
+  .subscribe-text { min-width: 0; }
+  .subscribe-card .eyebrow { justify-content: flex-start; }
+  .subscribe-card h2 { font-size: clamp(1.9rem, 2.9vw, 2.7rem); line-height: 1.07; margin: 4px 0 0; }
+  .subscribe-copy { margin: 10px 0 0; max-width: none; font-size: 0.98rem; }
+  .subscribe-action { min-width: 0; }
+  .subscribe-form { justify-content: flex-start; max-width: none; margin: 0; }
+  .subscribe-msg { text-align: left; margin-top: 12px; }
+  .subscribe-unsub { margin-top: 8px; }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   FOOTER · trim the excess height. The decorative mandala was flowing
+   into its own tall bottom row (the empty space); padding + gaps were
+   also generous. This roughly halves the footer's height.
+   ════════════════════════════════════════════════════════════════ */
+.site-footer {
+  padding-top: 26px !important;
+  padding-bottom: 26px !important;
+  gap: 14px 32px !important;
+  align-items: center;
+}
+.site-footer .footer-geo { display: none !important; }
+.footer-brand p { margin-top: 4px !important; }
+.footer-sign { margin-top: 8px !important; }
+.footer-sign .wax { width: 44px !important; height: 44px !important; }
+.footer-colophon { font-size: 1.15rem !important; line-height: 1.25 !important; max-width: 380px; }
+.footer-legal { margin-top: 12px !important; padding-top: 12px !important; }
+
+/* ════════════════════════════════════════════════════════════════
+   HERO PATHWAY TILES · colour-coded "pressed tickets"
+   They were flat & monochrome. Each now carries a theme colour, a
+   washi-tape strip, an icon medallion, a circular arrow, and a
+   coloured lift on hover — distinct little artefacts, not grey boxes.
+   ════════════════════════════════════════════════════════════════ */
+#page-home .hero-pathways .pathway-card:nth-child(1) { --pc:#a6741f; --pcs:rgba(166,116,31,.15); }
+#page-home .hero-pathways .pathway-card:nth-child(2) { --pc:#a14e5e; --pcs:rgba(161,78,94,.14); }
+#page-home .hero-pathways .pathway-card:nth-child(3) { --pc:#4a7060; --pcs:rgba(74,112,96,.15); }
+
+#page-home .hero-pathways .pathway-card {
+  background: linear-gradient(180deg, #fdfbf3, #f6efda) !important;
+  border: 1px solid rgba(120,96,60,.22) !important;
+  border-top: 3px solid var(--pc) !important;
+  border-radius: 5px !important;
+  backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+  box-shadow: 0 14px 30px -20px rgba(60,42,28,.5) !important;
+  overflow: visible !important;
+  transition: transform .35s cubic-bezier(.16,1,.3,1), box-shadow .35s ease, border-color .35s ease;
+}
+/* washi-tape strip pinning the top */
+#page-home .hero-pathways .pathway-card::before {
+  content: ""; position: absolute; top: -8px; left: 50%; width: 56px; height: 18px; z-index: 3;
+  transform: translateX(-50%) rotate(-3deg);
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,.25) 0 5px, transparent 5px 10px), var(--pc);
+  opacity: .42; border-radius: 0;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 5px, #000 calc(100% - 5px), transparent);
+          mask: linear-gradient(90deg, transparent, #000 5px, #000 calc(100% - 5px), transparent);
+}
+/* icon → tinted medallion */
+#page-home .hero-pathways .pathway-icon {
+  width: 48px !important; height: 48px !important; padding: 8px;
+  border-radius: 50%; background: var(--pcs);
+  box-shadow: inset 0 0 0 1px var(--pcs);
+  margin-bottom: 8px !important; box-sizing: border-box;
+  transition: transform .35s ease, background .3s ease;
+}
+#page-home .hero-pathways .pathway-body h3 { transition: color .3s ease; }
+/* arrow → circular button */
+#page-home .hero-pathways .pathway-arrow {
+  align-self: flex-end; width: 30px; height: 30px; border-radius: 50%;
+  border: 1px solid var(--pc); color: var(--pc);
+  display: grid; place-items: center; font-size: .82rem; line-height: 1;
+  margin-top: 8px;
+  transition: background .3s ease, color .3s ease, transform .3s ease;
+}
+/* hover */
+#page-home .hero-pathways .pathway-card:hover {
+  transform: translateY(-6px) !important;
+  border-color: var(--pc) !important;
+  box-shadow: 0 26px 46px -22px rgba(60,42,28,.55), 0 0 0 1px var(--pcs) !important;
+}
+#page-home .hero-pathways .pathway-card:hover::before { opacity: .7; }
+#page-home .hero-pathways .pathway-card:hover .pathway-icon { transform: scale(1.07) rotate(-4deg); background: var(--pcs); }
+#page-home .hero-pathways .pathway-card:hover .pathway-body h3 { color: var(--pc); }
+#page-home .hero-pathways .pathway-card:hover .pathway-arrow { background: var(--pc); color: #fbf3df; transform: translateX(2px); }
+
+/* ════════════════════════════════════════════════════════════════
+   COMBINED "practice + paths" section · one screen (was two)
+   A slim ritual ribbon (Arrive → Move → Make → Carry) + the four
+   offering cards, colour-coded, on a single screen.
+   ════════════════════════════════════════════════════════════════ */
+#page-home .practice-journey { padding-top: clamp(40px,4.8vw,68px) !important; padding-bottom: clamp(40px,4.8vw,68px) !important; }
+#page-home .pj-head { text-align: center; margin-bottom: 24px; }
+#page-home .pj-head .eyebrow { display: block; margin-bottom: 2px; }
+#page-home .pj-head h2 { font-family: "Fraunces", serif; font-style: italic; font-weight: 300; font-size: clamp(2rem, 3.3vw, 2.9rem); color: var(--ink); margin: 0; }
+
+#page-home .pj-ritual { list-style: none; margin: 0 auto 24px; padding: 0; max-width: 940px; display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+#page-home .pj-step { position: relative; text-align: center; padding: 0 6px; }
+#page-home .pj-step:not(:last-child)::after { content: "›"; position: absolute; top: 12px; right: -10px; color: rgba(120,96,60,.4); font-family: "EB Garamond", serif; font-size: 24px; line-height: 1; }
+#page-home .pj-step-ic { display: grid; place-items: center; width: 52px; height: 52px; margin: 0 auto 8px; border-radius: 50%; background: var(--pcs); color: var(--pc); }
+#page-home .pj-step-ic svg { width: 26px; height: 26px; }
+#page-home .pj-step-name { display: block; font-family: "Fraunces", serif; font-style: italic; font-size: 1.18rem; color: var(--ink); }
+#page-home .pj-step-sub { display: block; font-size: .8rem; color: var(--mist); margin-top: 2px; line-height: 1.35; }
+
+#page-home .pj-divider { display: flex; align-items: center; gap: 16px; max-width: 720px; margin: 0 auto 22px; }
+#page-home .pj-divider .pj-line { flex: 1; height: 1px; background: rgba(120,96,60,.22); }
+#page-home .pj-divider h3 { font-family: "Caveat", cursive; font-weight: 600; font-size: 1.45rem; color: var(--madder); margin: 0; white-space: nowrap; }
+
+#page-home .pj-paths { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; max-width: 1180px; margin: 0 auto; }
+@media (max-width: 1100px) { #page-home .pj-paths { grid-template-columns: repeat(3,1fr); gap: 16px; } }
+#page-home .pj-card {
+  position: relative; display: flex; flex-direction: column; text-decoration: none;
+  background: linear-gradient(180deg,#fdfbf3,#f6efda);
+  border: 1px solid rgba(120,96,60,.2); border-top: 3px solid var(--pc); border-radius: 6px;
+  padding: 20px 18px; box-shadow: 0 14px 30px -20px rgba(60,42,28,.5);
+  transition: transform .35s cubic-bezier(.16,1,.3,1), box-shadow .35s ease, border-color .35s ease;
+}
+#page-home .pj-card-ic { display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%; background: var(--pcs); color: var(--pc); margin-bottom: 12px; }
+#page-home .pj-card-ic svg { width: 30px; height: 30px; }
+#page-home .pj-card-eyb { font-family: "Caveat", cursive; font-size: 1.1rem; color: var(--pc); }
+#page-home .pj-card h3 { font-family: "Fraunces", serif; font-style: italic; font-weight: 300; font-size: 1.5rem; color: var(--ink); margin: 2px 0 6px; transition: color .3s ease; }
+#page-home .pj-card p { font-size: .92rem; line-height: 1.5; color: var(--mist); margin: 0 0 16px; flex: 1; }
+#page-home .pj-card-cta { font-size: .65rem; letter-spacing: .18em; text-transform: uppercase; color: var(--pc); border-bottom: 1px solid var(--pc); padding-bottom: 3px; width: fit-content; }
+#page-home .pj-card:hover { transform: translateY(-6px); border-color: var(--pc); box-shadow: 0 26px 46px -22px rgba(60,42,28,.55); }
+#page-home .pj-card:hover h3 { color: var(--pc); }
+/* Slightly tighter cards only in the 5-across layout so all five fit cleanly */
+@media (min-width: 1101px) {
+  #page-home .pj-card { padding: 18px 15px; }
+  #page-home .pj-card-ic { width: 44px; height: 44px; margin-bottom: 10px; }
+  #page-home .pj-card-ic svg { width: 26px; height: 26px; }
+  #page-home .pj-card h3 { font-size: 1.3rem; }
+  #page-home .pj-card p { font-size: .85rem; margin-bottom: 14px; }
+}
+
+@media (max-width: 860px) {
+  #page-home .pj-ritual { grid-template-columns: repeat(2,1fr); gap: 20px 12px; }
+  #page-home .pj-step:nth-child(2)::after { content: none; }
+  #page-home .pj-paths { grid-template-columns: repeat(2,1fr); }
+}
+@media (max-width: 520px) {
+  #page-home .pj-ritual { grid-template-columns: repeat(2,1fr); }
+  #page-home .pj-paths { grid-template-columns: 1fr; }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   RESPONSIVE CALIBRATION (audit-driven) · mobile + short-laptop polish
+   Loaded last so these win. Grouped by concern.
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Mobile menu: keep it a clean full-screen overlay, scrollable, with
+      nothing (cookie banner / header chrome / deckle) bleeding over it ── */
+@media (max-width: 940px) {
+  body.menu-open .cookie-banner { display: none !important; }
+  body.menu-open .site-header { box-shadow: none !important; }
+  body.menu-open .site-header::after,
+  body.menu-open .site-header.is-scrolled::after { display: none !important; }
+  .nav-links.is-open {
+    justify-content: flex-start !important;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: clamp(94px, 13vh, 122px) 20px 44px !important;
+    gap: clamp(20px, 4.5vh, 30px) !important;
+  }
+}
+
+/* ── Home hero on phones: drop the forced 100svh + huge padding, and keep
+      the heading inside the parchment card ── */
+@media (max-width: 760px) {
+  #page-home .hero { min-height: auto !important; padding-top: clamp(98px, 22vw, 124px) !important; padding-bottom: 30px !important; }
+  #page-home .hero h1 { font-size: clamp(2.3rem, 9vw, 3.2rem) !important; line-height: 1.06; }
+  #page-home .hero-pathways { margin-top: 20px; gap: 12px; }
+}
+/* short, narrow windowed laptops (the 861–900px gap) get a compact hero too */
+@media (min-width: 761px) and (max-height: 760px) {
+  #page-home .hero { min-height: auto; padding-top: 96px; padding-bottom: 28px; }
+}
+
+/* ── Snail-mail plan tiles: fluid 5→3→2→1 instead of a 5→1 jump at 900px ── */
+#page-snail-mail .snail-plans-grid { grid-template-columns: repeat(4, 1fr) !important; max-width: 1000px; }
+@media (max-width: 920px) { #page-snail-mail .snail-plans-grid { grid-template-columns: repeat(2, 1fr) !important; max-width: 520px; } }
+@media (max-width: 520px) { #page-snail-mail .snail-plans-grid { grid-template-columns: 1fr !important; } }
+
+/* ── Workshops grid: add a 3-column tier on standard breakpoints ── */
+@media (max-width: 1120px) { #page-workshops .workshop-grid { grid-template-columns: repeat(3, 1fr) !important; } }
+@media (max-width: 760px)  { #page-workshops .workshop-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+@media (max-width: 520px)  { #page-workshops .workshop-grid { grid-template-columns: 1fr !important; } }
+
+/* ── Snail-mail archive + testimonials on phones (un-nested; captions wrap) ── */
+@media (max-width: 600px) {
+  #page-snail-mail .snail-photo-card { width: 150px; }
+  #page-snail-mail .snail-photo-caption { white-space: normal; line-height: 1.25; font-size: .95rem; }
+  #page-snail-mail .snail-review-card { width: 240px; height: auto; min-height: 150px; }
+}
+
+/* ── About: uniform centring on phones (was half-centred) ── */
+@media (max-width: 680px) {
+  #page-about .about-content, #page-about .about-left { text-align: center !important; align-items: center !important; }
+  #page-about .about-logo { margin: 0 auto 24px !important; }
+}
+
+/* ── Tap targets ≥44px on phones (journal + shop controls, footer, unsub) ── */
+@media (max-width: 600px) {
+  #page-journal .journal-tag-btn { padding: 10px 16px !important; min-height: 44px; }
+  #page-journal .journal-sort-wrap select { min-height: 44px; padding: 12px 16px !important; }
+  #page-shop .category-btn { padding: 11px 18px !important; min-height: 44px; }
+  #page-shop .shop-search-wrapper input { padding: 13px 14px 13px 36px !important; }
+  .site-footer nav a, .footer-legal a { display: inline-block; padding: 6px 2px; }
+  .subscribe-unsub { padding: 10px 6px !important; display: inline-block; }
+}
+
+/* ── Short-laptop vertical reclaim (About / account / legal start lower) ── */
+@media (max-height: 760px) {
+  #page-about .about { min-height: auto !important; }
+  #page-about .about.section-pad { padding-top: clamp(90px,10vh,112px) !important; padding-bottom: clamp(40px,6vh,64px) !important; }
+  .member-dashboard-wrapper { padding-top: 96px !important; }
+  .member-gate-wrapper { padding-top: 96px !important; padding-bottom: 48px !important; }
+  .legal-page .legal-wrap { padding-top: 104px !important; }
+  #page-journal .journal-section.section-pad { padding-bottom: clamp(40px,6vw,72px) !important; }
+}
+
+/* ── Member login card breathing room on small phones ── */
+@media (max-width: 480px) {
+  .member-login-card { padding: 40px 22px 26px !important; }
+  .member-demo-note { margin: 18px -22px -26px !important; padding: 12px 22px !important; }
+}
+
+/* Phones: compact the four hero pathway cards so the hero isn't ~1.6 screens */
+@media (max-width: 760px) {
+  #page-home .hero-pathways .pathway-card { padding: 11px 14px !important; }
+  #page-home .hero-pathways .pathway-icon { width: 34px !important; height: 34px !important; margin-bottom: 4px !important; }
+  #page-home .hero-pathways .pathway-body h3 { font-size: 1.15rem !important; margin-bottom: 2px !important; }
+  #page-home .hero-pathways .pathway-body p { display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+}
+
+/* Small phones (~390px): four tiles, so make each card noticeably smaller
+   and align the column with consistent left/right margins */
+@media (max-width: 600px) {
+  #page-home .hero-pathways { margin-top: 14px; gap: 8px; padding: 0 4px; }
+  #page-home .hero-pathways .pathway-card { min-height: 0 !important; padding: 9px 13px !important; }
+  #page-home .hero-pathways .pathway-icon { width: 26px !important; height: 26px !important; margin-bottom: 3px !important; }
+  #page-home .hero-pathways .pathway-body h3 { font-size: 1rem !important; margin-bottom: 1px !important; }
+  #page-home .hero-pathways .pathway-body p { font-size: 0.72rem !important; line-height: 1.35; -webkit-line-clamp: 2; }
+  #page-home .hero-pathways .pathway-arrow { font-size: 1rem; margin-top: 2px; }
+}
+
+/* ════ Modals/lightbox/cart-drawer must sit ABOVE the fixed header ════
+   world.css grouped them at z-60 then raised the header to z-80, so the header
+   covered modal close buttons (e.g. the journal article "✕" on mobile). Lift
+   them above the header (80) and the floating cart (200). */
+.modal-overlay, .lightbox, .cart-drawer,
+#journal-modal, #gallery-lightbox, #snail-modal, #booking-modal { z-index: 1100 !important; }
+
+/* ════ Modal / cart close buttons — big, obvious, always-on-top tap targets ════
+   On phones the small "✕" sat near the top edge (and the header used to cover it).
+   The overlays are now z-1100 (above the header); here we also make every close
+   control a clear 42px circular button in the top-right, easy to find and tap. */
+#cart-drawer .cart-drawer-panel { position: relative; }
+@media (max-width: 600px) {
+  .modal-overlay .modal-close,
+  #journal-modal .modal-close, #booking-modal .modal-close, #snail-modal .modal-close,
+  #cart-drawer .cart-drawer-close {
+    position: absolute !important;
+    top: 12px !important; right: 12px !important;
+    width: 42px !important; height: 42px !important;
+    display: grid !important; place-items: center !important;
+    margin: 0 !important; padding: 0 !important;
+    font-size: 1.55rem !important; line-height: 1 !important;
+    color: #46372a !important; opacity: 1 !important;
+    background: rgba(247, 240, 218, 0.96) !important;
+    border: 1px solid rgba(120, 96, 60, 0.28) !important;
+    border-radius: 50% !important;
+    box-shadow: 0 3px 12px -3px rgba(60, 42, 28, 0.5) !important;
+    z-index: 40 !important;
+    transform: none !important;
+  }
+  .modal-overlay .modal-close:hover, #cart-drawer .cart-drawer-close:hover { transform: none !important; }
+  /* give panels headroom so the close button never overlaps the title */
+  .modal-overlay .modal-panel { padding-top: 60px !important; }
+  #cart-drawer .cart-drawer-header { padding-right: 58px !important; min-height: 54px; }
+}
+
+/* ═══════════ ABOUT PAGE — handmade-paper art, expressive type, CTA at the foot ═══════════
+   Additive restyle (story copy unchanged): warm "almanac paper" card, a richer sacred-
+   geometry mandala behind it, Fraunces/Caveat display type, a gold drop-cap + ink flourish,
+   a handwritten sign-off, and the "Begin your practice" CTA moved below the card. */
+
+/* Section wash: soften the dark overlay into warm paper (keeps the hero photo as faint texture) */
+#page-about .about::before{
+  background:
+    linear-gradient(155deg, rgba(244,235,212,0.94) 0%, rgba(236,224,196,0.9) 52%, rgba(228,214,182,0.96) 100%),
+    url("assets/ubhi-hero.png") center / cover;
+}
+#page-about .about::after{ background: rgba(244,235,212,0.10); }
+
+/* The card: luminous parchment instead of dark glass */
+#page-about .about-content{
+  background: rgba(247,240,221,0.82);
+  border: 1px solid rgba(201,151,42,0.30);
+  box-shadow: 0 24px 60px -36px rgba(70,50,30,0.55);
+}
+
+/* Bigger, crisper mandala art behind the card */
+#page-about .about-geo{ width: min(780px, 94vw); opacity: 0.6; }
+/* about-geo spin kept on — owner wants the motion */
+
+/* Logo reads as soft ink on the paper */
+#page-about .about-logo{ filter: brightness(0); opacity: 0.8; }
+
+/* Handwritten eyebrow */
+#page-about .about-content .eyebrow{
+  font-family: 'Caveat', cursive; font-size: 1.75rem; letter-spacing: .4px;
+  text-transform: none; color: #b0791f; opacity: .95; margin-bottom: 0;
+}
+/* Expressive italic heading, warm ink with a gold accent word */
+#page-about .about-content h2{
+  font-family: 'Fraunces', Georgia, serif; font-style: italic; font-weight: 380;
+  font-size: clamp(2.4rem, 4.6vw, 3.5rem); line-height: 1.04; letter-spacing: .4px;
+  color: #46372a; margin-bottom: 0;
+}
+#page-about .about-accent{ color: #b0791f; }
+
+/* Ink divider flourish under the heading */
+#page-about .about-flourish{ width: 180px; max-width: 72%; margin: 20px 0 2px; }
+#page-about .about-flourish svg{ width: 100%; height: auto; display: block; }
+
+/* Paragraphs: warm ink, comfortable rhythm, gold drop-cap on the first */
+#page-about .about-right p{ color: #4f4231; font-size: clamp(1rem, 1.3vw, 1.16rem); line-height: 1.74; }
+#page-about .about-right p:first-of-type::first-letter{
+  font-family: 'Fraunces', Georgia, serif; font-weight: 500; float: left;
+  font-size: 3.7em; line-height: .7; padding: 8px 12px 0 0; color: #b0791f;
+}
+/* Handwritten sign-off */
+#page-about .about-signature{
+  font-family: 'Caveat', cursive; font-size: 1.8rem; color: #b0791f;
+  text-align: right; margin-top: 4px !important;
+}
+
+/* CTA moved to the foot of the card — full-width row spanning both columns, centred */
+#page-about .about-cta{
+  grid-column: 1 / -1; text-align: center;
+  margin-top: 24px; padding-top: 24px;
+  border-top: 1px dashed rgba(201,151,42,0.32);
+}
+#page-about .about-cta .button{ margin-top: 0; }
+
+@media (max-width: 900px){
+  #page-about .about-flourish{ margin: 16px auto 2px; }
+  #page-about .about-signature{ text-align: center; }
+}
+
+/* ── About: fit the whole story on one screen (laptop & desktop ≥901px) ── */
+@media (min-width: 901px){
+  #page-about .about.section-pad{
+    min-height: 100vh;
+    justify-content: center;
+    padding-top: clamp(64px, 9vh, 96px) !important;
+    padding-bottom: clamp(18px, 2.5vh, 36px) !important;
+  }
+  #page-about .about-content{
+    padding: clamp(26px, 3vw, 40px) !important;
+    column-gap: clamp(28px, 3vw, 44px); row-gap: 16px;
+  }
+  #page-about .about-logo{ width: clamp(70px, 6.6vw, 100px); margin-bottom: 12px; }
+  #page-about .about-content h2{ font-size: clamp(2rem, 3.3vw, 2.7rem); }
+  #page-about .about-flourish{ margin: 12px 0 2px; }
+  #page-about .about-right{ gap: 9px; }
+  #page-about .about-right p{ font-size: clamp(0.95rem, 1.04vw, 1.05rem); line-height: 1.54; }
+  #page-about .about-right p:first-of-type::first-letter{ font-size: 3em; line-height: .72; padding: 4px 9px 0 0; }
+  #page-about .about-signature{ font-size: 1.5rem; margin-top: 2px !important; }
+  #page-about .about-cta{ margin-top: 14px; padding-top: 14px; }
+}
+
+/* ── About story set in a handwritten hand (Caveat) — reads like a personal letter ── */
+#page-about .about-right p{
+  font-family: 'Caveat', cursive !important;
+  font-size: clamp(1.05rem, 1.25vw, 1.2rem);
+  line-height: 1.3;
+  letter-spacing: 0.2px;
+  color: #4a3f2e;
+}
+/* keep the gold initial printed (Fraunces) as contrast against the handwriting */
+#page-about .about-right p:first-of-type::first-letter{
+  font-family: 'Fraunces', Georgia, serif;
+}
+
+/* ── Sliding carousels → draggable, hover-pausing loops (home gallery + snail sliders) ──
+   Applied by enhanceMarquee() in script.js, which moves the duplicated tracks with transform
+   (so it loops at any width). Grab cursor; vertical page scroll still works (touch-action);
+   the original keyframe marquee is switched off. */
+.js-marquee{
+  overflow: hidden;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none; -webkit-user-select: none;
+}
+.js-marquee.is-dragging{ cursor: grabbing; }
+.js-marquee > *{ animation: none !important; will-change: transform; }
+.js-marquee img{ -webkit-user-drag: none; user-drag: none; }
+
+/* ── Snail Mail hero: compact so the green letter/envelope is visible on the first screen ──
+   (keeps the top padding that clears the fixed header; trims everything below it). */
+@media (min-width: 901px){
+  #page-snail-mail .page-hero{ padding-bottom: 10px !important; }
+  #page-snail-mail .page-hero-content h1{ font-size: clamp(1.7rem, 3.8vw, 2.6rem); margin-bottom: 4px; }
+  #page-snail-mail .snail-hero-cta{ margin: 12px auto 6px !important; gap: 6px; }
+  #page-snail-mail .snail-hero-subscribe{ padding: 10px 22px 10px 16px !important; font-size: 1rem; }
+  #page-snail-mail .snail-hero-cta-note{ font-size: 1.05rem; }
+  #page-snail-mail .page-hero-content .snail-mail-ticker{ margin-top: 8px !important; padding: 5px 0 !important; }
+  #page-snail-mail .snail-story-section{ padding-top: 0 !important; }
+  #page-snail-mail .snail-story-wrapper{ padding-top: 12px !important; padding-bottom: 18px !important; min-height: 0 !important; }
+}
+
+/* ════ Social media icons — header, footer, About & mobile menu ════ */
+/* per-platform colour (important so it wins over container link colours) */
+.soc-ig{ color:#C13584 !important; }
+.soc-pin{ color:#BD081C !important; }
+.soc-mail{ color:#b07d1f !important; }
+.soc-ig, .soc-pin, .soc-mail{ display:inline-flex; align-items:center; justify-content:center; opacity:.95; transition:transform .18s ease, opacity .18s ease; }
+.soc-ig:hover, .soc-pin:hover, .soc-mail:hover{ transform:translateY(-2px) scale(1.08); opacity:1; }
+.soc-ig svg, .soc-pin svg, .soc-mail svg{ display:block; width:100%; height:100%; }
+
+/* header (desktop) — small, sits left of Sign in; never shown on mobile */
+.header-social{ display:flex; align-items:center; gap:11px; margin-right:2px; }
+.header-social a{ width:20px; height:20px; }
+
+/* footer — bigger, per request */
+.footer-social{ display:flex; gap:18px; margin-top:14px; }
+.footer-social a{ width:28px; height:28px; }
+
+/* About page — under the flourish in the left column */
+.about-social{ display:flex; gap:16px; margin-top:18px; }
+.about-social a{ width:24px; height:24px; }
+@media (max-width:900px){ .about-social{ justify-content:center; } }
+
+/* mobile menu social row — hidden until the overlay is open */
+.nav-social{ display:none; }
+
+/* Sign-in → a small, on-brand pill button (distinct from the madder "Reserve a space") */
+.nav-account{
+  display:inline-flex !important; align-items:center; gap:7px;
+  padding:7px 15px; border:1px solid rgba(201,151,42,0.45); border-radius:2px;
+  color:var(--aurora-gold) !important; opacity:1 !important;
+  background:rgba(201,151,42,0.05);
+  transition:background .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.nav-account .nav-account-ico{ width:16px; height:16px; flex:none; }
+.nav-account:hover{ background:rgba(201,151,42,0.14); border-color:rgba(201,151,42,0.78); transform:translateY(-1px); box-shadow:0 6px 14px -8px rgba(120,90,30,0.6); }
+
+@media (max-width: 940px){
+  .header-social{ display:none; }
+  .nav-account{ display:none !important; }   /* mobile uses the in-menu "Sign in" + social row */
+  .nav-links.is-open .nav-social{ display:flex; gap:28px; margin-top:8px; }
+  .nav-links.is-open .nav-social a{ width:34px; height:34px; }
+}
+
+/* ── Home hero: keep the decorative postage-stamp out of the "Yoga" heading ──
+   The hero-compaction reduced the heading's top padding, pulling the title up
+   under the stamp. Move the stamp to the top-right (where a real stamp sits on
+   a letter), clear of the left-aligned heading. */
+@media (min-width: 901px){
+  #page-home .he-stamp{
+    left: auto !important;
+    right: 4px;
+    top: 4px;
+    transform-origin: top right;
+    transform: rotate(5deg) scale(0.64);
+  }
+}
+
+/* ════════════ ADMIN — collapsible sidebar, mobile drawer, Customers tab ════════════ */
+/* header toggle (hamburger): collapses the sidebar on desktop, opens the drawer on mobile */
+#admin-dashboard .admin-header { justify-content: flex-start; gap: 14px; }
+#admin-dashboard .admin-header #admin-logout-btn { margin-left: auto; }
+.admin-nav-toggle {
+  flex: 0 0 auto; width: 40px; height: 36px; display: inline-flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 4px; cursor: pointer;
+  background: rgba(166,116,31,0.07); border: 1px solid rgba(90,68,42,0.3); border-radius: 6px;
+  transition: background .18s ease, border-color .18s ease;
+}
+.admin-nav-toggle:hover { background: rgba(166,116,31,0.16); border-color: rgba(166,116,31,0.65); }
+.admin-nav-toggle span { display: block; width: 18px; height: 2px; background: var(--gold, #a6741f); border-radius: 2px; }
+
+/* DESKTOP collapsed: hide the sidebar entirely so content takes the full width */
+#admin-dashboard.is-nav-collapsed { grid-template-columns: 0 minmax(0, 1fr) !important; column-gap: 0 !important; }
+#admin-dashboard.is-nav-collapsed .admin-tabs-nav { display: none !important; }
+
+.admin-nav-scrim { display: none; }
+
+/* count pill (Customers heading) */
+.admin-count-pill { display: inline-block; min-width: 20px; padding: 1px 7px; margin-left: 6px;
+  font-size: 0.72rem; font-family: ui-monospace, Menlo, monospace; color: #5b4a2a;
+  background: rgba(166,116,31,0.18); border-radius: 999px; vertical-align: middle; }
+
+/* small admin action buttons (Customers "Manage" cell + detail) */
+.admin-mini-btn {
+  font: inherit; font-size: 0.74rem; padding: 4px 9px; margin: 0 1px; cursor: pointer;
+  background: rgba(166,116,31,0.09); color: var(--gold, #a6741f);
+  border: 1px solid rgba(90,68,42,0.28); border-radius: 5px; transition: background .15s ease;
+}
+.admin-mini-btn:hover { background: rgba(166,116,31,0.22); }
+
+/* Customer detail card */
+.admin-customer-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px; }
+.admin-customer-detail-grid h5 { font-family: 'Fraunces', serif; font-size: 0.92rem; margin: 0 0 6px; color: var(--stardust-full, #f3e8cf); }
+.admin-customer-list { list-style: none; margin: 0; padding: 0; font-size: 0.84rem; line-height: 1.7; }
+.admin-customer-list li { border-bottom: 1px solid rgba(120,96,60,0.16); padding: 2px 0; }
+
+/* ── MOBILE (<=760px): the sidebar becomes an off-canvas drawer; tables scroll ── */
+@media (max-width: 760px) {
+  #admin-dashboard, .admin-dashboard-wrapper { display: block !important; }
+  #admin-dashboard .admin-tabs-nav, .admin-tabs-nav {
+    position: fixed !important; top: 0; left: 0; bottom: 0; width: min(80vw, 300px);
+    margin: 0; padding: 88px 16px 24px !important; border-right: 1px solid rgba(120,96,60,0.3);
+    background: linear-gradient(165deg, #f7f0dd 0%, #efe3c6 100%);
+    z-index: 1200; overflow-y: auto; transform: translateX(-100%); transition: transform .28s ease;
+    box-shadow: 6px 0 26px -10px rgba(60,42,28,0.5);
+  }
+  #admin-dashboard.is-drawer-open .admin-tabs-nav { transform: translateX(0); }
+  /* collapse class is meaningless on a drawer — always show the full menu */
+  #admin-dashboard.is-nav-collapsed .admin-tabs-nav { display: flex !important; }
+  #admin-dashboard .admin-tab-btn { font-size: 1rem !important; padding: 13px 14px !important; min-height: 44px; text-align: left; }
+  .admin-nav-scrim { display: block; position: fixed; inset: 0; z-index: 1150;
+    background: rgba(60,42,28,0.45); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+  .admin-nav-scrim[hidden] { display: none; }
+  .admin-table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #admin-dashboard .admin-table { min-width: 560px; }
+}
+
+/* ════════════ Address-label printing — on-screen preview + real A4 label sheet ════════════
+   Small letter-stickable labels (≈63.5×38.1mm, Avery L7160, 3×7 = 21 per A4). Shown on screen
+   first so the owner sees name/address/contact, then printed — only the sheet prints, and each
+   label stays whole across page breaks (page-break-inside: avoid). */
+body.sticker-preview-open { overflow: hidden; }
+#sticker-preview-overlay {
+  position: fixed; inset: 0; z-index: 9999; overflow: auto;
+  background: rgba(60, 42, 28, 0.55); padding: 18px;
+}
+#sticker-preview-overlay .sticker-toolbar {
+  position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 12px;
+  align-items: center; justify-content: space-between; max-width: 210mm; margin: 0 auto 14px;
+  background: #2c2620; color: #f3e8cf; padding: 12px 16px; border-radius: 8px;
+}
+#sticker-preview-overlay .stk-count { font-family: Georgia, serif; font-size: 0.92rem; }
+#sticker-preview-overlay .stk-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+#sticker-preview-overlay .sticker-sheet {
+  width: 210mm; max-width: 100%; margin: 0 auto; background: #fff;
+  padding: 10mm 6mm; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45); color: #111;
+  font-size: 0;   /* collapse inline-block whitespace so exactly 3 fit per row */
+}
+#sticker-preview-overlay .address-label {
+  display: inline-block; vertical-align: top; width: 33.33%; height: 38mm;
+  box-sizing: border-box; padding: 4mm 4.5mm; border: 1px dashed #cdcdcd; overflow: hidden;
+  font-family: Arial, Helvetica, sans-serif; font-size: 10pt; line-height: 1.3; color: #111;
+  page-break-inside: avoid; break-inside: avoid;
+}
+#sticker-preview-overlay .al-name { font-weight: bold; text-transform: uppercase; font-size: 10.5pt; letter-spacing: 0.02em; margin-bottom: 1.6mm; }
+#sticker-preview-overlay .al-address { font-size: 9.5pt; }
+#sticker-preview-overlay .al-contact { margin-top: 1.6mm; font-size: 8.5pt; color: #555; }
+
+/* The actual printing happens inside an isolated hidden iframe (#sticker-print-frame),
+   so the main page never needs to hijack print. We only hide the on-screen preview +
+   the hidden frame in case the owner hits Ctrl+P on the main page. */
+@media print {
+  #sticker-preview-overlay, #sticker-print-frame { display: none !important; }
+}
+
+/* ════════════ Admin large-list management: filter chips · sort · pagination · bulk ════════════ */
+.admin-list-controls { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; margin:0 0 14px; }
+.admin-list-controls:empty { display:none; }
+.admin-list-controls .alc-chips { display:flex; flex-wrap:wrap; gap:8px; }
+.admin-list-controls .alc-chip { background:rgba(255,255,255,0.05); border:1px solid var(--border-color); color:var(--mist); padding:6px 13px; border-radius:999px; font-size:0.82rem; cursor:pointer; transition:background .15s,color .15s,border-color .15s; }
+.admin-list-controls .alc-chip:hover { color:var(--gold); border-color:var(--aurora-gold); }
+.admin-list-controls .alc-chip.is-active { background:var(--aurora-gold); border-color:var(--aurora-gold); color:var(--dark-cosmos); font-weight:600; }
+.admin-list-controls .alc-n { opacity:0.65; font-size:0.78em; font-variant-numeric:tabular-nums; }
+.admin-list-controls .alc-chip.is-active .alc-n { opacity:0.85; }
+.admin-list-controls .alc-right { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+.admin-list-controls .alc-field { font-size:0.78rem; color:var(--mist); display:flex; align-items:center; gap:6px; }
+.admin-list-controls .alc-field select { background:rgba(255,255,255,0.05); border:1px solid var(--border-color); color:var(--gold); border-radius:4px; padding:5px 8px; font-size:0.82rem; max-width:230px; }
+
+.admin-bulk-bar { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; background:rgba(212,175,110,0.12); border:1px solid var(--aurora-gold); border-radius:6px; padding:9px 14px; margin:0 0 14px; }
+.admin-bulk-bar[hidden] { display:none; }
+.admin-bulk-bar .bulk-n { color:var(--gold); font-weight:600; font-size:0.85rem; }
+.admin-bulk-bar .bulk-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.admin-bulk-bar .bulk-btn { padding:5px 12px; font-size:0.8rem; }
+.admin-bulk-bar .bulk-clear { background:none; border:none; color:var(--mist); text-decoration:underline; cursor:pointer; font-size:0.8rem; padding:5px 4px; }
+.admin-bulk-bar .bulk-clear:hover { color:var(--gold); }
+
+.admin-pager { display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:space-between; margin:14px 0 0; color:var(--mist); font-size:0.82rem; }
+.admin-pager:empty { display:none; }
+.admin-pager .pager-count strong { color:var(--gold); font-variant-numeric:tabular-nums; }
+.admin-pager .pager-nav { display:flex; gap:8px; align-items:center; }
+.admin-pager .pager-btn { background:rgba(255,255,255,0.05); border:1px solid var(--border-color); color:var(--gold); border-radius:4px; padding:5px 12px; font-size:0.82rem; cursor:pointer; }
+.admin-pager .pager-btn:hover:not([disabled]) { border-color:var(--aurora-gold); }
+.admin-pager .pager-btn[disabled] { opacity:0.4; cursor:not-allowed; }
+.admin-pager .pager-page { color:var(--gold); font-variant-numeric:tabular-nums; }
+
+/* ════════════ Concise admin list controls · sub-tabs · sortable headers ════════════ */
+.admin-list-controls { gap:8px; margin:0 0 10px; }
+.admin-list-controls .alc-chips { gap:6px; }
+.admin-list-controls .alc-chip { padding:3px 10px; font-size:0.74rem; }
+.admin-list-controls .alc-field { font-size:0.72rem; gap:5px; }
+.admin-list-controls .alc-field select { padding:3px 7px; font-size:0.76rem; }
+.admin-bulk-bar { padding:7px 12px; margin:0 0 10px; }
+.admin-bulk-bar .bulk-n { font-size:0.8rem; }
+.admin-bulk-bar .bulk-btn { padding:4px 10px; font-size:0.76rem; }
+.admin-pager { margin:10px 0 0; font-size:0.76rem; }
+.admin-pager .pager-btn { padding:4px 10px; font-size:0.76rem; }
+
+.admin-subtabs { display:flex; flex-wrap:wrap; gap:4px; margin:0 0 16px; border-bottom:1px solid var(--border-color); }
+.admin-subtab { background:none; border:none; border-bottom:2px solid transparent; color:var(--mist); padding:9px 16px; cursor:pointer; font-size:0.9rem; font-family:inherit; margin-bottom:-1px; transition:color .15s,border-color .15s; }
+.admin-subtab:hover { color:var(--gold); }
+.admin-subtab.is-active { color:var(--gold); border-bottom-color:var(--aurora-gold); font-weight:600; }
+.admin-subtab-n { display:inline-block; min-width:18px; padding:1px 6px; margin-left:4px; border-radius:999px; background:rgba(255,255,255,0.08); color:var(--mist); font-size:0.72rem; font-weight:600; vertical-align:middle; }
+.admin-subtab.is-active .admin-subtab-n { background:var(--aurora-gold); color:var(--dark-cosmos); }
+.admin-subpanel { display:none; }
+.admin-subpanel.is-active { display:block; }
+
+.admin-th-sort { cursor:pointer; user-select:none; white-space:nowrap; }
+.admin-th-sort:hover { color:var(--gold); }
+.admin-th-sort.is-sorted { color:var(--aurora-gold); }
+.admin-th-sort .th-arrow { font-size:0.7em; color:var(--aurora-gold); }
+
+/* ════════════ Admin Orders & Bookings — parchment styling + compact density ════════════
+   Reverted from the dark experiment. Controls now use the DEFINED palette tokens (--ink,
+   --ink-soft, --mist, --aurora-gold) so they read cleanly on the light theme instead of the
+   washed-out look caused by undefined variables. Tables are tightened so many more rows fit. */
+.admin-list-controls .alc-chip { background: rgba(166,116,31,0.07); border: 1px solid rgba(120,96,60,0.35); color: var(--ink-soft); }
+.admin-list-controls .alc-chip:hover { background: rgba(166,116,31,0.15); border-color: var(--aurora-gold); color: var(--aurora-gold); }
+.admin-list-controls .alc-chip.is-active { background: var(--aurora-gold); border-color: var(--aurora-gold); color: #fdf6e3; font-weight: 600; }
+.admin-list-controls .alc-chip .alc-n { opacity: 0.7; }
+.admin-list-controls .alc-field { color: var(--mist); }
+.admin-list-controls .alc-field select { color: var(--ink-soft); border-color: rgba(120,96,60,0.35); }
+.admin-bulk-bar { background: rgba(166,116,31,0.1); border-color: var(--aurora-gold); }
+.admin-bulk-bar .bulk-n { color: var(--ink); }
+.admin-bulk-bar .bulk-clear { color: var(--mist); }
+.admin-pager { color: var(--mist); }
+.admin-pager .pager-count strong { color: var(--aurora-gold); }
+.admin-pager .pager-btn { color: var(--ink-soft); border-color: rgba(120,96,60,0.35); }
+.admin-pager .pager-page { color: var(--aurora-gold); }
+.admin-subtabs { border-bottom-color: rgba(120,96,60,0.3); }
+.admin-subtab { color: var(--mist); }
+.admin-subtab:hover { color: var(--aurora-gold); }
+.admin-subtab.is-active { color: var(--ink); border-bottom-color: var(--aurora-gold); }
+.admin-subtab-n { background: rgba(120,96,60,0.15); color: var(--ink-soft); }
+.admin-subtab.is-active .admin-subtab-n { background: var(--aurora-gold); color: #fdf6e3; }
+.admin-th-sort:hover { color: var(--aurora-gold); }
+.admin-th-sort.is-sorted { color: var(--aurora-gold); }
+.admin-th-sort .th-arrow { color: var(--aurora-gold); }
+
+/* Compact density — fit far more data per screen */
+#admin-tab-orders .admin-section-card { padding: 16px; }
+#admin-tab-orders .admin-table th,
+#admin-tab-orders .admin-table td { padding: 6px 9px; line-height: 1.3; }
+#admin-tab-orders .admin-table td { font-size: 0.8rem; }
+#admin-tab-orders .admin-table th { font-size: 0.64rem; }
+#admin-tab-orders .admin-table-title { font-size: 0.88rem; }
+#admin-tab-orders .admin-status-select { padding: 3px 6px; font-size: 0.76rem; }
+#admin-tab-orders .admin-action-btn-danger { padding: 3px 7px !important; font-size: 0.72rem !important; }
+
+/* Compact header actions + search for the Orders tab (smaller buttons/icons, less wasted space) */
+#admin-tab-orders .admin-card-header-actions { gap: 10px; margin-bottom: 12px; }
+#admin-tab-orders .admin-card-header-actions h4 { font-size: 1.12rem; margin-bottom: 0; letter-spacing: 0.03em; }
+#admin-tab-orders .admin-header-buttons { gap: 8px; }
+#admin-tab-orders .admin-header-buttons .button { padding: 6px 13px !important; font-size: 0.72rem !important; letter-spacing: 0.04em; border-radius: 5px; }
+#admin-tab-orders #admin-orders-search,
+#admin-tab-orders #admin-bookings-search { padding: 7px 12px !important; font-size: 0.82rem !important; }
+#admin-tab-orders .admin-section-card > div[style*="margin-bottom: 16px"] { margin-bottom: 10px !important; }
+
+/* Tighter vertical rhythm for Orders & Bookings — match the Snail Mail section's density */
+#admin-tab-orders .admin-table th,
+#admin-tab-orders .admin-table td { padding: 4px 9px; line-height: 1.2; vertical-align: middle; }
+#admin-tab-orders #admin-workshop-bookings-table-body td span { font-size: 0.68rem; }
+#admin-tab-orders .admin-table-title { font-size: 0.86rem; }
+#admin-tab-orders .admin-status-select { padding: 2px 6px; }
+#admin-tab-orders .admin-action-btn-danger { padding: 2px 7px !important; }
+#admin-tab-orders .admin-section-card { padding: 14px 16px; }
+#admin-tab-orders .admin-list-controls { margin-bottom: 8px; }
+#admin-tab-orders .admin-pager { margin-top: 8px; }
+
+/* Cap cell content to one line (full text on hover via title=) so rows stay short like Snail Mail */
+#admin-tab-orders #admin-shop-orders-table-body td,
+#admin-tab-orders #admin-workshop-bookings-table-body td { white-space: nowrap !important; overflow: hidden; text-overflow: ellipsis; max-width: 210px; }
+#admin-tab-orders #admin-workshop-bookings-table-body td strong,
+#admin-tab-orders #admin-workshop-bookings-table-body td span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* The status dropdown ships with min-height:50px which inflated every order row — shrink it */
+#admin-tab-orders .admin-status-select { min-height: 0 !important; height: auto !important; padding: 3px 8px !important; line-height: 1.2 !important; }
+
+/* Row checkboxes were inheriting the 50px form-input height (the real cause of tall rows) — restore them */
+#admin-tab-orders input[type="checkbox"] {
+  -webkit-appearance: auto !important; appearance: auto !important;
+  min-height: 0 !important; height: 15px !important; width: 15px !important;
+  padding: 0 !important; margin: 0 !important; vertical-align: middle;
+  background: none !important; box-shadow: none !important; accent-color: #a6741f;
+}
+
+/* ════════════ Site Profile: Website Text editor + custom footer socials ════════════ */
+#admin-text-editor .text-edit-group { margin-bottom: 18px; }
+#admin-text-editor .text-edit-group h5 { font-family: 'Fraunces', serif; font-style: italic; color: var(--aurora-gold); font-size: 1.05rem; margin: 0 0 8px; border-bottom: 1px solid rgba(120,96,60,0.3); padding-bottom: 5px; }
+#admin-text-editor .text-edit-row { display: block; margin-bottom: 8px; }
+#admin-text-editor .text-edit-input { width: 100%; font-family: inherit; font-size: 0.88rem; line-height: 1.4; resize: vertical; padding: 7px 10px; background: var(--paper-cream); border: 1px solid rgba(120,96,60,0.35); border-radius: 4px; color: var(--ink); }
+#admin-text-editor .text-edit-row.is-changed .text-edit-input { border-color: var(--aurora-gold); background: #fffdf6; }
+
+#extra-socials-list .extra-social-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; align-items: center; }
+#extra-socials-list .xs-label { flex: 1; min-width: 110px; }
+#extra-socials-list .xs-icon { width: 58px; text-align: center; }
+#extra-socials-list .xs-url { flex: 2; min-width: 170px; }
+#extra-socials-list .xs-remove { padding: 6px 11px !important; min-height: 0 !important; font-size: 0.85rem !important; }
+
+/* Owner-added social links in the footer (match the existing footer icons) */
+.footer-social a.soc-custom { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; font-size: 17px; line-height: 1; text-decoration: none; color: var(--aurora-gold); transition: transform .2s ease; }
+.footer-social a.soc-custom:hover { transform: translateY(-2px); }
+
+/* Website Text editor — collapsible page sections (easy, tidy) */
+#admin-text-editor details.text-edit-group { border: 1px solid rgba(120,96,60,0.25); border-radius: 8px; margin-bottom: 10px; background: rgba(255,255,255,0.025); overflow: hidden; }
+#admin-text-editor details.text-edit-group > summary { cursor: pointer; padding: 12px 14px; font-family: 'Fraunces', serif; font-style: italic; color: var(--ink); font-size: 1.06rem; display: flex; align-items: center; gap: 10px; list-style: none; user-select: none; }
+#admin-text-editor details.text-edit-group > summary::-webkit-details-marker { display: none; }
+#admin-text-editor details.text-edit-group > summary .teg-name { flex: 1; }
+#admin-text-editor details.text-edit-group > summary .teg-count { font-size: 0.72rem; font-style: normal; color: var(--mist); background: rgba(120,96,60,0.12); padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+#admin-text-editor details.text-edit-group > summary::after { content: "\25BE"; color: var(--aurora-gold); font-size: 0.8rem; transition: transform .2s ease; }
+#admin-text-editor details.text-edit-group[open] > summary::after { transform: rotate(180deg); }
+#admin-text-editor details.text-edit-group[open] > summary { border-bottom: 1px solid rgba(120,96,60,0.18); background: rgba(166,116,31,0.05); }
+#admin-text-editor .teg-body { padding: 10px 14px 12px; }
+
+/* ════════════ Workshop tile share button + booking quantity stepper ════════════ */
+.workshop-card { position: relative; }
+.workshop-share { position: absolute; top: 12px; right: 12px; z-index: 4; width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(201,151,42,0.55); background: rgba(248,241,223,0.92); color: var(--ochre, #a6741f); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 14px rgba(60,42,28,0.2); transition: transform .2s ease, background .2s ease, color .2s ease; -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.workshop-share svg { width: 18px; height: 18px; }
+.workshop-share:hover { transform: translateY(-2px) scale(1.07); background: var(--ochre, #a6741f); color: #fff8ea; }
+.workshop-card-highlight { animation: ws-pulse 2.5s ease; }
+@keyframes ws-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(201,151,42,0); } 12% { box-shadow: 0 0 0 5px rgba(201,151,42,0.55); } 70% { box-shadow: 0 0 0 5px rgba(201,151,42,0.22); } }
+
+#modal-qty-field { margin: 2px 0; }
+.modal-qty-stepper { display: inline-flex; align-items: center; border: 1px solid rgba(201,151,42,0.45); border-radius: 9px; overflow: hidden; margin-top: 6px; vertical-align: middle; }
+.modal-qty-stepper button { width: 40px; height: 40px; border: none; background: rgba(201,151,42,0.12); color: var(--ochre, #a6741f); font-size: 1.25rem; line-height: 1; cursor: pointer; transition: background .15s ease; }
+.modal-qty-stepper button:hover:not(:disabled) { background: rgba(201,151,42,0.24); }
+.modal-qty-stepper button:disabled { opacity: 0.35; cursor: not-allowed; }
+.modal-qty-stepper input { width: 52px; height: 40px; text-align: center; border: none; border-left: 1px solid rgba(201,151,42,0.3); border-right: 1px solid rgba(201,151,42,0.3); background: transparent; font-size: 1.05rem; font-weight: 600; color: inherit; -moz-appearance: textfield; }
+.modal-qty-stepper input::-webkit-outer-spin-button, .modal-qty-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.modal-qty-note { display: block; font-size: 0.8rem; color: var(--mist); margin-top: 7px; }
+
+.ws-share-toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(12px); background: #2c2620; color: #f3e8cf; padding: 10px 18px; border-radius: 9px; font-size: 0.9rem; z-index: 4000; opacity: 0; transition: opacity .25s ease, transform .25s ease; pointer-events: none; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+.ws-share-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Shop product share button — top-left so it never collides with the stock badge */
+.product-share { left: 12px; right: auto; }
+
+/* ════════════ Art Portfolio page ════════════ */
+/* Hero — centred like Shop / Workshop, but heading kept compact so the whole
+   page fits comfortably on one screen. */
+#page-art .page-hero { min-height: auto; display: flex; flex-direction: column; align-items: center; text-align: center; justify-content: center; overflow: hidden; padding: clamp(76px, 10vw, 100px) clamp(20px, 5.5vw, 80px) clamp(16px, 2.4vw, 24px); }
+/* Bounded width so the ticker clips to a clean window and the marquee scrolls
+   (without it the nowrap ticker blows the hero out to ~2800px and looks frozen). */
+#page-art .page-hero-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; width: min(920px, 100%); max-width: 100%; }
+#page-art .page-hero-content h1 { font-family: "Fraunces", Georgia, serif; font-weight: 300; font-style: italic; font-size: clamp(1.5rem, 3vw, 2.3rem); letter-spacing: -0.01em; margin-bottom: 6px; }
+
+/* Hero ticker — same marquee as Shop / Workshop */
+#page-art .page-hero-content .art-ticker { display: flex; overflow: hidden; width: 100%; margin-top: 14px; border-top: 1px solid rgba(201,151,42,0.08); border-bottom: 1px solid rgba(201,151,42,0.08); padding: 7px 0; pointer-events: none; }
+#page-art .page-hero-content .art-ticker-track { display: flex; flex-shrink: 0; align-items: center; gap: 32px; padding-right: 32px; animation: artMarquee 50s linear infinite; font-family: "EB Garamond", sans-serif; font-size: clamp(0.55rem, 0.85vw, 0.65rem); font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(58,44,32,0.8); }
+#page-art .page-hero-content .art-ticker-track span { white-space: nowrap; }
+#page-art .page-hero-content .art-ticker-track .ptr-svg-wrap { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; opacity: 0.85; }
+#page-art .page-hero-content .art-ticker-track .ptr-svg-wrap svg { width: 100%; height: 100%; }
+@keyframes artMarquee { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+
+.art-portfolio-section { max-width: 1100px; margin: 0 auto; padding-top: clamp(20px, 3vw, 34px); padding-bottom: clamp(28px, 4vw, 48px); }
+.art-portfolio-section .section-heading { text-align: center; margin-bottom: 20px; }
+.art-portfolio-sub { font-size: 1.25rem; color: var(--ink, #2b2018); margin: 0 0 6px; }
+.art-portfolio-note { color: var(--mist, #5f4b39); font-size: 0.9rem; max-width: none; margin: 0 auto; white-space: nowrap; }
+.art-portfolio-note a { color: var(--aurora-gold, #a6741f); text-decoration: underline; text-underline-offset: 2px; }
+@media (max-width: 760px) { .art-portfolio-note { white-space: normal; max-width: 520px; } }
+.art-portfolio-empty { grid-column: 1 / -1; text-align: center; color: var(--mist, #5f4b39); padding: 50px 20px; font-style: italic; }
+
+/* Compact grid of small images — click any to browse it enlarged (left / right) */
+.art-portfolio-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.art-portfolio-tile { position: relative; margin: 0; border-radius: 12px; overflow: hidden; background: var(--glass-bg, rgba(248,241,223,0.82)); border: 1px solid var(--glass-border, rgba(90,68,42,0.24)); box-shadow: 0 8px 22px -8px rgba(60,42,28,0.3); cursor: zoom-in; transition: transform .25s ease, box-shadow .25s ease; }
+.art-portfolio-tile:hover { transform: translateY(-4px); box-shadow: 0 16px 34px -10px rgba(60,42,28,0.4); }
+.art-portfolio-tile img { display: block; width: 100%; height: 200px; object-fit: cover; transition: transform .4s ease; }
+.art-portfolio-tile:hover img { transform: scale(1.06); }
+.art-portfolio-tile figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 12px 10px; font-size: 0.82rem; color: #fdf6e6; background: linear-gradient(to top, rgba(38,28,18,0.8), rgba(38,28,18,0)); opacity: 0; transform: translateY(8px); transition: opacity .25s ease, transform .25s ease; }
+.art-portfolio-tile:hover figcaption { opacity: 1; transform: translateY(0); }
+
+@media (max-width: 920px) { .art-portfolio-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 640px) {
+  .art-portfolio-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .art-portfolio-tile img { height: 150px; }
+  .art-portfolio-tile figcaption { opacity: 1; transform: none; font-size: 0.72rem; padding: 16px 8px 7px; }
+}
+
+/* Badge on tiles that hold more than one photo (swipe when opened) */
+.art-tile-count { position: absolute; top: 8px; right: 8px; z-index: 2; display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px; border-radius: 20px; background: rgba(38,28,18,0.72); color: #fdf6e6; font-size: 0.72rem; font-weight: 600; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); pointer-events: none; }
+.art-tile-count svg { display: block; }
+
+/* ── Admin · Art Portfolio management (easy multi-photo pieces) ── */
+.admin-help-text { font-size: 0.85rem; line-height: 1.5; color: var(--mist, #5f4b39); margin: -4px 0 14px; }
+.art-admin-piece { border: 1px solid rgba(90,68,42,0.22); border-radius: 10px; padding: 14px; margin-bottom: 14px; background: rgba(255,253,245,0.55); }
+.art-admin-piece-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.art-admin-title { flex: 1 1 220px; min-width: 0; padding: 8px 10px; border: 1px solid rgba(90,68,42,0.3); border-radius: 7px; background: #fffdf7; color: var(--ink, #2b2018); font-family: "Fraunces", serif; font-style: italic; font-size: 1.05rem; }
+.art-admin-count { font-size: 0.78rem; color: var(--mist, #5f4b39); white-space: nowrap; }
+.art-admin-thumbs { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.art-admin-thumb { position: relative; width: 84px; height: 84px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(90,68,42,0.28); box-shadow: 0 4px 12px -6px rgba(60,42,28,0.4); }
+.art-admin-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.art-admin-cover { position: absolute; left: 0; right: 0; bottom: 0; text-align: center; font-size: 0.58rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 0; background: rgba(166,116,31,0.92); color: #fff8ea; }
+.art-admin-thumb-del { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 50%; border: none; background: rgba(158,52,41,0.92); color: #fff; font-size: 0.7rem; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+.art-admin-thumb-del:hover { background: #872419; }
+.art-admin-add { width: 84px; height: 84px; border: 1.5px dashed rgba(120,96,60,0.55); border-radius: 8px; display: grid; place-items: center; text-align: center; cursor: pointer; color: var(--ochre, #a6741f); font-size: 0.74rem; line-height: 1.2; padding: 4px; transition: background .2s ease, border-color .2s ease; }
+.art-admin-add:hover { background: rgba(166,116,31,0.08); border-color: var(--ochre, #a6741f); }
+.art-admin-hint { font-size: 0.72rem; color: var(--mist, #5f4b39); opacity: 0.85; margin: 10px 0 0; font-style: italic; }
+
+/* Lightbox dot indicator — shows how many photos a piece has & lets you jump */
+.lightbox-dots { display: flex; gap: 8px; justify-content: center; align-items: center; margin-top: 14px; }
+.lb-dot { width: 9px; height: 9px; padding: 0; border: none; border-radius: 50%; background: rgba(255,240,220,0.42); cursor: pointer; transition: width .25s ease, background .25s ease; }
+.lb-dot:hover { background: rgba(255,240,220,0.75); }
+.lb-dot.is-active { width: 24px; border-radius: 5px; background: var(--ochre, #a6741f); }
+.lb-dot:focus-visible { outline: 2px solid #fff8ea; outline-offset: 2px; }
+
+/* Lightbox: browse images left / right (arrows + ← → keys), with a caption */
+.lightbox-figure { margin: 0; display: flex; flex-direction: column; align-items: center; max-width: 90vw; }
+.lightbox-cap { margin: 12px 0 0; color: #f3e8cf; font-size: 0.9rem; font-style: italic; text-align: center; max-width: 80vw; }
+.lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 52px; height: 52px; border-radius: 50%; border: 1px solid rgba(255,240,220,0.45); background: rgba(40,30,20,0.45); color: #fff8ea; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; transition: background .2s ease, transform .2s ease; -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.lightbox-nav svg { width: 24px; height: 24px; }
+.lightbox-nav:hover { background: rgba(166,116,31,0.9); transform: translateY(-50%) scale(1.08); }
+.lightbox-prev { left: clamp(10px, 4vw, 44px); }
+.lightbox-next { right: clamp(10px, 4vw, 44px); }
+@media (max-width: 640px) {
+  .lightbox-nav { width: 42px; height: 42px; }
+  .lightbox-nav svg { width: 20px; height: 20px; }
+  .lightbox-prev { left: 8px; }
+  .lightbox-next { right: 8px; }
+}
+
+/* ════════════ Header — compact height, logo tagline, balanced nav ════════════ */
+/* Shorter bar: trim the vertical padding and the logo so the header takes less
+   height, and tuck the brand line directly beneath the logo. */
+.site-header { padding-top: 11px; padding-bottom: 11px; }
+.site-header.is-scrolled { padding-top: 8px; padding-bottom: 8px; }
+
+.brand { display: inline-flex; flex-direction: column; align-items: center; gap: 3px; line-height: 1; }
+.brand img { width: clamp(76px, 8vw, 98px); }
+.brand-tagline {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ochre, #a6741f);
+  opacity: 0.92;
+  white-space: nowrap;
+}
+
+/* The desktop inline nav carries 7 links. Keep them on one line (tighter gap +
+   trimmed letter-spacing vs world.css's 0.2em) while giving the type a readable
+   size. Scoped to ≥941px so the mobile overlay menu keeps its larger sizing. */
+@media (min-width: 941px) {
+  .nav-links {
+    font-size: clamp(0.78rem, 0.9vw, 0.85rem);
+    gap: clamp(12px, 1.5vw, 22px);
+    letter-spacing: 0.05em;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+  .nav-links a { white-space: nowrap; }
+  /* Pull the social / sign-in / CTA cluster nearer the right edge (was ~110px). */
+  .site-header { padding-right: clamp(78px, 6vw, 96px); }
+  .header-right { gap: clamp(10px, 1.3vw, 18px); }
+}
+
+/* Mobile: keep the brand line subtle and let the header stay compact. */
+@media (max-width: 640px) {
+  .brand-tagline { font-size: 0.5rem; letter-spacing: 0.12em; }
+}
+
+
+/* Admin · server-connection status pill */
+.srv-pill { font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; padding: 3px 9px; border-radius: 20px; margin-left: 8px; vertical-align: middle; }
+.srv-pill.srv-off { background: rgba(120,96,60,0.16); color: var(--mist, #5f4b39); }
+.srv-pill.srv-on { background: rgba(74,112,96,0.20); color: #3a6a55; }

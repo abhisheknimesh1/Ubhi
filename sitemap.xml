@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Ubhi.in sitemap.
+     NOTE for developer: this is a hash-routed single-page app, so search
+     engines treat it as one URL by default. The hash routes are listed below
+     for reference; for true per-page indexing, switch to real paths (e.g.
+     /workshops, /shop) at deploy and regenerate this file with <lastmod> dates. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://ubhi.in/</loc><priority>1.0</priority></url>
+  <url><loc>https://ubhi.in/#workshops</loc><priority>0.9</priority></url>
+  <url><loc>https://ubhi.in/#shop</loc><priority>0.9</priority></url>
+  <url><loc>https://ubhi.in/#snail-mail</loc><priority>0.9</priority></url>
+  <url><loc>https://ubhi.in/#journal</loc><priority>0.7</priority></url>
+  <url><loc>https://ubhi.in/#about</loc><priority>0.6</priority></url>
+  <url><loc>https://ubhi.in/#contact</loc><priority>0.6</priority></url>
+  <url><loc>https://ubhi.in/#faq</loc><priority>0.5</priority></url>
+  <url><loc>https://ubhi.in/#shipping</loc><priority>0.4</priority></url>
+  <url><loc>https://ubhi.in/#refunds</loc><priority>0.4</priority></url>
+  <url><loc>https://ubhi.in/#terms</loc><priority>0.3</priority></url>
+  <url><loc>https://ubhi.in/#privacy</loc><priority>0.3</priority></url>
+  <url><loc>https://ubhi.in/#cookies</loc><priority>0.3</priority></url>
+</urlset>

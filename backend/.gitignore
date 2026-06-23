@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Environment / secrets — NEVER commit real values
+.env
+.env.local
+.env.*.local
+
+# JSON file store data (created on demand by JsonStore)
+db/data/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Uploaded images (created on demand by routes/upload.js)
+uploads/

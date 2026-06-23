@@ -1,0 +1,37 @@
+{
+  "name": "ubhi-backend",
+  "version": "1.0.0",
+  "description": "Ubhi brand site backend — Node.js + Express API with a zero-config JSON file store (default) that switches to PostgreSQL when DATABASE_URL is set.",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "seed": "node db/seed.js"
+  },
+  "keywords": [
+    "ubhi",
+    "express",
+    "api",
+    "backend"
+  ],
+  "author": "Ubhi",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.9.14",
+    "stripe": "^16.8.0"
+  },
+  "optionalDependencies": {
+    "pg": "^8.12.0"
+  }
+}

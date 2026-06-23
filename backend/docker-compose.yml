@@ -1,0 +1,106 @@
+# Ubhi backend — local/production-like stack: PostgreSQL + the API.
+#
+# Usage:
+#   1. Copy .env.example to .env and fill in real values (JWT_SECRET, etc.).
+#   2. docker compose up --build
+#   3. (first run) seed the owner + sample data:
+#        docker compose exec api node db/seed.js
+#
+# The "api" service is built from ./Dockerfile and connects to the "db"
+# Postgres service. Because DATABASE_URL is set here, the API uses PostgresStore
+# and runs db/schema.sql on boot. All env var names below match backend/config.js.
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      # These three configure the Postgres server itself. They must line up
+      # with the DATABASE_URL given to the api service below.
+      POSTGRES_USER: ubhi
+      POSTGRES_PASSWORD: ubhi
+      POSTGRES_DB: ubhi
+    volumes:
+      # Named volume keeps data across container restarts / rebuilds.
+      - ubhi_db_data:/var/lib/postgresql/data
+    healthcheck:
+      # api waits until Postgres is actually accepting connections.
+      test: ["CMD-SHELL", "pg_isready -U ubhi -d ubhi"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    # Not published to the host by default — only the api service needs it.
+    # Uncomment to inspect the DB from your machine:
+    # ports:
+    #   - "5432:5432"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    # Pull optional secrets (JWT_SECRET, Stripe, SMTP, owner seed creds) from a
+    # local .env if present. env_file is optional — explicit values below win
+    # for the keys they set.
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # --- Server (config.js: PORT, NODE_ENV) ---
+      PORT: 8090
+      NODE_ENV: production
+
+      # --- Database (config.js: DATABASE_URL) ---
+      # Points at the db service over the compose network. Host "db" resolves to
+      # the Postgres container. Credentials/db name match the db service above.
+      DATABASE_URL: postgres://ubhi:ubhi@db:5432/ubhi
+
+      # --- Auth (config.js: JWT_SECRET) ---
+      # REQUIRED — compose refuses to start until you set a strong value in .env
+      # (generate one with: node -e "console.log(require('crypto').randomBytes(48).toString('hex'))").
+      JWT_SECRET: ${JWT_SECRET:?set a strong JWT_SECRET in .env before starting}
+
+      # --- CORS (config.js: CORS_ORIGIN) ---
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+
+      # --- Stripe (config.js: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET) ---
+      # Leave blank to disable payments. Set in .env to enable.
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+
+      # --- Email / SMTP (config.js: SMTP_*, FROM_EMAIL) ---
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      FROM_EMAIL: ${FROM_EMAIL:-hello@ubhi.example}
+
+      # --- Seed owner (config.js: OWNER_EMAIL, OWNER_PASSWORD) ---
+      # Consumed by "node db/seed.js". Override in .env before seeding.
+      OWNER_EMAIL: ${OWNER_EMAIL:-owner@ubhi.example}
+      OWNER_PASSWORD: ${OWNER_PASSWORD:?set a strong OWNER_PASSWORD in .env before seeding}
+
+      # --- Shop economics (config.js: SHIPPING_FLAT, FREE_SHIP_THRESHOLD) ---
+      SHIPPING_FLAT: ${SHIPPING_FLAT:-3.95}
+      FREE_SHIP_THRESHOLD: ${FREE_SHIP_THRESHOLD:-50}
+    ports:
+      # Host:container — reach the API at http://localhost:8090/api/health
+      - "8090:8090"
+    healthcheck:
+      # node is in the image; curl/wget may not be. Use node to probe /api/health.
+      test:
+        - "CMD"
+        - "node"
+        - "-e"
+        - "require('http').get('http://127.0.0.1:8090/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  ubhi_db_data:

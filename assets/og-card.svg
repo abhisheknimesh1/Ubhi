@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" font-family="Georgia, 'Times New Roman', serif">
+  <defs>
+    <radialGradient id="lamp" cx="22%" cy="14%" r="90%">
+      <stop offset="0" stop-color="#fbf3dd"/>
+      <stop offset="60%" stop-color="#ece0c2"/>
+      <stop offset="100%" stop-color="#ddc9a0"/>
+    </radialGradient>
+    <radialGradient id="wax" cx="38%" cy="32%" r="75%">
+      <stop offset="0" stop-color="#c2503c"/><stop offset="55%" stop-color="#a23a2c"/><stop offset="100%" stop-color="#7c2a20"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#lamp)"/>
+  <rect x="28" y="28" width="1144" height="574" fill="none" stroke="#5f4b39" stroke-width="1.5" opacity="0.32"/>
+  <rect x="20" y="20" width="1160" height="590" fill="none" stroke="#5f4b39" stroke-width="0.8" opacity="0.2"/>
+
+  <!-- postage stamp -->
+  <g transform="translate(96,92) rotate(-6)">
+    <rect width="104" height="124" fill="#f7f0da" stroke="#a6741f" stroke-width="1.2"/>
+    <rect x="8" y="8" width="88" height="108" fill="none" stroke="#5f4b39" stroke-width="0.8" opacity="0.5"/>
+    <path d="M52 96 C40 86 30 84 24 84 C26 70 38 66 44 70 C40 56 48 46 52 42 C56 46 64 56 60 70 C66 66 78 70 80 84 C72 84 64 86 52 96Z" fill="none" stroke="#a6741f" stroke-width="1.4"/>
+    <text x="52" y="116" text-anchor="middle" font-size="10" letter-spacing="2" fill="#8a5e16">UBHI POST</text>
+  </g>
+
+  <!-- eucalyptus sprig -->
+  <g transform="translate(1010,360)" fill="none" stroke="#4a7060" stroke-width="2" stroke-linecap="round">
+    <path d="M70 220 C60 150 80 80 130 20"/>
+    <path d="M66 188 C40 184 24 192 12 204"/><path d="M70 150 C48 148 33 156 24 168"/>
+    <path d="M82 112 C62 110 49 118 41 130"/><path d="M100 76 C82 74 71 82 64 92"/>
+    <path d="M118 44 C104 42 95 49 89 58"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="100" y="330" font-size="132" font-style="italic" fill="#2b2018">Ubhi</text>
+  <text x="108" y="386" font-size="26" letter-spacing="10" fill="#8a5e16">· ਉਭੀ · TO ASCEND ·</text>
+  <text x="104" y="452" font-size="40" font-style="italic" fill="#46372a">The Almanac of Yoga, Art &amp; Slow Ritual</text>
+  <text x="106" y="516" font-size="22" fill="#6b5742">Workshops · a monthly Snail Mail Club · a shop · a journal — London</text>
+
+  <!-- hand-inked underline -->
+  <path d="M104 470 C300 462 520 478 760 466" fill="none" stroke="#a14e5e" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+
+  <!-- wax seal -->
+  <g transform="translate(1012,150)">
+    <circle r="58" fill="url(#wax)"/>
+    <circle r="46" fill="none" stroke="#5e1f17" stroke-width="2" opacity="0.5"/>
+    <text y="20" text-anchor="middle" font-size="58" fill="#f6d8cd" opacity="0.85">U</text>
+  </g>
+  <text x="106" y="566" font-size="18" letter-spacing="3" fill="#6b5742">no. 001 · written, drawn &amp; sealed by hand</text>
+</svg>

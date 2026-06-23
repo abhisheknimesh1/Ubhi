@@ -1,0 +1,861 @@
+/* ════════════════════════════════════════════════════════════════
+   THE UBHI ALMANAC · world.css
+   A handmade paper world, laid over the (re-papered) base styles.
+   Loaded AFTER styles.css → wins on equal specificity.
+
+   Contents
+   00 · Paper substrate          07 · Cards as pasted ephemera
+   01 · Ink typography           08 · Mantra → torn banner
+   02 · Eyebrow / kicker tabs    09 · Footer → colophon
+   03 · Decorative primitives    10 · Cart amulet → wax post
+   04 · Header → masthead        11 · Modals / drawers
+   05 · Buttons → rubber stamps  12 · HOME — the cover spread
+   06 · Nav CTA → postal stamp   13 · Inner pages · motion · a11y
+   ════════════════════════════════════════════════════════════════ */
+
+/* ════ 00 · PAPER SUBSTRATE ════════════════════════════════════ */
+body {
+  background-color: var(--void);
+  background-image:
+    radial-gradient(120% 90% at 12% -10%, rgba(255, 250, 235, 0.7), transparent 55%),
+    radial-gradient(120% 90% at 88% 110%, rgba(196, 168, 116, 0.28), transparent 55%),
+    url("assets/tex-foxing.svg");
+  background-size: auto, auto, 600px 600px;
+  background-attachment: fixed, fixed, fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* fixed fibre-grain veil — gives every surface a milled-paper tooth */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: url("assets/tex-grain.svg");
+  background-size: 260px 260px;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+}
+/* soft kraft vignette — the page edges sit deeper in the box */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(140% 120% at 50% 42%, transparent 58%, rgba(120, 92, 50, 0.10) 84%, rgba(92, 66, 34, 0.2) 100%);
+  mix-blend-mode: multiply;
+}
+/* keep the page chrome above the veil */
+.site-header, .modal-overlay, .lightbox, .cart-drawer,
+.floating-cart-btn, #journal-modal, #gallery-lightbox { z-index: 60; }
+.site-header { z-index: 80; }
+
+/* ════ 01 · INK TYPOGRAPHY ═════════════════════════════════════ */
+h1, h2, h3 {
+  color: var(--ink);
+  /* the faintest letterpress deboss */
+  text-shadow: 0 1px 0 rgba(255, 250, 234, 0.55);
+}
+h1 { font-weight: 400; }
+p { color: var(--mist); }
+
+/* handwriting helpers */
+.hand, .script {
+  font-family: "Caveat", cursive;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+.ink-blue { color: var(--indigo); }
+
+/* a margin annotation — scrawled, tilted, sitting in the gutter */
+.marginalia, .annotation {
+  font-family: "Caveat", cursive;
+  font-size: 1.32rem;
+  line-height: 1.25;
+  color: var(--ink-faded);
+  transform: rotate(-4deg);
+}
+.annotation { color: var(--madder); }
+
+/* illuminated initial for letters & essays */
+.dropcap::first-letter,
+.has-dropcap > p:first-of-type::first-letter {
+  font-family: "Fraunces", serif;
+  font-weight: 600;
+  float: left;
+  font-size: 4.4em;
+  line-height: 0.72;
+  padding: 0.06em 0.12em 0 0;
+  margin: 0.04em 0.04em 0 0;
+  color: var(--madder);
+  text-shadow: 0 1px 0 rgba(255, 250, 234, 0.6);
+}
+
+/* a hand-inked underline you can hang under any word */
+.ink-underline { position: relative; white-space: nowrap; }
+.ink-underline::after {
+  content: "";
+  position: absolute;
+  left: -2%;
+  right: -2%;
+  bottom: -0.22em;
+  height: 0.5em;
+  background: no-repeat center/100% 100%
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M2 7 C40 2 70 10 100 6 C135 1 165 9 198 4' fill='none' stroke='%23a14e5e' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E");
+  opacity: 0.85;
+}
+
+/* a deeper ochre reserved for TEXT, so small labels clear WCAG AA
+   (the bright --ochre stays for rules, lines & large accents) */
+:root { --ochre-ink: #7d540f; }
+
+/* ════ 02 · EYEBROW / KICKER TABS ══════════════════════════════ */
+.eyebrow {
+  color: var(--ochre-ink);
+  font-weight: 500;
+  letter-spacing: 0.26em;
+}
+.eyebrow::before {
+  content: "❧";
+  margin-right: 0.6em;
+  color: var(--madder);
+  font-size: 0.9em;
+  letter-spacing: 0;
+}
+
+/* ════ 03 · DECORATIVE PRIMITIVES ══════════════════════════════ */
+
+/* — washi tape ——————————————————————————————————————— */
+.washi-tape {
+  position: absolute;
+  width: 96px;
+  height: 30px;
+  z-index: 5;
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.18) 0 6px, rgba(255, 255, 255, 0) 6px 12px),
+    var(--tape);
+  opacity: 0.86;
+  mix-blend-mode: multiply;
+  box-shadow: 0 2px 5px rgba(60, 42, 28, 0.16);
+  /* torn, serrated ends */
+  -webkit-mask: linear-gradient(90deg, transparent 0, #000 4px, #000 calc(100% - 4px), transparent 100%);
+          mask: linear-gradient(90deg, transparent 0, #000 4px, #000 calc(100% - 4px), transparent 100%);
+}
+.washi-tape::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(2px 3px at 6px 50%, rgba(60, 42, 28, 0.12), transparent 60%),
+    radial-gradient(2px 3px at calc(100% - 6px) 50%, rgba(60, 42, 28, 0.12), transparent 60%);
+}
+.tape-sage  { background: repeating-linear-gradient(45deg, rgba(255,255,255,0.16) 0 6px, transparent 6px 12px), rgba(108, 138, 116, 0.5); }
+.tape-rose  { background: repeating-linear-gradient(45deg, rgba(255,255,255,0.16) 0 6px, transparent 6px 12px), rgba(176, 120, 132, 0.46); }
+.tape-ochre { background: repeating-linear-gradient(45deg, rgba(255,255,255,0.16) 0 6px, transparent 6px 12px), rgba(196, 156, 84, 0.5); }
+.tape-blue  { background: repeating-linear-gradient(45deg, rgba(255,255,255,0.16) 0 6px, transparent 6px 12px), rgba(108, 128, 162, 0.42); }
+
+/* — wax seal ————————————————————————————————————————— */
+.wax {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  color: rgba(255, 226, 214, 0.62);
+  font-family: "Fraunces", serif;
+  font-size: 1.7rem;
+  background:
+    radial-gradient(circle at 36% 30%, #c2503c 0%, #a23a2c 46%, #7c2a20 100%);
+  border-radius: 47% 53% 50% 50% / 55% 48% 52% 45%;
+  box-shadow:
+    inset 0 -4px 9px rgba(74, 22, 16, 0.7),
+    inset 0 4px 8px rgba(255, 180, 160, 0.32),
+    0 7px 16px rgba(70, 30, 22, 0.4);
+  text-shadow: 0 -1px 1px rgba(80, 24, 18, 0.6), 0 1px 0 rgba(255, 190, 170, 0.25);
+  z-index: 5;
+}
+.wax::before { /* pressed rim */
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1.5px rgba(80, 26, 18, 0.5);
+}
+.wax.wax-gold { background: radial-gradient(circle at 36% 30%, #c9a14a 0%, #a6741f 48%, #7c531a 100%); color: rgba(255,244,214,0.6); box-shadow: inset 0 -4px 9px rgba(70,46,12,0.7), inset 0 4px 8px rgba(255,232,170,0.3), 0 7px 16px rgba(70,50,16,0.4); }
+.wax.wax-sage { background: radial-gradient(circle at 36% 30%, #6f9079 0%, #4a7060 48%, #324f43 100%); }
+
+/* — postage stamp ——————————————————————————————————— */
+.stamp {
+  position: relative;
+  display: inline-block;
+  padding: 9px 9px 7px;
+  background: var(--paper-cream);
+  color: var(--ink-soft);
+  filter: drop-shadow(1.5px 2px 1.5px rgba(60, 42, 28, 0.32));
+  /* perforated edge: overlapping circles tiled & offset bite the border */
+  -webkit-mask: radial-gradient(circle at center, #000 66%, transparent 69%);
+          mask: radial-gradient(circle at center, #000 66%, transparent 69%);
+  -webkit-mask-size: 13px 13px;
+          mask-size: 13px 13px;
+  -webkit-mask-position: -6.5px -6.5px;
+          mask-position: -6.5px -6.5px;
+  -webkit-mask-repeat: round;
+          mask-repeat: round;
+}
+.stamp-inner {
+  display: block;
+  border: 1px solid rgba(90, 68, 42, 0.4);
+  padding: 8px 10px;
+  text-align: center;
+}
+.stamp-art { display: block; width: 46px; height: 46px; margin: 0 auto 4px; }
+.stamp-label { font-size: 0.46rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ochre); }
+.stamp-value { font-family: "Fraunces", serif; font-size: 1.1rem; line-height: 1; color: var(--ink); }
+
+/* circular postmark to cancel a stamp */
+.postmark {
+  position: absolute;
+  width: 92px;
+  height: 92px;
+  border: 2px solid rgba(58, 73, 106, 0.55);
+  border-radius: 50%;
+  color: rgba(58, 73, 106, 0.62);
+  font-family: "EB Garamond", sans-serif;
+  font-size: 0.4rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  transform: rotate(-13deg);
+  mix-blend-mode: multiply;
+  opacity: 0.8;
+  pointer-events: none;
+}
+.postmark::before, .postmark::after {
+  content: "";
+  position: absolute;
+  left: 8px; right: 8px;
+  height: 0;
+  border-top: 1.5px solid rgba(58, 73, 106, 0.45);
+}
+.postmark::before { top: 16px; }
+.postmark::after  { bottom: 16px; }
+.postmark span { display: block; }
+.postmark .pm-arc { font-size: 0.34rem; }
+
+/* — paper clip ———————————————————————————————————————— */
+.paper-clip {
+  position: absolute;
+  top: -16px;
+  left: 26px;
+  width: 26px;
+  height: 62px;
+  z-index: 6;
+  background: no-repeat center/contain
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 62'%3E%3Cpath d='M13 6 C7 6 5 10 5 16 L5 44 C5 52 11 56 16 56 C21 56 22 50 22 46 L22 16 C22 11 19 9 16 9 C13 9 12 12 12 16 L12 42' fill='none' stroke='%237d7a72' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M13 6 C7 6 5 10 5 16 L5 44' fill='none' stroke='%23b9b6ad' stroke-width='1' stroke-linecap='round'/%3E%3C/svg%3E");
+  filter: drop-shadow(0 2px 2px rgba(60, 42, 28, 0.3));
+  transform: rotate(4deg);
+}
+
+/* — photographic print + corners ——————————————————————— */
+.print {
+  position: relative;
+  background: #fdfaf0;
+  padding: 11px 11px 40px;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, var(--shadow);
+  border: 1px solid rgba(120, 96, 60, 0.18);
+}
+.print img { display: block; width: 100%; filter: sepia(0.32) saturate(0.86) contrast(0.98) brightness(1.02); }
+.print figcaption,
+.print .print-cap {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 10px;
+  text-align: center;
+  font-family: "Caveat", cursive;
+  font-size: 1.25rem;
+  color: var(--ink-faded);
+}
+.photo-corner::before, .photo-corner::after,
+.print.corners::before, .print.corners::after {
+  content: "";
+  position: absolute;
+  width: 22px; height: 22px;
+  border: 0 solid rgba(60, 42, 28, 0.34);
+  z-index: 3;
+}
+.print.corners::before { top: 5px;  left: 5px;  border-top-width: 8px;  border-left-width: 8px;  border-color: rgba(60,42,28,0.22) transparent transparent rgba(60,42,28,0.22); transform: skew(0); }
+.print.corners::after  { top: 5px;  right: 5px; border-top-width: 8px;  border-right-width: 8px; border-color: rgba(60,42,28,0.22) rgba(60,42,28,0.22) transparent transparent; }
+
+/* — torn / deckled sheet edges —————————————————————————— */
+.torn-bottom { position: relative; }
+.torn-bottom::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 26px;
+  background: inherit;
+  background-color: var(--void);
+  -webkit-mask: url("assets/edge-torn.svg") repeat-x bottom / 1200px 26px;
+          mask: url("assets/edge-torn.svg") repeat-x bottom / 1200px 26px;
+  transform: scaleY(-1);
+  z-index: 2;
+}
+.deckle {
+  border-radius: 255px 12px 225px 14px / 14px 225px 12px 255px;
+}
+
+/* — stitched / threaded borders ————————————————————————— */
+.stitched { border: 1.6px dashed rgba(138, 106, 63, 0.6); border-radius: 4px; }
+.thread {
+  height: 0;
+  border: 0;
+  border-top: 1.6px dashed rgba(138, 106, 63, 0.5);
+  opacity: 0.8;
+}
+
+/* — hand-drawn rule —————————————————————————————————————— */
+.ink-rule {
+  height: 12px;
+  border: 0;
+  background: no-repeat center/100% 100%
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 12' preserveAspectRatio='none'%3E%3Cpath d='M3 6 C120 2 220 10 300 6 C390 2 480 10 597 5' fill='none' stroke='%235f4b39' stroke-width='1.6' stroke-linecap='round' opacity='0.7'/%3E%3C/svg%3E");
+}
+
+/* — botanical doodles (draw-in handled by world.js) ——————— */
+.doodle { fill: none; stroke: var(--ink-faded); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.doodle.sage  { stroke: var(--sage); }
+.doodle.ochre { stroke: var(--ochre); }
+.doodle.rose  { stroke: var(--madder); }
+.doodle path, .doodle line, .doodle circle, .doodle ellipse { vector-effect: non-scaling-stroke; }
+.draw path, .draw line, .draw ellipse, .draw circle {
+  stroke-dasharray: var(--len, 600);
+  stroke-dashoffset: var(--len, 600);
+}
+.draw.is-drawn path, .draw.is-drawn line, .draw.is-drawn ellipse, .draw.is-drawn circle {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1.8s ease;
+}
+
+/* floating ephemera get a gentle, hand-placed tilt */
+.ephemera { position: absolute; z-index: 5; }
+
+/* ════ 04 · HEADER → LETTERPRESS MASTHEAD ══════════════════════ */
+.site-header {
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  mix-blend-mode: normal;
+}
+.site-header.is-scrolled {
+  background: rgba(243, 234, 208, 0.86);
+  border-bottom: 1px solid rgba(90, 68, 42, 0.3);
+  box-shadow: 0 10px 26px -18px rgba(60, 42, 28, 0.5);
+  backdrop-filter: blur(6px) saturate(1.1);
+  -webkit-backdrop-filter: blur(6px) saturate(1.1);
+}
+.site-header.is-scrolled::after { /* a torn lower deckle */
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -13px;
+  height: 14px;
+  background: rgba(243, 234, 208, 0.86);
+  -webkit-mask: url("assets/edge-torn.svg") repeat-x top / 1200px 14px;
+          mask: url("assets/edge-torn.svg") repeat-x top / 1200px 14px;
+}
+
+/* logos were forced white for the void — restore them to ink */
+.brand img, .footer-brand img, .about-logo {
+  filter: brightness(0) saturate(0%) brightness(0.22) sepia(0.5) hue-rotate(350deg);
+  opacity: 0.92;
+}
+.brand img { filter: brightness(0) saturate(0%); opacity: 0.82; }
+
+.nav-links { letter-spacing: 0.2em; }
+.nav-links a { color: var(--ink-soft); opacity: 0.72; }
+.nav-links a:hover, .nav-links a.is-active { color: var(--ochre); opacity: 1; }
+
+/* ════ 05 · BUTTONS → RUBBER STAMPS / PRESSED INK ══════════════ */
+.button, .mini-book { border-radius: 2px; font-weight: 500; letter-spacing: 0.18em; }
+
+.button-primary, .mini-book {
+  background: var(--ink);
+  color: var(--paper-cream);
+  border: 1px solid var(--ink);
+  box-shadow:
+    inset 0 0 0 1px rgba(246, 239, 217, 0.16),
+    0 2px 0 rgba(60, 42, 28, 0.45),
+    0 12px 22px -12px rgba(60, 42, 28, 0.6);
+  text-shadow: none;
+}
+.button-primary:hover, .mini-book:hover {
+  background: #1f1610;
+  box-shadow:
+    inset 0 0 0 1px rgba(246, 239, 217, 0.22),
+    0 3px 0 rgba(60, 42, 28, 0.5),
+    0 16px 30px -12px rgba(60, 42, 28, 0.65);
+}
+.button-ghost {
+  background: transparent;
+  border: 1.6px dashed var(--ink-faded);
+  color: var(--ink-soft);
+}
+.button-ghost:hover { border-color: var(--ochre); color: var(--ochre); background: rgba(166, 116, 31, 0.07); }
+.button-secondary {
+  border: 1.6px solid var(--ochre);
+  background: rgba(166, 116, 31, 0.06);
+  color: var(--ochre);
+}
+.button-secondary:hover { background: var(--ochre); color: var(--paper-cream); }
+
+/* ════ 06 · NAV CTA → POSTAL STAMP ═════════════════════════════ */
+.nav-cta {
+  border: 2px solid var(--ochre);
+  color: var(--ochre);
+  background: rgba(166, 116, 31, 0.05);
+  letter-spacing: 0.18em;
+  transform: rotate(-2.4deg);
+  box-shadow: inset 0 0 0 1px rgba(166, 116, 31, 0.3);
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+.nav-cta:hover { background: var(--ochre); color: var(--paper-cream); transform: rotate(0deg) scale(1.02); }
+
+/* ════ 07 · CARDS AS PASTED EPHEMERA ═══════════════════════════ */
+.preview-card, .pathway-card {
+  background:
+    linear-gradient(180deg, rgba(255, 252, 242, 0.7), rgba(243, 234, 208, 0.55)),
+    var(--paper-cream);
+  border: 1px solid rgba(120, 96, 60, 0.2);
+  border-radius: 3px;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.55) inset, 0 14px 30px -18px rgba(60, 42, 28, 0.5);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: transform 0.35s cubic-bezier(.2,.7,.2,1), box-shadow 0.35s ease;
+}
+.preview-card { padding-top: 30px; }
+.preview-card::before { /* a strip of washi tape pinning the card down */
+  content: "";
+  position: absolute;
+  top: -13px; left: 50%;
+  width: 110px; height: 26px;
+  transform: translateX(-50%) rotate(-2.2deg);
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.16) 0 6px, transparent 6px 12px), rgba(196, 156, 84, 0.5);
+  -webkit-mask: linear-gradient(90deg, transparent, #000 5px, #000 calc(100% - 5px), transparent);
+          mask: linear-gradient(90deg, transparent, #000 5px, #000 calc(100% - 5px), transparent);
+  opacity: 0.9;
+  mix-blend-mode: multiply;
+  box-shadow: 0 2px 4px rgba(60, 42, 28, 0.14);
+  z-index: 4;
+}
+.preview-card:nth-child(2n) { transform: rotate(0.8deg); }
+.preview-card:nth-child(2n) .preview-card::before { transform: translateX(-50%) rotate(3deg); }
+.preview-card:nth-child(3n) { transform: rotate(-0.7deg); }
+.preview-card:hover, .pathway-card:hover {
+  transform: rotate(0deg) translateY(-8px);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 26px 50px -22px rgba(60, 42, 28, 0.6);
+}
+.preview-card h3, .pathway-card h3 { color: var(--ink); }
+.preview-card p, .pathway-card p { color: var(--mist); }
+.preview-card-link, .pathway-arrow { color: var(--ochre-ink); }
+
+.pathway-card {
+  border-radius: 2px;
+}
+.pathway-card:nth-child(1) { transform: rotate(-1.1deg); }
+.pathway-card:nth-child(2) { transform: rotate(0.6deg); }
+.pathway-card:nth-child(3) { transform: rotate(-0.5deg); }
+
+/* generic path-step cards */
+.path-step {
+  position: relative;
+  background: var(--paper-cream);
+  border: 1px solid rgba(120, 96, 60, 0.18);
+  border-radius: 255px 12px 225px 14px / 14px 225px 12px 255px;
+  padding: clamp(22px, 3vw, 34px);
+  box-shadow: 0 12px 26px -18px rgba(60, 42, 28, 0.45);
+}
+.path-step h3 { color: var(--ink); }
+.step-icon { color: var(--ochre); }
+
+/* ════ 08 · MANTRA → TORN PAPER BANNER ═════════════════════════ */
+.mantra-strip {
+  position: relative;
+  background: var(--paper-kraft);
+  border-top: 1px solid rgba(90, 68, 42, 0.3);
+  border-bottom: 1px solid rgba(90, 68, 42, 0.3);
+  color: var(--ink-soft);
+  box-shadow: inset 0 0 40px rgba(120, 92, 50, 0.12);
+}
+.mantra-track span { color: var(--ink-soft); font-family: "Caveat", cursive; font-size: 1.5rem; letter-spacing: 0.02em; }
+.mantra-track .ticker-dot { color: var(--madder); font-family: serif; }
+
+/* ════ 09 · FOOTER → COLOPHON / BACK OF THE ENVELOPE ═══════════ */
+.site-footer {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(216, 193, 154, 0.4), rgba(204, 178, 134, 0.5)),
+    var(--paper-kraft);
+  border-top: 1px solid rgba(90, 68, 42, 0.35);
+  color: var(--ink-soft);
+}
+.site-footer::before { /* torn upper deckle joining footer to the page */
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: -16px;
+  height: 18px;
+  background: var(--paper-kraft);
+  -webkit-mask: url("assets/edge-torn.svg") repeat-x bottom / 1200px 18px;
+          mask: url("assets/edge-torn.svg") repeat-x bottom / 1200px 18px;
+}
+.footer-brand p { color: var(--ink-faded); font-family: "Caveat", cursive; font-size: 1.4rem; }
+.footer-sign { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
+.footer-sign .wax { width: 52px; height: 52px; font-size: 1.25rem; flex: none; }
+.footer-colophon { font-family: "Caveat", cursive !important; font-size: 1.34rem !important; letter-spacing: normal !important; line-height: 1.3; color: var(--ink-soft); max-width: 330px; margin: 0; text-transform: none !important; }
+.site-footer nav a { color: var(--ink-soft); opacity: 0.78; }
+.site-footer nav a:hover { color: var(--ochre); opacity: 1; }
+.footer-geo svg { opacity: 0.6; }
+
+/* ════ 10 · CART AMULET → WAX POST BUTTON ══════════════════════ */
+.floating-cart-btn {
+  background:
+    radial-gradient(circle at 36% 30%, #c9a14a 0%, #a6741f 50%, #7c531a 100%) !important;
+  border-radius: 48% 52% 50% 50% / 54% 48% 52% 46% !important;
+  box-shadow:
+    inset 0 -4px 9px rgba(70, 46, 12, 0.7),
+    inset 0 4px 8px rgba(255, 232, 170, 0.3),
+    0 10px 22px rgba(70, 50, 16, 0.4) !important;
+}
+.cart-amulet-geo { filter: brightness(0) invert(1); opacity: 0.55; }
+.cart-badge-count-container {
+  background: var(--vermilion) !important;
+  color: #fff5ec !important;
+  border: 1px solid rgba(255, 240, 220, 0.4) !important;
+}
+
+/* ════ 11 · MODALS / DRAWERS — paper, not glass ════════════════ */
+.modal-panel, .cart-drawer-panel, .journal-modal-panel {
+  background:
+    linear-gradient(180deg, rgba(255, 252, 243, 0.7), rgba(243, 234, 208, 0.6)),
+    var(--paper-cream) !important;
+  border: 1px solid rgba(120, 96, 60, 0.28) !important;
+  color: var(--ink-soft);
+}
+.modal-overlay, .cart-drawer-overlay, .lightbox {
+  background: rgba(60, 42, 28, 0.55) !important;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.modal-close, .cart-drawer-close, .lightbox-close { color: var(--ink-soft); }
+.cart-drawer-header h2, .journal-modal-header h2 { color: var(--ink); }
+
+/* form controls — inked fields on paper, never dark glass */
+input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="range"]),
+textarea, select {
+  background-color: var(--paper-cream) !important;
+  color: var(--ink-soft) !important;
+  border: 1px solid rgba(120, 96, 60, 0.4) !important;
+}
+input::placeholder, textarea::placeholder { color: var(--ink-faded) !important; opacity: 0.62; }
+select option { background: var(--paper-cream); color: var(--ink-soft); }
+
+/* ════ ADMIN — "The Keeper's Desk" ═══════════════════════════════
+   Clears the masthead from under the fixed header, drops the glass
+   (also the capture/perf hog), and removes shopfront chrome that has
+   no business back-of-house. No controls removed — layout only. */
+.admin-dashboard-wrapper { padding: clamp(104px, 12vh, 124px) clamp(16px, 2vw, 36px) 40px !important; }
+#page-admin *, .admin-gate-wrapper, .admin-dashboard-wrapper {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+/* the cart amulet & "reserve a space" are meaningless on the admin desk */
+body:has(#page-admin.is-active) .floating-cart-btn,
+body:has(#page-admin.is-active) .nav-cta { display: none !important; }
+
+/* admin masthead → a ruled ledger header */
+.admin-header {
+  position: relative;
+  border-bottom: 1.5px solid rgba(90, 68, 42, 0.3);
+  padding-bottom: 20px;
+  margin-bottom: 8px;
+}
+.admin-header::after { /* a hand-inked flourish under the ledger title */
+  content: "❧";
+  position: absolute;
+  left: 0; bottom: -14px;
+  color: var(--madder);
+  font-size: 1rem;
+  background: var(--void);
+  padding-right: 8px;
+}
+.admin-dashboard-wrapper h2, .admin-header h1, .admin-header h2 { color: var(--ink); font-style: italic; }
+
+/* admin panels read as filed paper; tabs as index labels */
+.admin-tab-content > *, .admin-panel, [class*="admin-card"], [class*="admin-section"] {
+  background-color: var(--paper-cream);
+}
+.admin-tab-btn { color: var(--ink-soft); }
+.admin-tab-btn.is-active { color: var(--ochre); }
+
+/* the native file picker, dressed for the desk */
+input[type="file"] { color: var(--ink-faded); font-size: 0.8rem; }
+input[type="file"]::file-selector-button {
+  font: inherit; font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase;
+  padding: 8px 14px; margin-right: 12px; cursor: pointer;
+  color: var(--ochre); background: rgba(166, 116, 31, 0.06);
+  border: 1.4px solid var(--ochre); border-radius: 2px;
+}
+input[type="file"]::file-selector-button:hover { background: var(--ochre); color: var(--paper-cream); }
+
+/* ════ 12 · HOME — THE COVER SPREAD ════════════════════════════ */
+
+/* the hero becomes a tea-toned photograph mounted on the desk,
+   with a translucent letter laid over it and ephemera pinned around */
+#page-home .hero {
+  align-items: center;
+  padding: clamp(120px, 16vh, 190px) clamp(20px, 5.5vw, 80px) clamp(60px, 9vh, 110px);
+  background:
+    radial-gradient(130% 100% at 80% 0%, rgba(220, 198, 150, 0.5), transparent 60%),
+    var(--paper-warm);
+}
+#page-home .hero-image {
+  inset: clamp(96px, 13vh, 150px) clamp(20px, 6vw, 90px) clamp(50px, 8vh, 96px);
+  width: auto; height: auto;
+  border: 12px solid #fdfaf0;
+  border-bottom-width: 44px;
+  box-shadow: 0 30px 60px -26px rgba(60, 42, 28, 0.7);
+  transform: rotate(-1.4deg);
+  filter: sepia(0.4) saturate(0.82) contrast(0.96) brightness(1.04);
+  z-index: -3;
+}
+#page-home .hero-overlay {
+  inset: clamp(96px, 13vh, 150px) clamp(20px, 6vw, 90px) clamp(50px, 8vh, 96px);
+  transform: rotate(-1.4deg);
+  background:
+    linear-gradient(105deg, rgba(244, 235, 210, 0.72) 0%, rgba(244, 235, 210, 0.28) 46%, rgba(244, 235, 210, 0.08) 100%),
+    linear-gradient(0deg, rgba(60, 42, 28, 0.34) 0%, transparent 46%);
+  z-index: -2;
+}
+#page-home .hero-geo { opacity: 0.3; filter: sepia(0.4); }
+
+#page-home .hero-content {
+  width: min(680px, 100%);
+  color: var(--ink);
+  background:
+    linear-gradient(180deg, rgba(247, 240, 218, 0.92), rgba(243, 234, 206, 0.88));
+  border: 1px solid rgba(120, 96, 60, 0.26);
+  border-radius: 3px;
+  padding: clamp(26px, 4vw, 48px) clamp(24px, 4vw, 50px) clamp(30px, 4vw, 52px);
+  box-shadow: 0 28px 60px -30px rgba(60, 42, 28, 0.65);
+  transform: rotate(-0.5deg);
+}
+/* Tie the parchment card to the viewport so it stays a calm ~36% of the screen
+   (like a 1920 monitor) instead of dominating a laptop and cropping the studio
+   photo. Engages from 901px (where the pathways become a 3-up row) with a 460px
+   floor so those cards never get cramped, and caps at 680px — so on a 1920 screen
+   it resolves to exactly 680px (desktop view unchanged). Works whether the browser
+   is maximised or windowed. */
+@media (min-width: 901px) {
+  #page-home .hero-content { width: clamp(460px, 36vw, 680px); }
+}
+#page-home .hero-content::before { /* wax seal holding the letter shut */
+  content: "UBHI";
+  position: absolute;
+  top: -26px; right: 36px;
+  width: 64px; height: 64px;
+  display: grid; place-items: center;
+  font-family: "Fraunces", serif;
+  font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em;
+  color: rgba(255, 226, 214, 0.62);
+  background: radial-gradient(circle at 36% 30%, #c2503c 0%, #a23a2c 46%, #7c2a20 100%);
+  border-radius: 47% 53% 50% 50% / 55% 48% 52% 45%;
+  box-shadow: inset 0 -4px 9px rgba(74, 22, 16, 0.7), inset 0 4px 8px rgba(255, 180, 160, 0.32), 0 7px 16px rgba(70, 30, 22, 0.4);
+  text-shadow: 0 -1px 1px rgba(80, 24, 18, 0.6);
+  transform: rotate(8deg);
+  z-index: 6;
+}
+#page-home .hero h1 { color: var(--ink); font-style: italic; }
+#page-home .hero h1 .ink-underline::after { bottom: -0.12em; }
+#page-home .hero .eyebrow { color: var(--ochre-ink) !important; padding-left: 56px !important; min-height: 40px; display: flex; align-items: center; }
+#page-home .hero-copy { color: var(--ink-soft); font-size: 1.06rem; }
+
+/* hero pathway "index cards" */
+#page-home .hero-pathways { gap: 14px; }
+#page-home .pathway-card {
+  background: linear-gradient(180deg, rgba(255, 253, 245, 0.96), rgba(245, 237, 213, 0.92));
+  box-shadow: 0 10px 22px -14px rgba(60, 42, 28, 0.5);
+}
+
+/* the intro becomes a hand-written letter */
+#page-home .intro {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 31px, rgba(120, 96, 60, 0.08) 31px 32px),
+    var(--paper-cream);
+  border-top: 1px solid rgba(90, 68, 42, 0.18);
+  border-bottom: 1px solid rgba(90, 68, 42, 0.18);
+}
+#page-home .intro-copy p:first-of-type::first-letter {
+  font-family: "Fraunces", serif;
+  font-weight: 600;
+  float: left;
+  font-size: 3.8em;
+  line-height: 0.74;
+  padding: 0.05em 0.1em 0 0;
+  color: var(--madder);
+}
+.intro-signature {
+  margin-top: 22px;
+  font-family: "Caveat", cursive;
+  font-size: 2.2rem;
+  color: var(--indigo);
+  transform: rotate(-3deg);
+  transform-origin: left center;
+}
+.intro-signature small { display: block; font-family: "EB Garamond", sans-serif; font-size: 0.62rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--ink-faded); transform: rotate(3deg); margin-top: 6px; }
+
+/* the four-movement path: a connecting thread of twine */
+.path-grid { position: relative; }
+.path-grid::before {
+  content: "";
+  position: absolute;
+  top: 42px; left: 8%; right: 8%;
+  height: 0;
+  border-top: 1.6px dashed rgba(138, 106, 63, 0.45);
+  z-index: 0;
+}
+.path-step { background-clip: padding-box; }
+
+/* preview pillars styled as a hand-numbered table of contents */
+.preview-section .section-heading h2 { font-style: italic; }
+.preview-card-num {
+  font-family: "Fraunces", serif;
+  color: var(--ochre);
+  opacity: 0.85;
+}
+
+/* sliding gallery → scattered prints */
+.gallery-section { background: var(--paper-warm); position: relative; }
+
+/* small hand-placed botanical in section margins */
+.section-sprig { position: absolute; pointer-events: none; opacity: 0.8; z-index: 0; }
+
+/* hero ephemera — pinned around the letter on the desk */
+.hero-ephemera { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.he-stamp { position: absolute; z-index: 6; top: 10px; left: 16px; transform: rotate(-7deg) scale(0.7); transform-origin: top left; pointer-events: none; }
+#page-home .hero-content { padding-top: clamp(56px, 6vw, 72px); }
+.he-stamp .stamp { width: 86px; }
+.he-stamp .stamp-value { font-size: 0.82rem; }
+.he-stamp .stamp-art { width: 40px; height: 40px; }
+.he-stamp .postmark { top: -6px; left: 6px; width: 58px; height: 58px; font-size: 0.3rem; }
+.he-stamp .postmark::before { top: 11px; }
+.he-stamp .postmark::after { bottom: 11px; }
+.he-fern {
+  position: absolute;
+  right: clamp(18px, 7vw, 118px);
+  bottom: clamp(36px, 8vh, 104px);
+  width: clamp(74px, 9vw, 122px);
+  height: auto;
+}
+.he-note-1 {
+  top: clamp(132px, 20vh, 228px);
+  right: clamp(36px, 11vw, 196px);
+  font-size: 1.5rem;
+  text-align: right;
+  color: var(--indigo);
+}
+.he-note-2 { bottom: clamp(118px, 17vh, 196px); left: clamp(26px, 15vw, 286px); }
+.intro-greeting { font-size: 1.7rem; color: var(--indigo); margin-bottom: 2px; transform: rotate(-1deg); transform-origin: left; }
+
+@media (max-width: 860px) { .he-note-1, .he-note-2 { display: none; } }
+@media (max-width: 600px) {
+  .he-fern { display: none; }
+  .he-stamp { top: 6px; left: 10px; transform: rotate(-7deg) scale(0.5); }
+  .he-stamp .postmark { display: none; }
+  #page-home .hero .eyebrow { padding-left: 50px !important; }
+  /* the wax seal kisses the cart amulet on phones — let it rest */
+  #page-home .hero-content::before { display: none; }
+}
+
+/* hero margin notes stay legible over busy parts of the photograph */
+.he-note-1, .he-note-2 {
+  text-shadow: 0 1px 9px rgba(244, 235, 210, 0.9), 0 0 3px rgba(244, 235, 210, 0.75);
+}
+
+/* Guard against the footer sliding under the fixed header during the
+   brief load moment before the router activates a page (when every
+   .page is display:none, <main id="app"> would otherwise collapse to
+   zero height). Keeping it a screen tall removes that overlap flash. */
+#app { min-height: 100vh; }
+
+/* ════ 13 · INNER PAGES · MOTION · A11Y ════════════════════════ */
+
+/* page heroes on inner pages sit on warm paper */
+.page-hero { background: var(--paper-warm); }
+#page-workshops .page-hero, #page-shop .page-hero,
+#page-journal .page-hero, #page-about .about {
+  background: var(--paper-warm);
+}
+
+/* about — the story sits on a paper letter, not a dark glass slab */
+#page-about .about-content {
+  background: linear-gradient(165deg, rgba(255, 252, 243, 0.94), rgba(243, 233, 205, 0.9)) !important;
+  border: 1px solid rgba(120, 96, 60, 0.26);
+  box-shadow: 0 28px 64px -34px rgba(60, 42, 28, 0.5);
+  border-radius: 3px;
+}
+#page-about .about-right p { color: var(--mist); }
+#page-about .about-right p:first-of-type::first-letter {
+  font-family: "Fraunces", serif; font-weight: 600; float: left;
+  font-size: 3.4em; line-height: 0.74; padding: 0.05em 0.12em 0 0; color: var(--madder);
+}
+
+/* shop — geometry motifs become printed-on-paper swatches, not dark glows */
+.product-art {
+  background:
+    radial-gradient(circle at 50% 38%, rgba(255, 252, 243, 0.75), rgba(222, 205, 168, 0.5)),
+    var(--paper-cream) !important;
+  border-bottom: 1px solid rgba(120, 96, 60, 0.18);
+}
+.product-art.lotus {
+  background:
+    radial-gradient(circle at 50% 38%, rgba(255, 252, 243, 0.75), rgba(206, 220, 198, 0.45)),
+    var(--paper-cream) !important;
+}
+.product-art svg { opacity: 0.8; filter: saturate(1.15) brightness(0.92); }
+.product-card { background: var(--paper-cream); border: 1px solid rgba(120, 96, 60, 0.2); }
+
+/* anything still using glass blur softens to paper */
+[class*="glass"], .snail-plan-card, .workshop-card, .shop-card, .journal-card {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* a custom nib cursor trail layer (filled by world.js) */
+#ink-trail { position: fixed; inset: 0; z-index: 90; pointer-events: none; }
+
+/* drifting motes (replaces the starfield) */
+.mote {
+  position: fixed;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(120, 92, 50, 0.5), transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* draw-in lines & floating motes kept on — owner wants the motion */
+}
+
+/* phones: unmount the tilts so nothing clips off the sheet */
+@media (max-width: 760px) {
+  #page-home .hero-content,
+  .preview-card, .pathway-card, .path-step,
+  .nav-cta, .intro-signature { transform: none; }
+  #page-home .hero-image, #page-home .hero-overlay { inset: clamp(70px,11vh,120px) 14px clamp(40px,7vh,80px); transform: none; }
+  .preview-card:nth-child(2n), .preview-card:nth-child(3n) { transform: none; }
+  body { background-attachment: scroll; }
+  body::before { background-attachment: scroll; }
+}

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="wax" cx="38%" cy="32%" r="75%">
+      <stop offset="0" stop-color="#c2503c"/>
+      <stop offset="55%" stop-color="#a23a2c"/>
+      <stop offset="100%" stop-color="#7c2a20"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="10" fill="#ece0c2"/>
+  <circle cx="32" cy="32" r="23" fill="url(#wax)"/>
+  <circle cx="32" cy="32" r="18.5" fill="none" stroke="#5e1f17" stroke-width="1.4" opacity="0.55"/>
+  <text x="32" y="43" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="30" fill="#f6d8cd">U</text>
+</svg>

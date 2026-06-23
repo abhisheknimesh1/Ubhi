@@ -1,0 +1,30 @@
+# Keep the Docker build context small and never bake secrets or local state
+# into the image. Mirrors .gitignore plus build-specific exclusions.
+
+# Dependencies — reinstalled inside the image via "npm install".
+node_modules/
+
+# Environment / secrets — supplied at runtime via --env-file / compose env.
+.env
+.env.local
+.env.*.local
+
+# JSON file store data (created on demand by JsonStore at runtime).
+db/data/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Docker / git metadata — not needed inside the image.
+Dockerfile
+.dockerignore
+docker-compose.yml
+.git
+.gitignore
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
