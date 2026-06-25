@@ -151,6 +151,31 @@
     return { reachable: state.reachable, connected: !!token(), email: email, base: state.base };
   };
 
+  // ----- transactional submit: orders / bookings / subscribers ---------------
+  // Checkout / booking / subscribe flows call this AFTER saving a local receipt.
+  // When the backend is reachable the record is POSTed to its validated,
+  // append-only PUBLIC endpoint, so it reaches the owner on EVERY device — not
+  // just the browser it was placed in. Resolves to a result object and NEVER
+  // rejects: { ok:true, data } on success, or { ok:false, offline|error } so the
+  // caller can keep the local copy as the fallback. No auth header (public POST).
+  var SUBMIT_PATHS = { order: '/orders', booking: '/bookings', subscriber: '/subscribers' };
+  window.ubhiSubmit = function (kind, payload) {
+    var path = SUBMIT_PATHS[kind];
+    if (!path) return Promise.resolve({ ok: false, error: 'unknown kind: ' + kind });
+    if (!state.reachable) return Promise.resolve({ ok: false, offline: true });
+    return fetch(API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload || {}),
+    })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }, function () { return { ok: r.ok, j: null }; }); })
+      .then(function (res) {
+        if (res.ok) return { ok: true, data: res.j };
+        return { ok: false, error: (res.j && res.j.error) || 'server rejected the record' };
+      })
+      .catch(function () { return { ok: false, offline: true }; });
+  };
+
   // ----- boot: health-check, then bootstrap content --------------------------
   fetch(API + '/health', { headers: { Accept: 'application/json' } })
     .then(function (r) { return r.ok ? r.json() : null; })

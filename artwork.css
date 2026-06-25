@@ -591,7 +591,7 @@
 #page-snail-mail .snail-plan-term { font-family: "EB Garamond", serif; font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ochre-ink); }
 #page-snail-mail .snail-plan-price { font-family: "Fraunces", serif; font-size: clamp(2rem, 3vw, 2.5rem); color: var(--ink); line-height: 1; }
 #page-snail-mail .snail-plan-period { color: var(--ink-faded); font-family: "EB Garamond", serif; }
-#page-snail-mail .snail-plan-saving { display: inline-block; margin-top: 8px; font-family: "Caveat", cursive; font-size: 1.25rem; color: var(--sage); }
+#page-snail-mail .snail-plan-saving { display: inline-block; margin-top: 8px; font-family: "Caveat", cursive; font-size: 1rem; color: var(--sage); }
 #page-snail-mail .snail-plan-desc { color: var(--mist); font-family: "EB Garamond", serif; font-size: 0.86rem; }
 
 /* ── featured 12-month hero card · gilt, standalone, premium ───── */
@@ -742,14 +742,14 @@
   color: #fcf7ec !important;
 }
 #page-snail-mail .snail-plan-subscribe {
-  background: linear-gradient(165deg, #5f8369, #4a7060 58%, #3a5a4c) !important;
-  box-shadow: inset 0 0 0 1px rgba(246, 240, 224, 0.25), 0 6px 14px -8px rgba(58, 90, 76, 0.6) !important;
+  background: linear-gradient(165deg, #b4596d, #a14e5e 60%, #88424f) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 238, 225, 0.25), 0 6px 14px -8px rgba(120, 60, 72, 0.6) !important;
 }
 #page-snail-mail .snail-plan-subscribe:hover {
-  background: linear-gradient(165deg, #6a8f74, #547c6a 58%, #426552) !important;
-  box-shadow: inset 0 0 0 1px rgba(246, 240, 224, 0.32), 0 11px 20px -8px rgba(58, 90, 76, 0.72) !important;
+  background: linear-gradient(165deg, #bf6577, #ad566c 60%, #95485a) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 238, 225, 0.32), 0 11px 20px -8px rgba(120, 60, 72, 0.72) !important;
 }
-#page-snail-mail .snail-plan-subscribe .heart { color: #f4dba0 !important; }
+#page-snail-mail .snail-plan-subscribe .heart { color: #ffd9cf !important; }
 /* keep the "most loved" ribbon distinct from the sage buttons → gilt */
 #page-snail-mail .snail-plans-grid > .snail-plan-card:first-child::before {
   background: linear-gradient(165deg, #c2902f, #a6741f) !important; color: #fbf3df !important;
@@ -2053,3 +2053,142 @@ body.sticker-preview-open { overflow: hidden; }
 .srv-pill { font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; padding: 3px 9px; border-radius: 20px; margin-left: 8px; vertical-align: middle; }
 .srv-pill.srv-off { background: rgba(120,96,60,0.16); color: var(--mist, #5f4b39); }
 .srv-pill.srv-on { background: rgba(74,112,96,0.20); color: #3a6a55; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   HOME HERO — v2 (owner sketch). Appended LAST so it wins the cascade.
+   • header sits clear of the art (art starts below it)  ……… point 1
+   • mantra ticker on the first screen ……………………………………… point 2
+   • four pathway tiles in ONE full-width row ……………………… point 3
+   • "Chelsea Kaur Ubhi" name line at the top of the hero ……… point 4
+   • rotating art full-bleed, edge-to-edge ……………………………… point 5
+   • postmark + wax-seal removed ………………………………………………… point 6
+   • headline + copy re-placed, centred over the art ……………… point 7
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* The hero = a full-width vertical stack (undoes the 2-col centred grid). */
+#page-home .hero {
+  --hdr-h: clamp(96px, 11vh, 116px);
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: center !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  min-height: 100svh !important;
+  overflow: hidden !important;
+  padding: var(--hdr-h, 104px) 0 0 0 !important;
+  gap: clamp(12px, 2.2vh, 26px);
+  background: var(--paper-warm) !important;
+}
+
+/* 1 + 5 — rotating art (and its scrim) begin BELOW the header and run edge-to-edge. */
+#page-home .hero-art-rotator,
+#page-home .hero > .hero-overlay {
+  inset: var(--hdr-h, 104px) 0 0 0 !important;
+  width: auto !important; height: auto !important;
+  transform: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  filter: none !important;
+}
+#page-home .hero-art-slide { object-fit: cover !important; object-position: center !important; filter: none !important; }
+#page-home .hero > .hero-overlay {
+  display: block !important;
+  z-index: -2 !important;
+  /* EVEN scrim — consistent darkening top-to-bottom so the art reads richly the
+     whole way down (no washed-out dusty band between the art and the tiles). */
+  background: linear-gradient(180deg, rgba(32,22,14,0.50) 0%, rgba(32,22,14,0.40) 42%, rgba(32,22,14,0.40) 72%, rgba(32,22,14,0.55) 100%) !important;
+}
+
+/* Content column — centred text + tiles stack (no 2-col, no rotation). */
+#page-home .hero > .hero-content {
+  order: 0 !important;
+  width: min(1180px, 100%) !important;
+  margin: 0 auto !important;
+  padding: clamp(16px, 4vh, 40px) clamp(20px, 5vw, 48px) 0 !important;
+  transform: none !important;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  /* kill the parchment panel behind the content — text + tiles sit straight on the art */
+  background: none !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  backdrop-filter: none !important;
+}
+
+/* 4 — name line at the top, light over the art. */
+#page-home .hero .eyebrow {
+  color: rgba(255,246,228,0.92) !important;
+  padding-left: 0 !important;
+  min-height: 0 !important;
+  justify-content: center !important;
+  margin: 0 0 clamp(10px, 2vh, 20px) !important;
+  text-shadow: 0 1px 12px rgba(28,18,10,0.6);
+}
+
+/* 7 — headline + copy, centred, light over the art. */
+#page-home .hero h1 {
+  color: #fdf6e6 !important;
+  font-size: clamp(2.7rem, 5.2vw, 5.2rem) !important;
+  line-height: 1.02 !important;
+  margin: 0 0 clamp(12px, 2vh, 20px) !important;
+  text-shadow: 0 2px 24px rgba(28,18,10,0.65);
+}
+#page-home .hero h1 .ink-underline::after { display: none !important; }   /* keep the pink accent block removed */
+#page-home .hero-copy {
+  color: rgba(252,245,230,0.92) !important;
+  max-width: 600px !important;
+  margin: 0 auto clamp(14px, 2.4vh, 26px) !important;
+  font-size: clamp(0.98rem, 1.25vw, 1.16rem) !important;
+  line-height: 1.65 !important;
+  text-shadow: 0 1px 12px rgba(28,18,10,0.6);
+}
+
+/* 3 — four tiles in ONE full-width row. */
+#page-home .hero-pathways {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: clamp(12px, 1.3vw, 20px) !important;
+  width: 100% !important;
+  max-width: 1180px !important;
+  margin: clamp(6px, 1.4vh, 18px) auto 0 !important;
+}
+#page-home .hero-pathways .pathway-card {
+  min-height: 0 !important;
+  padding: 16px 16px 14px !important;
+  transform: none !important;
+}
+
+/* 6 — remove the wax "UBHI" seal pseudo-element. */
+#page-home .hero-content::before {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+/* 2 — mantra ticker now inside the hero, pinned to the bottom (first screen). */
+#page-home .hero .mantra-strip {
+  width: 100% !important;
+  align-self: stretch !important;
+  margin: auto 0 0 0 !important;   /* push to the hero's bottom edge (first screen) */
+}
+
+/* Phones: four-in-a-row is too tight — fall back to a 2×2 grid + calibrate. */
+@media (max-width: 720px) {
+  #page-home .hero-pathways { grid-template-columns: repeat(2, 1fr) !important; }
+  #page-home .hero { --hdr-h: clamp(80px, 16vw, 104px); }
+  /* refine the name line + headline for phone widths */
+  #page-home .hero .eyebrow { font-size: 0.62rem !important; letter-spacing: 0.14em !important; }
+  #page-home .hero h1 { font-size: clamp(2.3rem, 11vw, 3rem) !important; }
+  #page-home .hero-copy { font-size: 0.94rem !important; line-height: 1.55 !important; }
+  /* hide the decorative rings so they don't crowd the name line on phones */
+  #page-home .hero > .hero-geo { display: none !important; }
+  #page-home .hero .art-accent.acc-tr,
+  #page-home .hero .acc-tr { display: none !important; }
+}
+
+/* (rotating art is back on — fixed via the even scrim above, not by removing it) */

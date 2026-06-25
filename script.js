@@ -679,13 +679,27 @@ if (modalForm) {
       status: "Confirmed"
     };
 
-    // Save locally
-    localStorage.setItem("ubhi-workshop-reservation", JSON.stringify(reservationObj));
-    
-    // Cumulative storage
-    const prevReservations = JSON.parse(localStorage.getItem("ubhi-workshop-reservations")) || [];
-    prevReservations.push(reservationObj);
-    localStorage.setItem("ubhi-workshop-reservations", JSON.stringify(prevReservations));
+    // Save a local receipt copy (used by the receipt download + offline fallback).
+    try { localStorage.setItem("ubhi-workshop-reservation", JSON.stringify(reservationObj)); } catch (e) {}
+    const bookingSavedLocally = persistAppend("workshop-reservations", reservationObj);
+
+    // Send the booking to the backend so it reaches the owner on EVERY device.
+    if (typeof window !== "undefined" && typeof window.ubhiSubmit === "function") {
+      window.ubhiSubmit("booking", {
+        name: name,
+        email: email,
+        phone: phone,
+        workshop_title: option.value,
+        session_date: reservationObj.date,
+        price: (totalPrice === "custom" ? 0 : totalPrice),
+        note: note
+      });
+    }
+
+    const bookingBackendUp = !!(window.ubhiSyncStatus && window.ubhiSyncStatus().reachable);
+    if (!bookingSavedLocally && !bookingBackendUp) {
+      alert("We're sorry — your device storage is full and our server is offline, so this reservation couldn't be recorded. Please screenshot this page and email hello@ubhi.in to confirm your place.");
+    }
 
     // Update capacity
     const capacities = JSON.parse(localStorage.getItem("ubhi-workshops-capacities")) || {};
@@ -924,13 +938,35 @@ if (shopForm) {
       status: "Preparing with care"
     };
     
-    // Save locally
-    localStorage.setItem("ubhi-shop-order", JSON.stringify(orderData));
+    // Save a local receipt copy (used by the receipt download + offline fallback).
+    try { localStorage.setItem("ubhi-shop-order", JSON.stringify(orderData)); } catch (e) {}
+    // Quota-safe append to the cumulative list (returns false if storage is full).
+    const savedLocally = persistAppend("shop-orders", orderData);
 
-    // Save to cumulative list
-    const prevOrders = JSON.parse(localStorage.getItem("ubhi-shop-orders")) || [];
-    prevOrders.push(orderData);
-    localStorage.setItem("ubhi-shop-orders", JSON.stringify(prevOrders));
+    // Send the order to the backend so it reaches the owner on EVERY device — not
+    // only this browser. No-op when the backend isn't deployed/reachable.
+    if (typeof window !== "undefined" && typeof window.ubhiSubmit === "function") {
+      window.ubhiSubmit("order", {
+        customer_name: name,
+        customer_email: email,
+        phone: mobile,
+        items: itemsList.map(it => ({ id: it.id || null, name: it.name, price: it.price, qty: it.quantity || 1 })),
+        ship_street: address, ship_city: city, ship_postcode: postcode, ship_country: country
+      }).then(r => {
+        if (r && r.ok && r.data) {
+          try {
+            const o = JSON.parse(localStorage.getItem("ubhi-shop-order"));
+            if (o) { o.backendId = r.data.id; o.backendRef = r.data.order_ref; localStorage.setItem("ubhi-shop-order", JSON.stringify(o)); }
+          } catch (e) {}
+        }
+      });
+    }
+
+    // Fail LOUDLY only if the order could reach neither local storage nor a server.
+    const backendUp = !!(window.ubhiSyncStatus && window.ubhiSyncStatus().reachable);
+    if (!savedLocally && !backendUp) {
+      alert("We're sorry — your device storage is full and our server is offline, so this order couldn't be recorded. Please screenshot this page (Order " + orderRef + ") and email hello@ubhi.in and we'll complete it for you.");
+    }
 
     // Clear cart
     if (isCartCheckout) {
@@ -950,7 +986,7 @@ if (shopForm) {
       successMsg.innerHTML =
         `Thank you, <strong>${esc(name)}</strong> — ${what} is confirmed.<br>` +
         `<span style="display:inline-block;margin-top:8px;">Order <strong>${esc(orderRef)}</strong> · Total <strong>£${totalStr}</strong> <span style="opacity:.75;">(${shipStr})</span></span><br>` +
-        `<span style="opacity:.75;font-size:0.92em;">A receipt is on its way to ${esc(email)}.</span>`;
+        `<span style="opacity:.75;font-size:0.92em;">Download your receipt below to keep for your records.</span>`;
     }
 
     const stepPayment = document.getElementById("shop-step-payment");
@@ -1110,10 +1146,11 @@ function refreshSnailSelection() {
     }
   }
 
+  const renewEvery = selectedSnailTerm === "12" ? "year" : selectedSnailTerm + " months";
   const summary = document.getElementById("snail-selected-summary");
   if (summary) {
     const body = selectedSnailPrepay
-      ? `Selected: <strong>${selectedSnailPlan}</strong> &middot; <strong>£${selectedSnailTotal} once</strong> (£${selectedSnailPrice}/mo)`
+      ? `Selected: <strong>${selectedSnailPlan}</strong> &middot; <strong>£${selectedSnailTotal} every ${renewEvery}</strong> (£${selectedSnailPrice}/mo) &middot; auto-renews, cancel anytime`
       : `Selected: <strong>Monthly</strong> &middot; <strong>£${selectedSnailPrice} / month</strong> &middot; cancel anytime`;
     summary.innerHTML = `${body}
         <p style="font-size:0.85rem;color:var(--mist,#6b5b49);margin-top:6px;font-family:Jost,sans-serif;font-style:normal;" id="snail-selected-desc">${selectedSnailDesc}</p>`;
@@ -1122,7 +1159,7 @@ function refreshSnailSelection() {
   // Keep the checkout modal's pricing in sync with the selection (so toggling a
   // gift after the modal is open updates the amount shown at payment).
   const mName = document.getElementById("snail-modal-plan-name");
-  if (mName) mName.textContent = selectedSnailPrepay ? `${selectedSnailPlan} · prepaid` : "Monthly subscription";
+  if (mName) mName.textContent = selectedSnailPrepay ? `${selectedSnailPlan} · auto-renews` : "Monthly subscription";
   const mPrice = document.getElementById("snail-modal-plan-price");
   if (mPrice) mPrice.textContent = selectedSnailPrepay ? `£${selectedSnailTotal} today` : `£${selectedSnailPrice} / month`;
   const pAmt = document.getElementById("snail-payment-amount");
@@ -1130,7 +1167,7 @@ function refreshSnailSelection() {
   const pLabel = document.getElementById("snail-payment-label");
   if (pLabel) pLabel.textContent = selectedSnailPrepay ? "Total today:" : "Monthly rate:";
   const pSub = document.getElementById("snail-payment-subline");
-  if (pSub) pSub.textContent = selectedSnailPrepay ? `then nothing for ${selectedSnailTerm} months` : "Billed monthly · Cancel anytime";
+  if (pSub) pSub.textContent = selectedSnailPrepay ? `then £${selectedSnailTotal} every ${renewEvery} · cancel anytime` : "Billed monthly · Cancel anytime";
 }
 
 // Switch plan on card click
@@ -1180,9 +1217,9 @@ function applySnailPlanPrices() {
       }
       const periodEl = card.querySelector(".snail-plan-period");
       if (periodEl && !isMonthly) {
-        periodEl.textContent = card.classList.contains("snail-plan-featured")
-          ? "for the whole year · £" + card.getAttribute("data-price") + "/mo"
-          : "once · £" + card.getAttribute("data-price") + "/mo";
+        const _term = card.getAttribute("data-term");
+        const _every = _term === "12" ? "year" : _term + " months";
+        periodEl.textContent = "every " + _every + " · £" + card.getAttribute("data-price") + "/mo";
       }
     } else if (String(cfg).trim() !== "") {
       // Legacy schema fallback: a plain monthly-price string.
@@ -1299,14 +1336,47 @@ function saveSnailPrices() {
   document.addEventListener("click", function (e) {
     const btn = e.target.closest && e.target.closest(".admin-subtabs button[data-subtab]");
     if (!btn) return;
-    const panel = document.getElementById(btn.getAttribute("data-subtab"));
+    const panelId = btn.getAttribute("data-subtab");
+    const panel = document.getElementById(panelId);
     if (!panel || !panel.classList.contains("admin-subpanel")) return;
     const nav = btn.closest(".admin-subtabs");
     const scope = btn.closest(".admin-tab-content") || document;
     nav.querySelectorAll("button[data-subtab]").forEach(function (b) { b.classList.toggle("is-active", b === btn); });
     scope.querySelectorAll(".admin-subpanel").forEach(function (p) { p.classList.toggle("is-active", p === panel); });
+    // Remember this sub-tab so a refresh returns the owner here, not the default.
+    const navKey = nav.id || (scope && scope.id) || "";
+    if (navKey) safeLocalWrite("ubhi-admin-subtab-" + navKey, panelId);
   });
 })();
+
+// Restore each section's last-viewed sub-tab after a refresh.
+function restoreAdminSubtabs() {
+  document.querySelectorAll(".admin-subtabs").forEach(function (nav) {
+    const scope = nav.closest(".admin-tab-content") || document;
+    const navKey = nav.id || (scope && scope.id) || "";
+    if (!navKey) return;
+    const savedPanel = safeLocalRead("ubhi-admin-subtab-" + navKey);
+    if (!savedPanel) return;
+    const panel = document.getElementById(savedPanel);
+    const btn = nav.querySelector('button[data-subtab="' + savedPanel + '"]');
+    if (!panel || !btn || !panel.classList.contains("admin-subpanel")) return;
+    nav.querySelectorAll("button[data-subtab]").forEach(function (b) { b.classList.toggle("is-active", b === btn); });
+    scope.querySelectorAll(".admin-subpanel").forEach(function (p) { p.classList.toggle("is-active", p === panel); });
+  });
+  // Orders & Bookings uses its own short-key sub-tabs — restore it too.
+  const ob = safeLocalRead("ubhi-admin-ob-subtab");
+  if (ob === "orders" || ob === "bookings") {
+    const obNav = document.getElementById("admin-orders-subtabs");
+    if (obNav) {
+      obNav.querySelectorAll(".admin-subtab").forEach(function (b) { b.classList.toggle("is-active", b.getAttribute("data-subtab") === ob); });
+      const op = document.getElementById("admin-sub-orders");
+      const bp = document.getElementById("admin-sub-bookings");
+      if (op) op.classList.toggle("is-active", ob === "orders");
+      if (bp) bp.classList.toggle("is-active", ob === "bookings");
+    }
+  }
+}
+window.restoreAdminSubtabs = restoreAdminSubtabs;
 
 // Pre-fill the offline add-member form's "Date Subscribed" with today's date.
 (function prefillAddMemberDate() {
@@ -1556,9 +1626,10 @@ function openSnailModal() {
   const paymentSubline = document.getElementById("snail-payment-subline");
   const paymentLabel = document.getElementById("snail-payment-label");
 
+  const modalRenewEvery = selectedSnailTerm === "12" ? "year" : selectedSnailTerm + " months";
   if (modalPlanName) {
     modalPlanName.textContent = selectedSnailPrepay
-      ? `${selectedSnailPlan} · prepaid`
+      ? `${selectedSnailPlan} · auto-renews`
       : "Monthly subscription";
   }
   if (modalPlanPrice) {
@@ -1576,7 +1647,7 @@ function openSnailModal() {
   }
   if (paymentSubline) {
     paymentSubline.textContent = selectedSnailPrepay
-      ? `then nothing for ${selectedSnailTerm} months`
+      ? `then £${selectedSnailTotal} every ${modalRenewEvery} · cancel anytime`
       : "Billed monthly · Cancel anytime";
   }
   
@@ -1747,7 +1818,7 @@ if (snailSubmitBtn) {
     // Gifts are recorded under a "{term}-month gift" plan label.
     const recordPlan = giftOn ? (giftTerm + "-month gift") : selectedSnailPlan;
     const billingStr = selectedSnailPrepay
-      ? ("£" + selectedSnailTotal + " for " + selectedSnailTerm + " months (£" + selectedSnailPrice + "/mo)")
+      ? ("£" + selectedSnailTotal + " every " + selectedSnailTerm + " months (£" + selectedSnailPrice + "/mo, auto-renews)")
       : ("£" + selectedSnailPrice + " / month");
 
     const orderData = {
@@ -1778,13 +1849,10 @@ if (snailSubmitBtn) {
       subscribedAt: new Date().toISOString()
     };
     
-    // Write order data to localStorage
-    localStorage.setItem("ubhi-snail-mail-order", JSON.stringify(orderData));
-    
-    // Cumulative array
-    const prevSnailOrders = JSON.parse(localStorage.getItem("ubhi-snail-mail-orders")) || [];
-    prevSnailOrders.push(orderData);
-    localStorage.setItem("ubhi-snail-mail-orders", JSON.stringify(prevSnailOrders));
+    // Write order data to localStorage (local receipt + offline fallback).
+    try { localStorage.setItem("ubhi-snail-mail-order", JSON.stringify(orderData)); } catch (e) {}
+    // Quota-safe append to the cumulative list.
+    persistAppend("snail-mail-orders", orderData);
 
     // Also register the subscriber in the admin Snail-Mail members database so this
     // sign-up (and its mobile number, shown in the Contact column) appears in the
@@ -1815,7 +1883,20 @@ if (snailSubmitBtn) {
       });
       dbWrite("snail-members", members);
     } catch (e) { /* keep the subscription even if the admin bridge fails */ }
-    
+
+    // Send the subscriber to the backend so it reaches the owner on EVERY device.
+    if (typeof window !== "undefined" && typeof window.ubhiSubmit === "function") {
+      window.ubhiSubmit("subscriber", {
+        name: nameVal,
+        email: emailVal,
+        contact: mobileVal,
+        plan: recordPlan,
+        price: Number(selectedSnailPrice) || 0,
+        address: [addressVal, cityVal, postcodeVal, countryVal].filter(Boolean).join(", "),
+        date_subscribed: new Date().toISOString()
+      });
+    }
+
     // Update success screen text
     const successMsg = document.getElementById("snail-success-msg");
     if (successMsg) {
@@ -2304,7 +2385,31 @@ function updateCartQty(name, newQty) {
 const UBHI_FREE_SHIP = 50;
 const UBHI_SHIP_FLAT = 3.95;
 function ubhiShipping(subtotal) { return subtotal >= ubhiFreeShip() ? 0 : ubhiShipFlat(); }
-function ubhiOrderRef() { return "UB-" + Date.now().toString(36).toUpperCase().slice(-6); }
+// Collision-proof order reference: time component (so refs sort roughly by date)
+// PLUS a random component, so two checkouts in the same millisecond never clash.
+function ubhiOrderRef() {
+  var t = Date.now().toString(36).toUpperCase().slice(-4);
+  var r = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return "UB-" + t + r;
+}
+
+// Quota-safe append to a cumulative localStorage list. Returns true on success,
+// false if the browser's storage is full (so the caller can fail LOUDLY instead
+// of silently dropping an order). Never throws.
+function persistAppend(tableKey, record) {
+  var fullKey = "ubhi-" + tableKey;
+  try {
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem(fullKey)) || []; } catch (e) { list = []; }
+    if (!Array.isArray(list)) list = [];
+    list.push(record);
+    localStorage.setItem(fullKey, JSON.stringify(list));
+    return true;
+  } catch (e) {
+    console.error("Could not persist to " + fullKey + " (storage full?):", e);
+    return false;
+  }
+}
 
 function updateCartDOM(shouldPulse = false) {
   cart = JSON.parse(localStorage.getItem("ubhi-cart")) || [];
@@ -3091,7 +3196,7 @@ function renderHomeGallery() {
   const makeTrackHTML = () => {
     return items.map((item, idx) => `
       <div class="gallery-item">
-        <img src="${esc(item.src)}" alt="${esc(item.alt)}" />
+        <img src="${esc(item.src)}" alt="${esc(item.alt)}" loading="lazy" />
       </div>
       <div class="gallery-separator" aria-hidden="true">
         <span class="sep-om">ॐ</span>
@@ -3222,7 +3327,7 @@ function renderWorkshops() {
 
     let imgHtml = "";
     if (w.image && w.image !== "") {
-      imgHtml = `<div class="card-image-wrap"><img src="${w.image}" alt="${w.title}" /><div class="card-image-glow"></div></div>`;
+      imgHtml = `<div class="card-image-wrap"><img src="${w.image}" alt="${w.title}" loading="lazy" /><div class="card-image-glow"></div></div>`;
     } else {
       imgHtml = `
         <div class="product-art" style="background:radial-gradient(circle at center,rgba(201,151,42,0.08),rgba(7,6,14,0.9));" aria-hidden="true">
@@ -3347,7 +3452,7 @@ function renderShop() {
     const pslug = (p.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
     let visualHtml = "";
     if (p.image && p.image !== "") {
-      visualHtml = `<div class="product-image-wrap"><img src="${p.image}" alt="${p.name}" /></div>`;
+      visualHtml = `<div class="product-image-wrap"><img src="${p.image}" alt="${p.name}" loading="lazy" /></div>`;
     } else {
       const themeClass = p.vector || "lotus";
       let svgMarkup = `<svg viewBox="0 0 200 200" fill="none" width="100%" height="100%"><circle cx="100" cy="100" r="90" stroke="rgba(201,151,42,0.4)" stroke-width="0.8"/><circle cx="100" cy="100" r="10" stroke="rgba(201,151,42,0.5)" stroke-width="0.6"/></svg>`;
@@ -3443,7 +3548,7 @@ function renderSnailMailArchive() {
       const rotClass = rotations[idx % rotations.length];
       return `
         <div class="gallery-item snail-photo-card ${rotClass}">
-          <img src="${esc(item.src)}" alt="${esc(item.caption)}" />
+          <img src="${esc(item.src)}" alt="${esc(item.caption)}" loading="lazy" />
           <div class="snail-photo-caption">${esc(item.caption)}</div>
         </div>
       `;
@@ -3581,7 +3686,7 @@ function renderAdminGallery() {
 
   listEl.innerHTML = rows.map(({ item, idx }) => `
     <div class="admin-gallery-card">
-      <img src="${item.src}" alt="${item.alt}" />
+      <img src="${item.src}" alt="${item.alt}" loading="lazy" />
       <div class="admin-gallery-card-info">${item.alt}</div>
       <div class="delete-overlay">
         <button type="button" class="admin-action-btn-danger" onclick="deleteGalleryItem(${idx})">Delete</button>
@@ -3612,7 +3717,7 @@ function renderArtAdmin() {
     const imgs = Array.isArray(piece.images) ? piece.images : [];
     const thumbs = imgs.map((src, j) => `
       <div class="art-admin-thumb">
-        <img src="${esc(src)}" alt="" />
+        <img src="${esc(src)}" alt="" loading="lazy" />
         ${j === 0 ? `<span class="art-admin-cover">Cover</span>` : ""}
         <button type="button" class="art-admin-thumb-del" title="Remove this photo" onclick="deleteArtImage(${i},${j})">✕</button>
       </div>
@@ -3750,8 +3855,346 @@ function renderAdminShop() {
   }).join("");
 }
 
+// ════════════════════════════════════════════════════════════════════════
+// SNAIL MAIL DISPATCH — every subscriber is anchored to the 5th of the month.
+// A "cycle" is one post day, keyed "YYYY-MM". A term (1/3/6/12 months) = that
+// many letters on consecutive cycles. Paused subscribers are skipped and do NOT
+// use up a letter. Each member keeps a `sentCycles` log so you always know who
+// has received what.
+// ════════════════════════════════════════════════════════════════════════
+const SNAIL_DISPATCH_DAY = 5;
+let snailDispatchCycle = null; // the post run currently shown (defaults to this month)
+
+function snailCycleKey(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); }
+function snailParseCycle(key) { const m = String(key || "").match(/(\d{4})-(\d{1,2})/); return m ? { y: +m[1], m: +m[2] } : null; }
+function snailCycleLabel(key) {
+  const c = snailParseCycle(key); if (!c) return key || "";
+  return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][c.m - 1] + " " + c.y;
+}
+function snailAddCycles(key, n) {
+  const c = snailParseCycle(key); if (!c) return key;
+  const tot = c.y * 12 + (c.m - 1) + n;
+  return Math.floor(tot / 12) + "-" + String((tot % 12) + 1).padStart(2, "0");
+}
+function snailNowCycle() { return snailCycleKey(new Date()); }
+// First dispatch cycle for a join/start date — the 5th-of-the-month rule:
+// join on the 1st–5th → this month; after the 5th → next month.
+function snailStartCycleFor(dateStr) {
+  let d = dateStr ? new Date(dateStr) : new Date();
+  if (isNaN(d.getTime())) d = new Date();
+  let y = d.getFullYear(), m = d.getMonth();
+  if (d.getDate() > SNAIL_DISPATCH_DAY) { m += 1; if (m > 11) { m = 0; y += 1; } }
+  return y + "-" + String(m + 1).padStart(2, "0");
+}
+// Term length in letters (cycles), from termMonths or the plan label.
+function snailTermMonths(m) {
+  if ((m.isGift || m.giftOn) && Number(m.giftTermMonths)) return Number(m.giftTermMonths);
+  if (Number(m.termMonths)) return Number(m.termMonths);
+  const mt = String(m.plan || "").match(/(\d+)\s*month/i);
+  return mt ? +mt[1] : 1;
+}
+// Back-fill startCycle + sentCycles onto a legacy member record. Gifts anchor to
+// the gift's start date; everyone else to their subscribe date. Returns true if mutated.
+function snailEnsureCycleFields(m) {
+  let changed = false;
+  if (!m.startCycle) {
+    const seed = (m.isGift && m.giftStart) ? m.giftStart : m.dateSubscribed;
+    m.startCycle = snailStartCycleFor(seed);
+    changed = true;
+  }
+  if (!Array.isArray(m.sentCycles)) { m.sentCycles = []; changed = true; }
+  return changed;
+}
+// EVERY Snail Mail plan now recurs — it auto-renews until the subscriber cancels.
+// Monthly renews monthly; the 3/6/12 plans renew at the end of each block. So a
+// subscriber receives a letter every month indefinitely; nothing ever "completes".
+// (Gifts are the only fixed-length exception — a gift runs for its bought term.)
+function snailIsRolling(m) {
+  return !(m.isGift || m.giftOn);
+}
+// How often the plan renews (its billing block), for display.
+function snailRenewLabel(m) {
+  const t = snailTermMonths(m);
+  if (t <= 1) return "monthly";
+  if (t === 12) return "yearly";
+  return "every " + t + " months";
+}
+function snailMemberProgress(m) {
+  snailEnsureCycleFields(m);
+  const rolling = snailIsRolling(m);
+  const term = snailTermMonths(m);
+  const sent = (m.sentCycles || []).length;
+  return {
+    rolling: rolling, term: term, sent: sent,
+    remaining: rolling ? Infinity : Math.max(0, term - sent),
+    complete: rolling ? false : (sent >= term),
+    startCycle: m.startCycle
+  };
+}
+// Due a letter in `cycle`? Active, started, not complete, not already sent.
+function snailDueInCycle(m, cycle) {
+  if (m.status !== "Active") return false;          // paused/inactive/completed → skip
+  const p = snailMemberProgress(m);
+  if (p.complete) return false;
+  if (m.startCycle > cycle) return false;           // YYYY-MM strings sort correctly
+  return (m.sentCycles || []).indexOf(cycle) === -1;
+}
+// The next cycle an active member will receive a letter (null if complete/paused).
+function snailNextDue(m) {
+  const p = snailMemberProgress(m);
+  if (p.complete || m.status !== "Active") return null;
+  let c = snailNowCycle();
+  if (m.startCycle > c) c = m.startCycle;
+  let guard = 0;
+  while ((m.sentCycles || []).indexOf(c) !== -1 && guard++ < 240) c = snailAddCycles(c, 1);
+  return c;
+}
+function snailProgressLabel(m) {
+  const p = snailMemberProgress(m);
+  if (p.complete) return "✓ gift complete (" + p.sent + "/" + p.term + ")";
+  if (m.status !== "Active") return "cancelled · " + p.sent + " sent";
+  if (p.rolling) return p.sent + " sent · renews " + snailRenewLabel(m) + " · next " + snailCycleLabel(snailNextDue(m));
+  return "gift " + p.sent + "/" + p.term + " sent · next " + snailCycleLabel(snailNextDue(m));
+}
+// Stamp a letter as sent for a member in a cycle; auto-complete when the term is met.
+function snailMarkSent(email, cycle) {
+  const members = dbRead("snail-members", []);
+  const m = members.find(x => String(x.email || "").toLowerCase() === String(email).toLowerCase());
+  if (!m) return;
+  snailEnsureCycleFields(m);
+  if (m.sentCycles.indexOf(cycle) === -1) m.sentCycles.push(cycle);
+  if (!snailIsRolling(m) && m.sentCycles.length >= snailTermMonths(m)) { m.status = "Completed"; m.completedAt = cycle; }
+  dbWrite("snail-members", members);
+  renderAdminSnailMail();
+}
+function snailUnmarkSent(email, cycle) {
+  const members = dbRead("snail-members", []);
+  const m = members.find(x => String(x.email || "").toLowerCase() === String(email).toLowerCase());
+  if (!m) return;
+  snailEnsureCycleFields(m);
+  m.sentCycles = m.sentCycles.filter(c => c !== cycle);
+  if (m.status === "Completed" && m.sentCycles.length < snailTermMonths(m)) { m.status = "Active"; delete m.completedAt; }
+  dbWrite("snail-members", members);
+  renderAdminSnailMail();
+}
+function snailMarkAllSent(cycle) {
+  const members = dbRead("snail-members", []);
+  let n = 0;
+  members.forEach(m => {
+    if (snailDueInCycle(m, cycle)) {
+      snailEnsureCycleFields(m);
+      m.sentCycles.push(cycle);
+      if (!snailIsRolling(m) && m.sentCycles.length >= snailTermMonths(m)) { m.status = "Completed"; m.completedAt = cycle; }
+      n++;
+    }
+  });
+  if (n) dbWrite("snail-members", members);
+  renderAdminSnailMail();
+}
+function snailShiftDispatchCycle(delta) {
+  if (!snailDispatchCycle) snailDispatchCycle = snailNowCycle();
+  snailDispatchCycle = snailAddCycles(snailDispatchCycle, delta);
+  snailDispatchPage = 1;
+  renderAdminSnailMail();
+}
+window.snailMarkSent = snailMarkSent;
+window.snailUnmarkSent = snailUnmarkSent;
+window.snailMarkAllSent = snailMarkAllSent;
+window.snailShiftDispatchCycle = snailShiftDispatchCycle;
+
+// ── Post-run console state + actions (scales to thousands of letters) ──────
+let snailDispatchPage = 1;
+let snailDispatchPageSize = 50;
+let snailDispatchSearch = "";
+
+// Everyone who should receive a letter in `cycle`: active, started, and either
+// still owed a letter or already ticked this cycle. Paused/cancelled and finished
+// gifts drop off.
+function snailRunRoster(members, cycle) {
+  return members.filter(function (m) {
+    if (m.status !== "Active") return false;
+    snailEnsureCycleFields(m);
+    if (m.startCycle > cycle) return false;
+    var p = snailMemberProgress(m);
+    if (p.complete && (m.sentCycles || []).indexOf(cycle) === -1) return false;
+    return true;
+  });
+}
+function renderSnailDispatchOnly() { renderSnailDispatch(dbRead("snail-members", [])); }
+function snailDispatchSetPage(n) { snailDispatchPage = Math.max(1, n); renderSnailDispatchOnly(); }
+function snailDispatchSetPageSize(v) { snailDispatchPageSize = parseInt(v, 10) || 50; snailDispatchPage = 1; renderSnailDispatchOnly(); }
+function snailDispatchSetSearch(v) {
+  snailDispatchSearch = v; snailDispatchPage = 1; renderSnailDispatchOnly();
+  var inp = document.getElementById("snail-dispatch-search");
+  if (inp) { inp.focus(); var val = inp.value; inp.value = ""; inp.value = val; } // keep cursor at end
+}
+// Update the live counter/progress bar WITHOUT a full re-render, so ticking
+// through a long list never jumps your scroll position.
+function snailUpdateRunCounter(cycle) {
+  var roster = snailRunRoster(dbRead("snail-members", []), cycle);
+  var total = roster.length;
+  var sent = roster.filter(function (m) { return (m.sentCycles || []).indexOf(cycle) !== -1; }).length;
+  var cEl = document.getElementById("snail-run-counter");
+  if (cEl) cEl.innerHTML = '<strong style="color:var(--gold);">' + sent + "</strong> of " + total + " packed";
+  var rEl = document.getElementById("snail-run-remaining");
+  if (rEl) rEl.textContent = (total - sent) + " left to send";
+  var bar = document.getElementById("snail-run-bar");
+  if (bar) bar.style.width = (total ? Math.round(sent / total * 100) : 0) + "%";
+}
+// Tick / untick a single letter in place (no full re-render).
+function snailToggleCycle(cb, email, cycle) {
+  var members = dbRead("snail-members", []);
+  var m = members.find(function (x) { return String(x.email || "").toLowerCase() === String(email).toLowerCase(); });
+  if (!m) return;
+  snailEnsureCycleFields(m);
+  if (cb.checked) { if (m.sentCycles.indexOf(cycle) === -1) m.sentCycles.push(cycle); }
+  else { m.sentCycles = m.sentCycles.filter(function (c) { return c !== cycle; }); }
+  dbWrite("snail-members", members);
+  var row = cb.closest && cb.closest("tr"); if (row) row.classList.toggle("is-sent", cb.checked);
+  snailUpdateRunCounter(cycle);
+}
+function snailUnmarkAll(cycle) {
+  var members = dbRead("snail-members", []);
+  var changed = false;
+  members.forEach(function (m) {
+    if ((m.sentCycles || []).indexOf(cycle) !== -1) {
+      m.sentCycles = m.sentCycles.filter(function (c) { return c !== cycle; });
+      if (m.status === "Completed") { m.status = "Active"; delete m.completedAt; }
+      changed = true;
+    }
+  });
+  if (changed) dbWrite("snail-members", members);
+  renderAdminSnailMail();
+}
+// Export the run as CSV — for printing address labels / handing to a fulfilment house.
+function snailExportRun(cycle) {
+  var roster = snailRunRoster(dbRead("snail-members", []), cycle);
+  var lines = [["Name", "Email", "Contact", "Plan", "Letter", "Address", "Status"]];
+  roster.forEach(function (m) {
+    var p = snailMemberProgress(m);
+    var sent = (m.sentCycles || []).indexOf(cycle) !== -1;
+    lines.push([m.name || "", m.email || "", m.contact || "", m.plan || "", "letter " + (sent ? p.sent : p.sent + 1), m.address || "", sent ? "sent" : "to send"]);
+  });
+  var csv = lines.map(function (r) { return r.map(function (c) { return '"' + String(c == null ? "" : c).replace(/"/g, '""') + '"'; }).join(","); }).join("\r\n");
+  var blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a"); a.href = url; a.download = "ubhi-post-run-" + cycle + ".csv";
+  document.body.appendChild(a); a.click();
+  setTimeout(function () { a.remove(); URL.revokeObjectURL(url); }, 500);
+}
+window.snailDispatchSetPage = snailDispatchSetPage;
+window.snailDispatchSetPageSize = snailDispatchSetPageSize;
+window.snailDispatchSetSearch = snailDispatchSetSearch;
+window.snailToggleCycle = snailToggleCycle;
+window.snailUnmarkAll = snailUnmarkAll;
+window.snailExportRun = snailExportRun;
+
+// Render the "This month's post run" panel into #admin-snail-dispatch.
+function renderSnailDispatch(members) {
+  const el = document.getElementById("admin-snail-dispatch");
+  if (!el) return;
+  if (!snailDispatchCycle) snailDispatchCycle = snailNowCycle();
+  const cycle = snailDispatchCycle;
+
+  // Whole roster for this cycle (to-send + already-sent), to-send first.
+  const roster = snailRunRoster(members, cycle).slice().sort((a, b) => {
+    const sa = (a.sentCycles || []).indexOf(cycle) !== -1 ? 1 : 0;
+    const sb = (b.sentCycles || []).indexOf(cycle) !== -1 ? 1 : 0;
+    if (sa !== sb) return sa - sb;
+    return String(a.name || "").localeCompare(String(b.name || ""));
+  });
+  const total = roster.length;
+  const sentCount = roster.filter(m => (m.sentCycles || []).indexOf(cycle) !== -1).length;
+  const toSend = total - sentCount;
+
+  // Search + paginate so thousands of letters stay manageable.
+  const q = (snailDispatchSearch || "").toLowerCase().trim();
+  const filtered = q ? roster.filter(m =>
+    (m.name || "").toLowerCase().includes(q) || (m.email || "").toLowerCase().includes(q) ||
+    (m.address || "").toLowerCase().includes(q) || (m.plan || "").toLowerCase().includes(q)) : roster;
+  const pageSize = snailDispatchPageSize;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  if (snailDispatchPage > totalPages) snailDispatchPage = totalPages;
+  if (snailDispatchPage < 1) snailDispatchPage = 1;
+  const page = snailDispatchPage;
+  const startIdx = (page - 1) * pageSize;
+  const pageItems = filtered.slice(startIdx, startIdx + pageSize);
+  const fromN = filtered.length ? startIdx + 1 : 0;
+  const toN = Math.min(startIdx + pageSize, filtered.length);
+
+  const rows = pageItems.map(m => {
+    const p = snailMemberProgress(m);
+    const sent = (m.sentCycles || []).indexOf(cycle) !== -1;
+    const num = sent ? p.sent : p.sent + 1;
+    return `<tr class="snail-run-row${sent ? " is-sent" : ""}">
+      <td style="text-align:center;width:28px;"><input type="checkbox" class="snail-run-check"${sent ? " checked" : ""} onchange="snailToggleCycle(this,'${m.email}','${cycle}')"></td>
+      <td style="white-space:nowrap;"><span class="srun-name" style="color:var(--gold);">${esc(m.name)}</span>${m.isGift ? " 🎁" : ""} <span style="font-size:0.68rem;color:var(--mist);">· ${esc(m.plan || "")}</span></td>
+      <td style="font-size:0.72rem;color:var(--aurora-teal);white-space:nowrap;">letter ${num}${p.rolling ? "" : " / " + p.term}</td>
+      <td style="font-size:0.72rem;color:var(--mist);max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(m.address || "—")}</td>
+    </tr>`;
+  }).join("");
+
+  el.innerHTML = `
+    <style>
+      #admin-snail-dispatch .srun-tbl{width:100%;border-collapse:collapse;}
+      #admin-snail-dispatch .srun-tbl thead th{padding:4px 8px;font-size:0.64rem;color:var(--mist);text-transform:uppercase;letter-spacing:0.05em;text-align:left;border-bottom:1px solid var(--border-color);}
+      #admin-snail-dispatch .snail-run-row td{padding:3px 8px;border-bottom:1px solid rgba(255,255,255,0.05);vertical-align:middle;font-size:0.78rem;line-height:1.25;}
+      #admin-snail-dispatch .snail-run-row.is-sent{opacity:0.45;}
+      #admin-snail-dispatch .snail-run-row.is-sent .srun-name{text-decoration:line-through;}
+      #admin-snail-dispatch .snail-run-check{width:16px!important;height:16px!important;min-height:0!important;min-width:0!important;padding:0!important;margin:0!important;box-shadow:none!important;border-radius:3px!important;cursor:pointer;accent-color:#a14e5e;flex:none;}
+      #admin-snail-dispatch .srun-prog{height:6px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;}
+      #admin-snail-dispatch .srun-prog > i{display:block;height:100%;background:#a14e5e;transition:width .2s;}
+    </style>
+    <div style="background:rgba(201,151,42,0.06);border:1px solid var(--border-color);border-radius:10px;padding:16px 20px;margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div>
+          <div style="font-family:var(--font-header);color:var(--gold);font-size:1.1rem;">📮 This month's post run</div>
+          <div style="font-size:0.82rem;color:var(--mist);margin-top:2px;"><span id="snail-run-counter"><strong style="color:var(--gold);">${sentCount}</strong> of ${total} packed</span> · <span id="snail-run-remaining">${toSend} left to send</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button type="button" class="admin-pagination-btn" onclick="snailShiftDispatchCycle(-1)">‹ Prev</button>
+          <span style="min-width:104px;text-align:center;color:var(--gold);font-weight:600;">${snailCycleLabel(cycle)}</span>
+          <button type="button" class="admin-pagination-btn" onclick="snailShiftDispatchCycle(1)">Next ›</button>
+        </div>
+      </div>
+      ${total ? `
+        <div class="srun-prog" style="margin-top:12px;"><i id="snail-run-bar" style="width:${Math.round(sentCount / total * 100)}%;"></i></div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px;">
+          <input id="snail-dispatch-search" type="text" value="${esc(snailDispatchSearch)}" oninput="snailDispatchSetSearch(this.value)" placeholder="Search this run — name, address…" style="flex:1;min-width:200px;padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid var(--border-color);border-radius:4px;color:var(--gold);font-size:0.85rem;">
+          <select onchange="snailDispatchSetPageSize(this.value)" style="padding:7px 8px;background:rgba(0,0,0,0.3);border:1px solid var(--border-color);color:var(--gold);border-radius:4px;cursor:pointer;">
+            ${[25, 50, 100, 200].map(s => `<option value="${s}"${s === pageSize ? " selected" : ""}>${s} / page</option>`).join("")}
+          </select>
+          <button type="button" class="admin-pagination-btn" onclick="snailExportRun('${cycle}')">⤓ Export CSV</button>
+        </div>
+        <table class="srun-tbl" style="margin-top:12px;">
+          <thead><tr><th style="width:34px;">✓</th><th>Subscriber</th><th>Letter</th><th>Address</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;">
+          <div style="font-size:0.78rem;color:var(--mist);">Showing ${fromN}–${toN} of ${filtered.length}${filtered.length !== total ? ` (filtered from ${total})` : ""}</div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button type="button" class="admin-pagination-btn"${page === 1 ? " disabled" : ""} onclick="snailDispatchSetPage(1)">« First</button>
+            <button type="button" class="admin-pagination-btn"${page === 1 ? " disabled" : ""} onclick="snailDispatchSetPage(${page - 1})">‹</button>
+            <span style="color:var(--gold);font-size:0.82rem;min-width:96px;text-align:center;">Page ${page} / ${totalPages}</span>
+            <button type="button" class="admin-pagination-btn"${page === totalPages ? " disabled" : ""} onclick="snailDispatchSetPage(${page + 1})">›</button>
+            <button type="button" class="admin-pagination-btn"${page === totalPages ? " disabled" : ""} onclick="snailDispatchSetPage(${totalPages})">Last »</button>
+          </div>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;border-top:1px solid var(--border-color);padding-top:14px;">
+          <button type="button" class="button button-primary"${toSend ? "" : " disabled"} onclick="if(confirm('Mark all ${toSend} unsent letters in ${snailCycleLabel(cycle)} as sent?'))snailMarkAllSent('${cycle}')">Mark all ${toSend} sent ✓</button>
+          <button type="button" class="admin-pagination-btn"${sentCount ? "" : " disabled"} onclick="if(confirm('Clear every sent tick for ${snailCycleLabel(cycle)}?'))snailUnmarkAll('${cycle}')">Undo all</button>
+        </div>` :
+        `<div style="margin-top:14px;color:var(--mist);font-size:0.9rem;">Nothing to post for ${snailCycleLabel(cycle)} — you're all caught up. 🎉</div>`}
+    </div>`;
+}
+
 function renderAdminSnailMail() {
   const members = dbRead("snail-members", []);
+  // Back-fill cycle fields once so dispatch + progress are accurate for legacy records.
+  let _cycleChanged = false;
+  members.forEach(m => { if (snailEnsureCycleFields(m)) _cycleChanged = true; });
+  if (_cycleChanged) dbWrite("snail-members", members);
+  renderSnailDispatch(members);
 
   // Update Stats Panel
   const totalCountEl = document.getElementById("admin-snail-total-count");
@@ -3813,7 +4256,7 @@ function renderAdminSnailMail() {
           <td class="admin-table-title">${esc(m.name)}${m.isGift ? ' <span style="display:inline-block;font-size:0.64rem;font-weight:600;letter-spacing:0.04em;background:rgba(168,68,47,0.16);color:var(--aurora-rose,#a8442f);padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle;">🎁 GIFT</span>' : ''}${m.isGift ? `<div style="font-size:0.74rem;color:var(--mist);font-weight:400;margin-top:4px;line-height:1.4;">For ${esc(m.giftFor || "—")}${m.giftStart ? ` · starts ${esc(m.giftStart)}` : ""}${m.giftMessage ? `<br>“${esc(m.giftMessage)}”` : ""}</div>` : ""}</td>
           <td>${esc(m.email)}</td>
           <td style="color:var(--aurora-gold);font-family:monospace;">${esc(m.contact || "—")}</td>
-          <td>${esc(m.plan)}</td>
+          <td>${esc(m.plan)}<div style="font-size:0.72rem;color:var(--mist);margin-top:3px;">${snailProgressLabel(m)}</div></td>
           <td>${esc(m.billing)}</td>
           <td style="max-width: 250px; font-size:0.82rem; white-space: normal; line-height: 1.4;">${esc(m.address)}</td>
           <td>${esc(m.dateSubscribed)}</td>
@@ -4301,6 +4744,7 @@ function renderAdminDashboard() {
   safe(renderAdminOrders, "orders");
   safe(populateSiteSettingsForm, "site-profile");
   safe(restoreAdminTab, "active-tab");
+  safe(restoreAdminSubtabs, "subtabs");
 }
 
 // Restore the last-viewed admin tab after a refresh (so it doesn't jump back to Overview).
@@ -4598,10 +5042,13 @@ function expireLapsedMembers() {
   let changed = 0;
   members.forEach((m) => {
     if (!m || m.status !== "Active" || m.autoExpired) return;
-    const match = /(\d+)/.exec(m.plan || "");
-    const termMonths = match ? parseInt(match[1], 10) : 0;   // "Monthly" → 0 → ongoing
-    if (!termMonths || !m.dateSubscribed) return;
-    const start = new Date(m.dateSubscribed);
+    // Only GIFTS are fixed-length and genuinely end. Paid plans now auto-renew
+    // (recurring), so they must NEVER be auto-expired by the calendar.
+    if (!(m.isGift || m.giftOn)) return;
+    const termMonths = parseInt(m.giftTermMonths, 10) || 0;
+    const startStr = m.giftStart || m.dateSubscribed;
+    if (!termMonths || !startStr) return;
+    const start = new Date(startStr);
     if (isNaN(start.getTime())) return;
     const ends = new Date(start);
     ends.setMonth(ends.getMonth() + termMonths);
@@ -4914,6 +5361,11 @@ if (addShopForm) {
     const description = document.getElementById("admin-shop-desc-text")?.value || "";
 
     const list = dbRead("shop-catalog", []);
+    // Guard against accidental duplicates (e.g. a double-click on Publish).
+    const dupe = list.some(p => String(p.name || "").trim().toLowerCase() === name.trim().toLowerCase());
+    if (dupe && !confirm('A product called "' + name.trim() + '" already exists. Add it again anyway?')) {
+      return;
+    }
     list.push({ name, category, price, totalStock, remainingStock, vector, image, description });
     dbWrite("shop-catalog", list);
 
@@ -5906,6 +6358,7 @@ function initOrdersAndBackupListeners() {
     if (op) op.classList.toggle("is-active", which === "orders");
     if (bp) bp.classList.toggle("is-active", which === "bookings");
     if (which === "orders") renderAdminShopOrders(); else renderAdminWorkshopBookings();
+    safeLocalWrite("ubhi-admin-ob-subtab", which);   // remember across refresh
   });
 
   // 3. Clear Buttons
@@ -6289,9 +6742,158 @@ try { initSnailMailCRMListeners(); } catch (e) { console.error("Snail CRM listen
     var b = document.getElementById("booking-ics-btn");
     if (b && !b._wired) { b._wired = true; b.addEventListener("click", downloadICS); }
   }
-  function init() { initGiftToggle(); initICSBtn(); }
+
+  // ── DOWNLOADABLE RECEIPTS (orders + workshop bookings) ──────────
+  function rEsc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function money(n) {
+    var v = Number(n);
+    if (!isFinite(v)) return String(n == null ? "" : n);
+    return "£" + (Number.isInteger(v) ? v : v.toFixed(2));
+  }
+  function fmtDate(iso) {
+    var d = iso ? new Date(iso) : new Date();
+    if (isNaN(d.getTime())) return "";
+    var M = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    return d.getDate() + " " + M[d.getMonth()] + " " + d.getFullYear();
+  }
+  function bookingRef(r) {
+    var t = r && r.reservedAt ? new Date(r.reservedAt).getTime() : 0;
+    if (!t) t = (String(r && r.workshop || "").length + 1) * 100000;
+    return "WS-" + t.toString(36).toUpperCase().slice(-6);
+  }
+  function receiptShell(opts) {
+    // opts: { title, ref, date, status, parties:[{label,lines:[]}], rowsHTML, totalsHTML, footNote }
+    var partiesHTML = (opts.parties || []).map(function (p) {
+      var lines = (p.lines || []).filter(Boolean).map(function (l) { return rEsc(l); }).join("<br>");
+      return '<div class="party"><span class="lbl">' + rEsc(p.label) + '</span>' + lines + '</div>';
+    }).join("");
+    return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">' +
+      '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+      '<title>Ubhi Receipt · ' + rEsc(opts.ref) + '</title><style>' +
+      '*{box-sizing:border-box}body{margin:0;background:#e7dcc4;color:#46372a;' +
+      'font-family:Georgia,"Iowan Old Style","Palatino Linotype",serif;line-height:1.5;padding:28px 16px}' +
+      '.sheet{max-width:680px;margin:0 auto;background:#f7f0df;border:1px solid #d8c9a6;' +
+      'border-radius:6px;padding:34px 38px;box-shadow:0 8px 30px rgba(70,55,42,.14)}' +
+      '.hint{max-width:680px;margin:0 auto 14px auto;font-size:.85rem;color:#6b5b49;display:flex;' +
+      'align-items:center;gap:12px;flex-wrap:wrap}.hint button{font:inherit;font-size:.85rem;cursor:pointer;' +
+      'background:#46372a;color:#f7f0df;border:0;border-radius:4px;padding:7px 14px}' +
+      'header{text-align:center;border-bottom:1px solid #d8c9a6;padding-bottom:18px;margin-bottom:22px}' +
+      '.brand{font-size:2rem;letter-spacing:.32em;text-transform:uppercase;color:#46372a}' +
+      '.tag{font-size:.82rem;letter-spacing:.18em;text-transform:uppercase;color:#9a8a6f;margin-top:6px}' +
+      'h1{font-size:1.15rem;letter-spacing:.14em;text-transform:uppercase;color:#8a6d2e;margin:0 0 18px}' +
+      '.meta{display:flex;flex-wrap:wrap;gap:18px 32px;margin-bottom:24px;font-size:.92rem}' +
+      '.meta span{display:block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:#9a8a6f}' +
+      '.meta strong{font-weight:700}' +
+      '.parties{display:flex;flex-wrap:wrap;gap:24px 48px;margin-bottom:24px;font-size:.92rem}' +
+      '.party .lbl{display:block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:#9a8a6f;margin-bottom:4px}' +
+      'table{width:100%;border-collapse:collapse;margin-bottom:18px;font-size:.94rem}' +
+      'th{text-align:left;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#9a8a6f;' +
+      'border-bottom:1px solid #d8c9a6;padding:0 0 8px}td{padding:9px 0;border-bottom:1px solid #ece2cb}' +
+      '.c{text-align:center}.r{text-align:right}.totals{margin-left:auto;width:260px;font-size:.95rem}' +
+      '.totals .row{display:flex;justify-content:space-between;padding:5px 0}' +
+      '.totals .grand{border-top:1px solid #d8c9a6;margin-top:6px;padding-top:10px;font-size:1.1rem;font-weight:700}' +
+      'footer{margin-top:26px;border-top:1px solid #d8c9a6;padding-top:16px;font-size:.86rem;color:#6b5b49;text-align:center}' +
+      'footer a{color:#8a6d2e}@media print{body{background:#fff;padding:0}.hint{display:none}' +
+      '.sheet{box-shadow:none;border:0}}</style></head><body>' +
+      '<div class="hint">Tip: use Print → “Save as PDF” to keep this receipt.' +
+      '<button onclick="window.print()">Print / Save as PDF</button></div>' +
+      '<div class="sheet"><header><div class="brand">Ubhi</div><div class="tag">Look within to ascend</div></header>' +
+      '<h1>' + rEsc(opts.title) + '</h1>' +
+      '<div class="meta"><div><span>Reference</span><strong>' + rEsc(opts.ref) + '</strong></div>' +
+      '<div><span>Date</span><strong>' + rEsc(opts.date) + '</strong></div>' +
+      (opts.status ? '<div><span>Status</span><strong>' + rEsc(opts.status) + '</strong></div>' : '') + '</div>' +
+      '<div class="parties">' + partiesHTML + '</div>' +
+      (opts.rowsHTML ? '<table><thead>' + opts.thead + '</thead><tbody>' + opts.rowsHTML + '</tbody></table>' : '') +
+      (opts.totalsHTML || '') +
+      '<footer>' + (opts.footNote || '') + '<br>Ubhi · hello@ubhi.in · Made by hand in the United Kingdom</footer>' +
+      '</div></body></html>';
+  }
+  function buildOrderReceipt(o) {
+    var rows = (o.items || []).map(function (it) {
+      var qty = Number(it.quantity) || 1, price = Number(it.price) || 0, line = price * qty;
+      return '<tr><td>' + rEsc(it.name || "Item") + '</td><td class="c">' + qty +
+        '</td><td class="r">' + money(price) + '</td><td class="r">' + money(line) + '</td></tr>';
+    }).join("");
+    var a = o.address || {};
+    var ship = Number(o.shipping) || 0;
+    var totals = '<div class="totals"><div class="row"><span>Subtotal</span><span>' + money(o.subtotal) + '</span></div>' +
+      '<div class="row"><span>Shipping</span><span>' + (ship === 0 ? "Free" : money(ship)) + '</span></div>' +
+      '<div class="row grand"><span>Total</span><span>' + money(o.totalPrice) + '</span></div></div>';
+    return receiptShell({
+      title: "Order Receipt", ref: o.orderRef || "—", date: fmtDate(o.orderedAt),
+      status: o.status || "Preparing with care",
+      parties: [
+        { label: "Billed to", lines: [o.name, o.email, o.phone] },
+        { label: "Ship to", lines: [a.street, [a.city, a.postcode].filter(Boolean).join(" "), a.country] }
+      ],
+      thead: '<tr><th>Item</th><th class="c">Qty</th><th class="r">Price</th><th class="r">Total</th></tr>',
+      rowsHTML: rows, totalsHTML: totals,
+      footNote: "Thank you for supporting handmade work."
+    });
+  }
+  function buildBookingReceipt(r) {
+    var tickets = Number(r.tickets) || 1;
+    var priceTxt = (r.price === "custom" || r.price == null) ? "To be confirmed" : money(r.price);
+    var rows = '<tr><td>' + rEsc(r.workshop || "Workshop") +
+      (r.date ? '<br><span style="color:#9a8a6f;font-size:.86rem">' + rEsc(r.date) + '</span>' : '') +
+      '</td><td class="c">' + tickets + '</td><td class="r">' + priceTxt + '</td></tr>';
+    var totals = '<div class="totals"><div class="row grand"><span>Total</span><span>' + priceTxt + '</span></div></div>';
+    return receiptShell({
+      title: "Booking Receipt", ref: bookingRef(r), date: fmtDate(r.reservedAt),
+      status: r.status || "Confirmed",
+      parties: [
+        { label: "Attendee", lines: [r.name, r.email, r.phone] },
+        { label: "Note", lines: [r.note] }
+      ],
+      thead: '<tr><th>Workshop</th><th class="c">Places</th><th class="r">Total</th></tr>',
+      rowsHTML: rows, totalsHTML: totals,
+      footNote: "We look forward to gathering with you."
+    });
+  }
+  function downloadReceiptDoc(html, ref) {
+    var blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "ubhi-receipt-" + String(ref || "order").replace(/[^a-z0-9]+/gi, "-").toLowerCase() + ".html";
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { a.remove(); URL.revokeObjectURL(url); }, 500);
+  }
+  function downloadOrderReceipt() {
+    var o; try { o = JSON.parse(localStorage.getItem("ubhi-shop-order")); } catch (e) {}
+    if (!o) { alert("No recent order found to receipt."); return; }
+    downloadReceiptDoc(buildOrderReceipt(o), o.orderRef);
+  }
+  function downloadBookingReceipt() {
+    var r; try { r = JSON.parse(localStorage.getItem("ubhi-workshop-reservation")); } catch (e) {}
+    if (!r) { alert("No recent booking found to receipt."); return; }
+    downloadReceiptDoc(buildBookingReceipt(r), bookingRef(r));
+  }
+  function initReceiptBtns() {
+    var s = document.getElementById("shop-receipt-btn");
+    if (s && !s._wired) { s._wired = true; s.addEventListener("click", downloadOrderReceipt); }
+    var b = document.getElementById("booking-receipt-btn");
+    if (b && !b._wired) { b._wired = true; b.addEventListener("click", downloadBookingReceipt); }
+  }
+  function init() { initGiftToggle(); initICSBtn(); initReceiptBtns(); }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
+})();
+
+// ── Hero art rotator — slowly cross-fade the full-bleed background slides. ──
+(function initHeroArtRotator() {
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".hero-art-slide"));
+  if (slides.length < 2) return;                 // nothing to rotate
+  var i = 0;
+  setInterval(function () {
+    slides[i].classList.remove("is-active");
+    i = (i + 1) % slides.length;
+    slides[i].classList.add("is-active");
+  }, 5500);                                       // dwell ~5.5s; CSS handles the 1.6s fade
 })();
 
 // ── INITIAL PAGE LOAD (called LAST — all helpers defined above) ──

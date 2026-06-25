@@ -364,6 +364,22 @@ p {
   object-position: center;
 }
 
+/* Rotating hero art — full-bleed slides that slowly cross-fade behind the
+   parchment overlay. Only the .is-active slide is visible at a time. */
+.hero-art-rotator { position: absolute; inset: 0; z-index: -3; overflow: hidden; }
+.hero-art-slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  transition: opacity 1.6s ease-in-out;
+  will-change: opacity;
+}
+.hero-art-slide.is-active { opacity: 1; }
+
 .hero-overlay {
   position: absolute;
   inset: 0;
@@ -6133,3 +6149,62 @@ summary:focus-visible,
   .snail-plan-featured { transform: none; }
   .snail-plan-featured:hover { transform: translateY(-4px); }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   ADMIN DENSITY — one consistent, compact scale across every admin tab and
+   sub-tab (buttons, search/inputs, selects, tables, headings, stat numbers).
+   Scoped to #page-admin so the public site is untouched. !important is used on
+   the shared controls because many carry inline padding/size from earlier work.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Buttons — every kind to one compact size */
+#page-admin .button,
+#page-admin .admin-pagination-btn,
+#page-admin .admin-subtab {
+  font-size: 0.8rem !important;
+  padding: 7px 13px !important;
+  min-height: 0 !important;
+  line-height: 1.25 !important;
+}
+#page-admin .admin-action-btn-danger {
+  font-size: 0.74rem !important;
+  padding: 5px 10px !important;
+  min-height: 0 !important;
+}
+#page-admin .admin-tab-btn {
+  font-size: 0.84rem !important;
+  padding: 6px 11px !important;
+}
+
+/* Form fields — search, inputs, selects, textareas to one compact size */
+#page-admin input[type="text"],
+#page-admin input[type="email"],
+#page-admin input[type="tel"],
+#page-admin input[type="number"],
+#page-admin input[type="date"],
+#page-admin input[type="password"],
+#page-admin input[type="search"],
+#page-admin select,
+#page-admin textarea {
+  font-size: 0.82rem !important;
+  padding: 7px 10px !important;
+  min-height: 0 !important;
+}
+
+/* Headings & section titles */
+#page-admin h3 { font-size: 1.05rem !important; }
+#page-admin h4 { font-size: 0.92rem !important; margin: 0 0 8px !important; }
+
+/* Oversized stat numbers */
+#page-admin .admin-stat-card h3,
+#page-admin #admin-snail-total-count,
+#page-admin #admin-snail-active-count,
+#page-admin #admin-snail-inactive-count { font-size: 1.45rem !important; }
+
+/* Labels */
+#page-admin label { font-size: 0.78rem !important; }
+
+/* Tables — tighter type. No !important on padding, so the Post-Run console's
+   even tighter rows keep their own spacing via higher specificity. */
+#page-admin table th { font-size: 0.66rem; padding: 5px 8px; }
+#page-admin table td { font-size: 0.8rem; padding: 5px 8px; }

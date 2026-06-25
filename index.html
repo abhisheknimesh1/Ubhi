@@ -28,10 +28,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=Gochi+Hand&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=1.3.97" />
-    <link rel="stylesheet" href="world.css?v=1.3.97" />
-    <link rel="stylesheet" href="artwork.css?v=1.3.97" />
-    <link rel="stylesheet" href="embellish.css?v=1.3.97" />
+    <link rel="stylesheet" href="styles.css?v=1.6.7" />
+    <link rel="stylesheet" href="world.css?v=1.6.7" />
+    <link rel="stylesheet" href="artwork.css?v=1.6.7" />
+    <link rel="stylesheet" href="embellish.css?v=1.6.7" />
     <!-- Structured data — helps search engines & rich results.
          DEVELOPER: fill in the real address, phone & social URLs before launch. -->
     <script type="application/ld+json">
@@ -106,7 +106,18 @@
         <!-- Hero -->
         <section class="hero" aria-label="Ubhi workshops in London">
           <canvas class="particles-canvas" id="particles" aria-hidden="true"></canvas>
-          <img class="hero-image" src="assets/ubhi-workshop-generated.png" fetchpriority="high" decoding="async" alt="Yoga and block printing workshop in a London studio" />
+          <!-- Rotating hero art — slowly cross-fades behind the parchment overlay.
+               TO USE YOUR OWN ART: replace these files in /assets (or change the src
+               below). The rotator cycles whatever .hero-art-slide images are present,
+               so you can add or remove slides freely. Placeholders for now:
+               workshop · geometry · yoga · block-print · snail-mail. -->
+          <div class="hero-art-rotator" aria-hidden="true">
+            <img class="hero-art-slide is-active" src="assets/ubhi-workshop-generated.png" alt="" fetchpriority="high" decoding="async" />
+            <img class="hero-art-slide" src="assets/gallery-geometry-draw.png" alt="" loading="lazy" decoding="async" />
+            <img class="hero-art-slide" src="assets/gallery-yoga-breath.png" alt="" loading="lazy" decoding="async" />
+            <img class="hero-art-slide" src="assets/gallery-block-print.png" alt="" loading="lazy" decoding="async" />
+            <img class="hero-art-slide" src="assets/ubhi-snail-mail-generated.png" alt="" loading="lazy" decoding="async" />
+          </div>
           <div class="hero-overlay" aria-hidden="true"></div>
 
           <!-- Ephemera scattered across the desk (parallax via data-depth) -->
@@ -150,24 +161,6 @@
           </div>
 
           <div class="hero-content reveal">
-            <div class="he-stamp" data-depth="14" aria-hidden="true">
-              <span class="stamp">
-                <span class="stamp-inner">
-                  <svg class="stamp-art" viewBox="0 0 46 46" fill="none">
-                    <path d="M23 39 C15 33 9 31 5 31 C7 22 14 20 18 23 C15 14 20 7 23 5 C26 7 31 14 28 23 C32 20 39 22 41 31 C37 31 31 33 23 39Z" stroke="#a6741f" stroke-width="1.2" stroke-linejoin="round"/>
-                    <path d="M23 39 L23 23" stroke="#a6741f" stroke-width="1"/>
-                    <circle cx="23" cy="20" r="2.2" fill="#a14e5e"/>
-                  </svg>
-                  <span class="stamp-label">Ubhi Post</span>
-                  <span class="stamp-value">to ascend</span>
-                </span>
-              </span>
-              <span class="postmark">
-                <span class="pm-arc">· London ·</span>
-                <span>ਉਭੀ</span>
-                <span class="pm-arc">look within</span>
-              </span>
-            </div>
             <p class="eyebrow">Chelsea Kaur Ubhi · ਉਭੀ · to ascend</p>
             <h1>Yoga, Art<br>&amp; <span class="ink-underline">Slow Ritual.</span></h1>
             <p class="hero-copy">Become aware of our creative spirit. Intimate workshops weaving conscious movement and slow art to quiet the mind, settle the body and breath, and ascend within.</p>
@@ -241,25 +234,25 @@
               </a>
             </div>
           </div>
-        </section>
 
-        <!-- Mantra ticker -->
-        <div class="mantra-strip" aria-hidden="true">
-          <div class="mantra-track">
-            <span data-site="tagline">Look within to ascend</span><span class="ticker-dot">ॐ</span>
-            <span>Key to happy life</span><span class="ticker-dot">ॐ</span>
-            <span>Yoga</span><span class="ticker-dot">ॐ</span>
-            <span>Meditation</span><span class="ticker-dot">ॐ</span>
-            <span>Art</span><span class="ticker-dot">ॐ</span>
+          <!-- Mantra ticker — now inside the hero so it sits on the first screen -->
+          <div class="mantra-strip" aria-hidden="true">
+            <div class="mantra-track">
+              <span data-site="tagline">Look within to ascend</span><span class="ticker-dot">ॐ</span>
+              <span>Key to happy life</span><span class="ticker-dot">ॐ</span>
+              <span>Yoga</span><span class="ticker-dot">ॐ</span>
+              <span>Meditation</span><span class="ticker-dot">ॐ</span>
+              <span>Art</span><span class="ticker-dot">ॐ</span>
+            </div>
+            <div class="mantra-track">
+              <span data-site="tagline">Look within to ascend</span><span class="ticker-dot">ॐ</span>
+              <span>Key to happy life</span><span class="ticker-dot">ॐ</span>
+              <span>Yoga</span><span class="ticker-dot">ॐ</span>
+              <span>Meditation</span><span class="ticker-dot">ॐ</span>
+              <span>Art</span><span class="ticker-dot">ॐ</span>
+            </div>
           </div>
-          <div class="mantra-track">
-            <span data-site="tagline">Look within to ascend</span><span class="ticker-dot">ॐ</span>
-            <span>Key to happy life</span><span class="ticker-dot">ॐ</span>
-            <span>Yoga</span><span class="ticker-dot">ॐ</span>
-            <span>Meditation</span><span class="ticker-dot">ॐ</span>
-            <span>Art</span><span class="ticker-dot">ॐ</span>
-          </div>
-        </div>
+        </section>
 
         <!-- Intro -->
         <section class="intro section-pad">
@@ -439,7 +432,7 @@
             <div class="gallery-track">
               <!-- Set 1 -->
               <div class="gallery-item">
-                <img src="assets/gallery-chelsea.png" alt="Chelsea Kaur Ubhi in her studio">
+                <img src="assets/gallery-chelsea.png" alt="Chelsea Kaur Ubhi in her studio" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -454,7 +447,7 @@
               </div>
 
               <div class="gallery-item">
-                <img src="assets/gallery-block-print.png" alt="Slow craft block printing workshop">
+                <img src="assets/gallery-block-print.png" alt="Slow craft block printing workshop" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -469,7 +462,7 @@
               </div>
 
               <div class="gallery-item">
-                <img src="assets/gallery-yoga-breath.png" alt="Somatic movement and breathwork practice">
+                <img src="assets/gallery-yoga-breath.png" alt="Somatic movement and breathwork practice" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -484,7 +477,7 @@
               </div>
 
               <div class="gallery-item">
-                <img src="assets/gallery-geometry-draw.png" alt="Sacred geometry drawing session">
+                <img src="assets/gallery-geometry-draw.png" alt="Sacred geometry drawing session" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -500,7 +493,7 @@
 
               <!-- Set 2 -->
               <div class="gallery-item">
-                <img src="assets/gallery-chelsea.png" alt="Chelsea Kaur Ubhi in her studio">
+                <img src="assets/gallery-chelsea.png" alt="Chelsea Kaur Ubhi in her studio" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -515,7 +508,7 @@
               </div>
 
               <div class="gallery-item">
-                <img src="assets/gallery-block-print.png" alt="Slow craft block printing workshop">
+                <img src="assets/gallery-block-print.png" alt="Slow craft block printing workshop" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -530,7 +523,7 @@
               </div>
 
               <div class="gallery-item">
-                <img src="assets/gallery-yoga-breath.png" alt="Somatic movement and breathwork practice">
+                <img src="assets/gallery-yoga-breath.png" alt="Somatic movement and breathwork practice" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -545,7 +538,7 @@
               </div>
 
               <div class="gallery-item">
-                <img src="assets/gallery-geometry-draw.png" alt="Sacred geometry drawing session">
+                <img src="assets/gallery-geometry-draw.png" alt="Sacred geometry drawing session" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -561,7 +554,7 @@
 
               <!-- Set 3 -->
               <div class="gallery-item">
-                <img src="assets/gallery-chelsea.png" alt="Chelsea Kaur Ubhi in her studio">
+                <img src="assets/gallery-chelsea.png" alt="Chelsea Kaur Ubhi in her studio" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -576,7 +569,7 @@
               </div>
 
               <div class="gallery-item">
-                <img src="assets/gallery-block-print.png" alt="Slow craft block printing workshop">
+                <img src="assets/gallery-block-print.png" alt="Slow craft block printing workshop" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -591,7 +584,7 @@
               </div>
 
               <div class="gallery-item">
-                <img src="assets/gallery-yoga-breath.png" alt="Somatic movement and breathwork practice">
+                <img src="assets/gallery-yoga-breath.png" alt="Somatic movement and breathwork practice" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -606,7 +599,7 @@
               </div>
 
               <div class="gallery-item">
-                <img src="assets/gallery-geometry-draw.png" alt="Sacred geometry drawing session">
+                <img src="assets/gallery-geometry-draw.png" alt="Sacred geometry drawing session" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -624,7 +617,7 @@
             <div class="gallery-track">
               <!-- Set 1 -->
               <div class="gallery-item">
-                <img src="assets/gallery-chelsea.png" alt="Chelsea Kaur Ubhi in her studio">
+                <img src="assets/gallery-chelsea.png" alt="Chelsea Kaur Ubhi in her studio" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -639,7 +632,7 @@
               </div>
 
               <div class="gallery-item">
-                <img src="assets/gallery-block-print.png" alt="Slow craft block printing workshop">
+                <img src="assets/gallery-block-print.png" alt="Slow craft block printing workshop" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -654,7 +647,7 @@
               </div>
 
               <div class="gallery-item">
-                <img src="assets/gallery-yoga-breath.png" alt="Somatic movement and breathwork practice">
+                <img src="assets/gallery-yoga-breath.png" alt="Somatic movement and breathwork practice" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -669,7 +662,7 @@
               </div>
 
               <div class="gallery-item">
-                <img src="assets/gallery-geometry-draw.png" alt="Sacred geometry drawing session">
+                <img src="assets/gallery-geometry-draw.png" alt="Sacred geometry drawing session" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -685,7 +678,7 @@
 
               <!-- Set 2 -->
               <div class="gallery-item">
-                <img src="assets/gallery-chelsea.png" alt="Chelsea Kaur Ubhi in her studio">
+                <img src="assets/gallery-chelsea.png" alt="Chelsea Kaur Ubhi in her studio" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -700,7 +693,7 @@
               </div>
 
               <div class="gallery-item">
-                <img src="assets/gallery-block-print.png" alt="Slow craft block printing workshop">
+                <img src="assets/gallery-block-print.png" alt="Slow craft block printing workshop" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -715,7 +708,7 @@
               </div>
 
               <div class="gallery-item">
-                <img src="assets/gallery-yoga-breath.png" alt="Somatic movement and breathwork practice">
+                <img src="assets/gallery-yoga-breath.png" alt="Somatic movement and breathwork practice" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -730,7 +723,7 @@
               </div>
 
               <div class="gallery-item">
-                <img src="assets/gallery-geometry-draw.png" alt="Sacred geometry drawing session">
+                <img src="assets/gallery-geometry-draw.png" alt="Sacred geometry drawing session" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -746,7 +739,7 @@
 
               <!-- Set 3 -->
               <div class="gallery-item">
-                <img src="assets/gallery-chelsea.png" alt="Chelsea Kaur Ubhi in her studio">
+                <img src="assets/gallery-chelsea.png" alt="Chelsea Kaur Ubhi in her studio" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -761,7 +754,7 @@
               </div>
 
               <div class="gallery-item">
-                <img src="assets/gallery-block-print.png" alt="Slow craft block printing workshop">
+                <img src="assets/gallery-block-print.png" alt="Slow craft block printing workshop" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -776,7 +769,7 @@
               </div>
 
               <div class="gallery-item">
-                <img src="assets/gallery-yoga-breath.png" alt="Somatic movement and breathwork practice">
+                <img src="assets/gallery-yoga-breath.png" alt="Somatic movement and breathwork practice" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -791,7 +784,7 @@
               </div>
 
               <div class="gallery-item">
-                <img src="assets/gallery-geometry-draw.png" alt="Sacred geometry drawing session">
+                <img src="assets/gallery-geometry-draw.png" alt="Sacred geometry drawing session" loading="lazy">
               </div>
               <div class="gallery-separator" aria-hidden="true">
                 <span class="sep-om">ॐ</span>
@@ -885,7 +878,7 @@
           <div class="workshop-grid" id="workshops-list-container">
             <article class="workshop-card reveal">
               <div class="card-image-wrap">
-                <img src="assets/ubhi-workshop-generated.png" alt="Block printing and yoga workshop" />
+                <img src="assets/ubhi-workshop-generated.png" alt="Block printing and yoga workshop" loading="lazy" />
                 <div class="card-image-glow"></div>
               </div>
               <div class="card-body">
@@ -1187,10 +1180,11 @@
                 
                 <h2 class="modal-title">Space Reserved</h2>
                 <p id="modal-success-msg" class="modal-success-message">Thank you. Your space has been quietly held.</p>
-                <p class="modal-success-subtext">A confirmation email has been sent. Chelsea will reach out a few days before the gathering with location details and preparation notes.</p>
-                
+                <p class="modal-success-subtext">Add it to your calendar and download your receipt below. Chelsea will reach out a few days before the gathering with location details and preparation notes.</p>
+
                 <div class="modal-footer" style="width: 100%;">
                   <button type="button" class="button" id="booking-ics-btn" style="width: 100%; margin-bottom: 10px;">📅 Add to calendar</button>
+                  <button type="button" class="button" id="booking-receipt-btn" style="width: 100%; margin-bottom: 10px;">🧾 Download receipt</button>
                   <button type="button" class="button button-primary" id="modal-success-close-btn" style="width: 100%;">Return to workshops</button>
                 </div>
               </div>
@@ -1249,7 +1243,7 @@
               <div class="product-grid" id="shop-products-container">
 
                 <article class="product-card reveal">
-                  <div class="product-image-wrap"><img src="assets/ubhi-snail-mail-generated.png" alt="Volume 01 AUM snail mail package" /></div>
+                  <div class="product-image-wrap"><img src="assets/ubhi-snail-mail-generated.png" alt="Volume 01 AUM snail mail package" loading="lazy" /></div>
                   <div class="product-body">
                     <p class="eyebrow">Snail Mail</p>
                     <h3>Volume 01 &middot; AUM</h3>
@@ -1411,7 +1405,7 @@
                 </article>
 
                 <article class="product-card reveal">
-                  <div class="product-image-wrap"><img src="assets/ubhi-snail-mail-generated.png" alt="Volume 02 STILLNESS snail mail package" /></div>
+                  <div class="product-image-wrap"><img src="assets/ubhi-snail-mail-generated.png" alt="Volume 02 STILLNESS snail mail package" loading="lazy" /></div>
                   <div class="product-body">
                     <p class="eyebrow">Snail Mail</p>
                     <h3>Volume 02 &middot; STILLNESS</h3>
@@ -1530,9 +1524,10 @@
                 
                 <h2 class="modal-title">Order Placed</h2>
                 <p id="shop-success-msg" class="modal-success-message">Thank you. Your order has been received.</p>
-                <p class="modal-success-subtext">A purchase receipt has been sent to your email. We will prepare your package with quiet care and dispatch it soon.</p>
-                
+                <p class="modal-success-subtext">Download your receipt below to keep for your records. We will prepare your package with quiet care and dispatch it soon.</p>
+
                 <div class="modal-footer" style="width: 100%;">
+                  <button type="button" class="button" id="shop-receipt-btn" style="width: 100%; margin-bottom: 10px;">🧾 Download receipt</button>
                   <button type="button" class="button button-primary" id="shop-success-close-btn" style="width: 100%;">Return to shop</button>
                 </div>
               </div>
@@ -1788,7 +1783,7 @@
             <!-- Section 6: Subscription plans selector -->
           <section class="snail-plans-section reveal" id="snail-subscribe-anchor">
             <h2 class="text-center" style="font-family:'Fraunces',serif;font-style:italic;font-weight:300;margin-bottom:8px;color:var(--stardust-full);">Let’s be pen pals</h2>
-            <p class="text-center" style="color:var(--stardust);font-size:0.95rem;max-width:500px;margin:0 auto 24px auto;">Choose how you'd like your letters to arrive — month to month with no commitment, or prepay for six or twelve months and save a little.</p>
+            <p class="text-center" style="color:var(--stardust);font-size:0.95rem;max-width:500px;margin:0 auto 24px auto;">Choose how often you'd like to be billed — monthly, or every 3, 6 or 12 months to save a little. Every plan posts a letter each month and auto-renews until you cancel.</p>
             
             <div class="snail-plans-grid">
               
@@ -1801,13 +1796,13 @@
                   </div>
                 </div>
                 <span class="snail-plan-term">Monthly</span>
-                <span class="snail-plan-tag tag-monthly">Pay monthly</span>
+                <span class="snail-plan-tag tag-monthly">Renews monthly</span>
                 <div class="snail-plan-price">£18</div>
                 <span class="snail-plan-period">/ month · cancel anytime</span>
                 <p class="snail-plan-desc">Month to month, no commitment — pause or cancel whenever you like.</p>
               </div>
 
-              <div class="snail-plan-card" data-plan="3 Months" data-price="16.33" data-total="49" data-term="3" data-prepay="true" data-desc="A gentle first season — three letters to begin, paid in one go.">
+              <div class="snail-plan-card" data-plan="3 Months" data-price="16.33" data-total="49" data-term="3" data-prepay="true" data-desc="A gentle first season — a letter every month, renewing each quarter. Cancel anytime.">
                 <div class="plan-wax-seal">
                   <div class="wax-seal gold" style="position:static;transform:none;width:32px;height:32px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
@@ -1816,10 +1811,10 @@
                   </div>
                 </div>
                 <span class="snail-plan-term">3 Months</span>
-                <span class="snail-plan-tag tag-prepay">Pay once</span>
+                <span class="snail-plan-tag tag-prepay">Auto-renews</span>
                 <div class="snail-plan-price">£49</div>
-                <span class="snail-plan-period">once · £16.33/mo</span>
-                <p class="snail-plan-desc">A gentle first season — three letters to begin, paid in one go.</p>
+                <span class="snail-plan-period">every 3 months · £16.33/mo</span>
+                <p class="snail-plan-desc">A gentle first season — a letter every month, renewing each quarter. Cancel anytime.</p>
               </div>
 
               <div class="snail-plan-card" data-plan="6 Months" data-price="15.83" data-total="95" data-term="6" data-prepay="true" data-desc="Half a year of handmade post, wrapped in botanically-dyed linen.">
@@ -1831,9 +1826,9 @@
                   </div>
                 </div>
                 <span class="snail-plan-term">6 Months</span>
-                <span class="snail-plan-tag tag-prepay">Pay once</span>
+                <span class="snail-plan-tag tag-prepay">Auto-renews</span>
                 <div class="snail-plan-price">£95</div>
-                <span class="snail-plan-period">once · £15.83/mo</span>
+                <span class="snail-plan-period">every 6 months · £15.83/mo</span>
                 <p class="snail-plan-desc">Half a year of handmade post, wrapped in botanically-dyed linen.</p>
               </div>
 
@@ -1847,10 +1842,10 @@
                   </div>
                 </div>
                 <span class="snail-plan-term">12 Months</span>
-                <span class="snail-plan-tag tag-prepay">Pay once</span>
+                <span class="snail-plan-tag tag-prepay">Auto-renews</span>
                 <div class="snail-plan-price">£149</div>
-                <span class="snail-plan-period">for the whole year · £12.42/mo</span>
-                <span class="snail-plan-saving">Save £67 vs paying monthly</span>
+                <span class="snail-plan-period">every year · £12.42/mo</span>
+                <span class="snail-plan-saving">A year full of surprises</span>
                 <p class="snail-plan-desc">A full year of slow post — twelve parcels, opened with a hand-thrown clay inkwell.</p>
               </div>
 
@@ -1858,7 +1853,7 @@
 
             <div class="snail-plans-footer">
               <div class="snail-selected-summary" id="snail-selected-summary">
-                Selected: <strong>12 Months</strong> &middot; <strong>£149 once</strong> (£12.42/mo)
+                Selected: <strong>12 Months</strong> &middot; <strong>£149 / year</strong> (£12.42/mo) &middot; auto-renews
                 <p style="font-size:0.85rem;color:var(--mist,#6b5b49);margin-top:6px;font-family:'EB Garamond',sans-serif;font-style:normal;" id="snail-selected-desc">A full year of slow post — twelve parcels, opened with a hand-thrown clay inkwell. Our very best value.</p>
               </div>
               <button class="button button-primary" type="button" id="snail-subscribe-btn">Step into the Club</button>
@@ -1942,62 +1937,62 @@
               <div class="snail-photos-track">
                 
                 <div class="gallery-item snail-photo-card snail-rot-left-1">
-                  <img src="assets/ubhi-snail-mail-generated.png" decoding="async" alt="January — Volume 01: AUM">
+                  <img src="assets/ubhi-snail-mail-generated.png" loading="lazy" decoding="async" alt="January — Volume 01: AUM">
                   <div class="snail-photo-caption">January — Vol. 01: AUM ॐ</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-right-1">
-                  <img src="assets/gallery-block-print.png" decoding="async" alt="February — Volume 02: Prana">
+                  <img src="assets/gallery-block-print.png" loading="lazy" decoding="async" alt="February — Volume 02: Prana">
                   <div class="snail-photo-caption">February — Vol. 02: Prana 🌀</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-left-2">
-                  <img src="assets/gallery-geometry-draw.png" decoding="async" alt="March — Volume 03: Lotus">
+                  <img src="assets/gallery-geometry-draw.png" loading="lazy" decoding="async" alt="March — Volume 03: Lotus">
                   <div class="snail-photo-caption">March — Vol. 03: Lotus 🪷</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-right-2">
-                  <img src="assets/gallery-yoga-breath.png" decoding="async" alt="April — Volume 04: Prithvi">
+                  <img src="assets/gallery-yoga-breath.png" loading="lazy" decoding="async" alt="April — Volume 04: Prithvi">
                   <div class="snail-photo-caption">April — Vol. 04: Prithvi 🌍</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-zero">
-                  <img src="assets/ubhi-workshop-generated.png" decoding="async" alt="May — Volume 05: Vayu">
+                  <img src="assets/ubhi-workshop-generated.png" loading="lazy" decoding="async" alt="May — Volume 05: Vayu">
                   <div class="snail-photo-caption">May — Vol. 05: Vayu 🌬️</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-left-1">
-                  <img src="assets/ubhi-snail-mail-generated.png" decoding="async" alt="June — Volume 06: Akasha">
+                  <img src="assets/ubhi-snail-mail-generated.png" loading="lazy" decoding="async" alt="June — Volume 06: Akasha">
                   <div class="snail-photo-caption">June — Vol. 06: Akasha ✨</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-right-1">
-                  <img src="assets/gallery-block-print.png" decoding="async" alt="July — Volume 07: Agni">
+                  <img src="assets/gallery-block-print.png" loading="lazy" decoding="async" alt="July — Volume 07: Agni">
                   <div class="snail-photo-caption">July — Vol. 07: Agni 🔥</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-left-2">
-                  <img src="assets/gallery-geometry-draw.png" decoding="async" alt="August — Volume 08: Jala">
+                  <img src="assets/gallery-geometry-draw.png" loading="lazy" decoding="async" alt="August — Volume 08: Jala">
                   <div class="snail-photo-caption">August — Vol. 08: Jala 🌊</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-right-2">
-                  <img src="assets/gallery-yoga-breath.png" decoding="async" alt="September — Volume 09: Tejas">
+                  <img src="assets/gallery-yoga-breath.png" loading="lazy" decoding="async" alt="September — Volume 09: Tejas">
                   <div class="snail-photo-caption">September — Vol. 09: Tejas ☀️</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-zero">
-                  <img src="assets/ubhi-workshop-generated.png" decoding="async" alt="October — Volume 10: Ojas">
+                  <img src="assets/ubhi-workshop-generated.png" loading="lazy" decoding="async" alt="October — Volume 10: Ojas">
                   <div class="snail-photo-caption">October — Vol. 10: Ojas 🍯</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-left-1">
-                  <img src="assets/ubhi-snail-mail-generated.png" decoding="async" alt="November — Volume 11: Soma">
+                  <img src="assets/ubhi-snail-mail-generated.png" loading="lazy" decoding="async" alt="November — Volume 11: Soma">
                   <div class="snail-photo-caption">November — Vol. 11: Soma 🌙</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-right-1">
-                  <img src="assets/gallery-block-print.png" decoding="async" alt="December — Volume 12: Dhyana">
+                  <img src="assets/gallery-block-print.png" loading="lazy" decoding="async" alt="December — Volume 12: Dhyana">
                   <div class="snail-photo-caption">December — Vol. 12: Dhyana 🧘</div>
                 </div>
 
@@ -2005,62 +2000,62 @@
               <div class="snail-photos-track" aria-hidden="true">
                 
                 <div class="gallery-item snail-photo-card snail-rot-left-1">
-                  <img src="assets/ubhi-snail-mail-generated.png" decoding="async" alt="January — Volume 01: AUM">
+                  <img src="assets/ubhi-snail-mail-generated.png" loading="lazy" decoding="async" alt="January — Volume 01: AUM">
                   <div class="snail-photo-caption">January — Vol. 01: AUM ॐ</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-right-1">
-                  <img src="assets/gallery-block-print.png" decoding="async" alt="February — Volume 02: Prana">
+                  <img src="assets/gallery-block-print.png" loading="lazy" decoding="async" alt="February — Volume 02: Prana">
                   <div class="snail-photo-caption">February — Vol. 02: Prana 🌀</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-left-2">
-                  <img src="assets/gallery-geometry-draw.png" decoding="async" alt="March — Volume 03: Lotus">
+                  <img src="assets/gallery-geometry-draw.png" loading="lazy" decoding="async" alt="March — Volume 03: Lotus">
                   <div class="snail-photo-caption">March — Vol. 03: Lotus 🪷</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-right-2">
-                  <img src="assets/gallery-yoga-breath.png" decoding="async" alt="April — Volume 04: Prithvi">
+                  <img src="assets/gallery-yoga-breath.png" loading="lazy" decoding="async" alt="April — Volume 04: Prithvi">
                   <div class="snail-photo-caption">April — Vol. 04: Prithvi 🌍</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-zero">
-                  <img src="assets/ubhi-workshop-generated.png" decoding="async" alt="May — Volume 05: Vayu">
+                  <img src="assets/ubhi-workshop-generated.png" loading="lazy" decoding="async" alt="May — Volume 05: Vayu">
                   <div class="snail-photo-caption">May — Vol. 05: Vayu 🌬️</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-left-1">
-                  <img src="assets/ubhi-snail-mail-generated.png" decoding="async" alt="June — Volume 06: Akasha">
+                  <img src="assets/ubhi-snail-mail-generated.png" loading="lazy" decoding="async" alt="June — Volume 06: Akasha">
                   <div class="snail-photo-caption">June — Vol. 06: Akasha ✨</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-right-1">
-                  <img src="assets/gallery-block-print.png" decoding="async" alt="July — Volume 07: Agni">
+                  <img src="assets/gallery-block-print.png" loading="lazy" decoding="async" alt="July — Volume 07: Agni">
                   <div class="snail-photo-caption">July — Vol. 07: Agni 🔥</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-left-2">
-                  <img src="assets/gallery-geometry-draw.png" decoding="async" alt="August — Volume 08: Jala">
+                  <img src="assets/gallery-geometry-draw.png" loading="lazy" decoding="async" alt="August — Volume 08: Jala">
                   <div class="snail-photo-caption">August — Vol. 08: Jala 🌊</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-right-2">
-                  <img src="assets/gallery-yoga-breath.png" decoding="async" alt="September — Volume 09: Tejas">
+                  <img src="assets/gallery-yoga-breath.png" loading="lazy" decoding="async" alt="September — Volume 09: Tejas">
                   <div class="snail-photo-caption">September — Vol. 09: Tejas ☀️</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-zero">
-                  <img src="assets/ubhi-workshop-generated.png" decoding="async" alt="October — Volume 10: Ojas">
+                  <img src="assets/ubhi-workshop-generated.png" loading="lazy" decoding="async" alt="October — Volume 10: Ojas">
                   <div class="snail-photo-caption">October — Vol. 10: Ojas 🍯</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-left-1">
-                  <img src="assets/ubhi-snail-mail-generated.png" decoding="async" alt="November — Volume 11: Soma">
+                  <img src="assets/ubhi-snail-mail-generated.png" loading="lazy" decoding="async" alt="November — Volume 11: Soma">
                   <div class="snail-photo-caption">November — Vol. 11: Soma 🌙</div>
                 </div>
 
                 <div class="gallery-item snail-photo-card snail-rot-right-1">
-                  <img src="assets/gallery-block-print.png" decoding="async" alt="December — Volume 12: Dhyana">
+                  <img src="assets/gallery-block-print.png" loading="lazy" decoding="async" alt="December — Volume 12: Dhyana">
                   <div class="snail-photo-caption">December — Vol. 12: Dhyana 🧘</div>
                 </div>
 
@@ -2488,7 +2483,7 @@
           </div>
           <div class="page-hero-content">
             <p class="eyebrow">slow reading &amp; making</p>
-            <h1>Art &amp; Journal<span class="journal-hero-ornament" aria-hidden="true"><svg viewBox="0 0 100 60" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="30" r="24" stroke="rgba(201, 151, 42, 0.18)" stroke-width="0.5" stroke-dasharray="2 2"/><circle cx="50" cy="30" r="14" stroke="rgba(201, 151, 42, 0.12)" stroke-width="0.5"/><path d="M50,42 Q40,36 20,38 L20,16 Q40,14 50,22 Q60,14 80,16 L80,38 Q60,36 50,42 Z" stroke="rgba(201, 151, 42, 0.45)" stroke-width="0.8" fill="rgba(201, 151, 42, 0.02)"/><path d="M50,22 L50,42" stroke="rgba(201, 151, 42, 0.45)" stroke-width="0.8"/><path d="M56,12 L38,36" stroke="rgba(45, 139, 124, 0.45)" stroke-width="0.8" stroke-linecap="round"/><path d="M38,36 L36,39 L39,37 Z" fill="rgba(45, 139, 124, 0.6)" stroke="rgba(45, 139, 124, 0.45)" stroke-width="0.5"/><path d="M26,10 L27,12 L29,13 L27,14 L26,16 L25,14 L23,13 L25,12 Z" fill="rgba(201, 151, 42, 0.35)"/><path d="M74,10 L75,12 L77,13 L75,14 L74,16 L73,14 L71,13 L73,12 Z" fill="rgba(201, 151, 42, 0.35)"/><path d="M 46 8 A 6 6 0 0 0 52 14 A 5.2 5.2 0 0 1 46 8" fill="rgba(201, 151, 42, 0.3)" stroke="rgba(201, 151, 42, 0.4)" stroke-width="0.5"/></svg></span></h1>
+            <h1>Journal<span class="journal-hero-ornament" aria-hidden="true"><svg viewBox="0 0 100 60" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="30" r="24" stroke="rgba(201, 151, 42, 0.18)" stroke-width="0.5" stroke-dasharray="2 2"/><circle cx="50" cy="30" r="14" stroke="rgba(201, 151, 42, 0.12)" stroke-width="0.5"/><path d="M50,42 Q40,36 20,38 L20,16 Q40,14 50,22 Q60,14 80,16 L80,38 Q60,36 50,42 Z" stroke="rgba(201, 151, 42, 0.45)" stroke-width="0.8" fill="rgba(201, 151, 42, 0.02)"/><path d="M50,22 L50,42" stroke="rgba(201, 151, 42, 0.45)" stroke-width="0.8"/><path d="M56,12 L38,36" stroke="rgba(45, 139, 124, 0.45)" stroke-width="0.8" stroke-linecap="round"/><path d="M38,36 L36,39 L39,37 Z" fill="rgba(45, 139, 124, 0.6)" stroke="rgba(45, 139, 124, 0.45)" stroke-width="0.5"/><path d="M26,10 L27,12 L29,13 L27,14 L26,16 L25,14 L23,13 L25,12 Z" fill="rgba(201, 151, 42, 0.35)"/><path d="M74,10 L75,12 L77,13 L75,14 L74,16 L73,14 L71,13 L73,12 Z" fill="rgba(201, 151, 42, 0.35)"/><path d="M 46 8 A 6 6 0 0 0 52 14 A 5.2 5.2 0 0 1 46 8" fill="rgba(201, 151, 42, 0.3)" stroke="rgba(201, 151, 42, 0.4)" stroke-width="0.5"/></svg></span></h1>
             <div class="journal-ticker" aria-hidden="true">
               <div class="journal-ticker-track">
                 <span>Ideas explored slowly</span> <span class="ptr-svg-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="var(--aurora-gold)" stroke-width="1.2"><path d="M12 3c0 4.5 1.5 6 6 6-4.5 0-6 1.5-6 6 0-4.5-1.5-6-6-6 4.5 0 6-1.5 6-6Z" fill="rgba(201,151,42,0.1)"/></svg></span>
@@ -2840,7 +2835,7 @@
               <button type="button" class="admin-tab-btn" data-admin-tab="shop">Shop</button>
               <button type="button" class="admin-tab-btn" data-admin-tab="snail">Snail Mail</button>
               <button type="button" class="admin-tab-btn" data-admin-tab="customers">Customers</button>
-              <button type="button" class="admin-tab-btn" data-admin-tab="journal">Art &amp; Journal</button>
+              <button type="button" class="admin-tab-btn" data-admin-tab="journal">Journal</button>
               <button type="button" class="admin-tab-btn" data-admin-tab="orders">Orders & Bookings</button>
               <button type="button" class="admin-tab-btn" data-admin-tab="updates">Email Updates</button>
               <button type="button" class="admin-tab-btn" data-admin-tab="profile">Site Profile</button>
@@ -2927,7 +2922,7 @@
                     <span class="admin-stat-sub">in the catalogue</span>
                   </div>
                   <div class="admin-stat-card stat-journal">
-                    <span class="admin-stat-label">Art &amp; Journal</span>
+                    <span class="admin-stat-label">Journal</span>
                     <span class="admin-stat-number" id="ov-journal-count">0</span>
                     <span class="admin-stat-sub">posts published</span>
                   </div>
@@ -3153,9 +3148,16 @@
             <div class="admin-tab-content" id="admin-tab-snail">
               <div class="admin-subtabs" id="admin-snail-subtabs">
                 <button type="button" class="admin-subtab is-active" data-subtab="admin-sub-snail-members">👥 Members</button>
+                <button type="button" class="admin-subtab" data-subtab="admin-sub-snail-postrun">📮 Post Run</button>
                 <button type="button" class="admin-subtab" data-subtab="admin-sub-snail-pricing">💷 Pricing</button>
                 <button type="button" class="admin-subtab" data-subtab="admin-sub-snail-archive">📸 Visual Archive</button>
                 <button type="button" class="admin-subtab" data-subtab="admin-sub-snail-reviews">💌 Testimonials</button>
+              </div>
+
+              <!-- Post Run (monthly dispatch tracking) -->
+              <div id="admin-sub-snail-postrun" class="admin-subpanel">
+                <p style="font-size:0.9rem; color:var(--mist); margin:0 0 16px; max-width:640px; line-height:1.5;">Everyone due a letter on the upcoming 5th. Tick them off as you post — paused and completed subscribers drop off automatically. Use ‹ Prev / Next › to look back at past runs or ahead.</p>
+                <div id="admin-snail-dispatch"></div>
               </div>
 
               <!-- Pricing -->
@@ -3359,7 +3361,7 @@
             <!-- TAB CONTENT: JOURNAL -->
             <div class="admin-tab-content" id="admin-tab-journal">
               <div class="admin-section-card">
-                <h4>Add an Art or Journal Entry</h4>
+                <h4>Add a Journal Entry</h4>
                 <p class="admin-form-hint" style="font-size:0.86rem;color:var(--mist);line-height:1.55;margin:-4px 0 16px;">Two kinds of post: a <strong>written entry</strong> (a motif up top, your words below), or an <strong>art&nbsp;+&nbsp;words</strong> post — pick <em>“Upload my artwork”</em> for the header and <em>“Write the entry”</em> for the words, and your handmade piece appears up top with your writing beneath it.</p>
                 <form id="admin-add-journal-form" class="admin-grid-form">
                   <div class="admin-form-row col-3">
@@ -3960,7 +3962,7 @@
               <a href="#workshops" data-page-link="workshops">Workshops</a>
               <a href="#shop" data-page-link="shop">Shop</a>
               <a href="#snail-mail" data-page-link="snail-mail">Snail Mail</a>
-              <a href="#journal" data-page-link="journal">Art &amp; Journal</a>
+              <a href="#journal" data-page-link="journal">Journal</a>
             </div>
           </div>
         </div>
@@ -4132,16 +4134,16 @@
       </div>
     </noscript>
 
-    <script src="script.js?v=1.3.97"></script>
-    <script src="world.js?v=1.3.97" defer></script>
-    <script src="artwork.js?v=1.3.97" defer></script>
-    <script src="updates.js?v=1.3.97" defer></script>
+    <script src="script.js?v=1.6.7"></script>
+    <script src="world.js?v=1.6.7" defer></script>
+    <script src="artwork.js?v=1.6.7" defer></script>
+    <script src="updates.js?v=1.6.7" defer></script>
     <!-- Connects the storefront to the backend (content sync + image hosting). Safe no-op if the API is unreachable. -->
-    <script src="ubhi-sync.js?v=1.3.97"></script>
+    <script src="ubhi-sync.js?v=1.6.7"></script>
     <!-- Owner-only click-to-edit text across the whole site. -->
-    <script src="editmode.js?v=1.3.97"></script>
+    <script src="editmode.js?v=1.6.7"></script>
     <!-- Hand-made ink details: dividers, snail mascot, marginalia, wax-seal + postmark moments. -->
-    <script src="embellish.js?v=1.3.97" defer></script>
+    <script src="embellish.js?v=1.6.7" defer></script>
   </body>
 </html>
 
