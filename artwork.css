@@ -1946,14 +1946,14 @@ body.sticker-preview-open { overflow: hidden; }
 /* ════════════ Art Portfolio page ════════════ */
 /* Hero — centred like Shop / Workshop, but heading kept compact so the whole
    page fits comfortably on one screen. */
-#page-art .page-hero { min-height: auto; display: flex; flex-direction: column; align-items: center; text-align: center; justify-content: center; overflow: hidden; padding: clamp(76px, 10vw, 100px) clamp(20px, 5.5vw, 80px) clamp(16px, 2.4vw, 24px); }
+#page-art .page-hero { min-height: auto; display: flex; flex-direction: column; align-items: center; text-align: center; justify-content: center; overflow: hidden; padding: clamp(90px, 12vw, 120px) clamp(20px, 5.5vw, 80px) clamp(24px, 3.5vw, 32px); }
 /* Bounded width so the ticker clips to a clean window and the marquee scrolls
    (without it the nowrap ticker blows the hero out to ~2800px and looks frozen). */
 #page-art .page-hero-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; width: min(920px, 100%); max-width: 100%; }
-#page-art .page-hero-content h1 { font-family: "Fraunces", Georgia, serif; font-weight: 300; font-style: italic; font-size: clamp(1.5rem, 3vw, 2.3rem); letter-spacing: -0.01em; margin-bottom: 6px; }
+#page-art .page-hero-content h1 { font-family: "Fraunces", Georgia, serif; font-weight: 300; font-style: italic; font-size: clamp(1.8rem, 4.5vw, 3.0rem); letter-spacing: -0.01em; margin-bottom: 8px; }
 
 /* Hero ticker — same marquee as Shop / Workshop */
-#page-art .page-hero-content .art-ticker { display: flex; overflow: hidden; width: 100%; margin-top: 14px; border-top: 1px solid rgba(201,151,42,0.08); border-bottom: 1px solid rgba(201,151,42,0.08); padding: 7px 0; pointer-events: none; }
+#page-art .page-hero-content .art-ticker { display: flex; overflow: hidden; width: 100%; margin-top: 16px; border-top: 1px solid rgba(201,151,42,0.08); border-bottom: 1px solid rgba(201,151,42,0.08); padding: 8px 0; pointer-events: none; }
 #page-art .page-hero-content .art-ticker-track { display: flex; flex-shrink: 0; align-items: center; gap: 32px; padding-right: 32px; animation: artMarquee 50s linear infinite; font-family: "EB Garamond", sans-serif; font-size: clamp(0.55rem, 0.85vw, 0.65rem); font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(58,44,32,0.8); }
 #page-art .page-hero-content .art-ticker-track span { white-space: nowrap; }
 #page-art .page-hero-content .art-ticker-track .ptr-svg-wrap { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; opacity: 0.85; }
