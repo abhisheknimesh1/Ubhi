@@ -2153,10 +2153,24 @@ body.sticker-preview-open { overflow: hidden; }
   color: #fdf6e6 !important;
   font-size: clamp(2.7rem, 5.2vw, 5.2rem) !important;
   line-height: 1.02 !important;
-  margin: 0 0 clamp(12px, 2vh, 20px) !important;
+  margin: 0 0 clamp(6px, 1vh, 12px) !important;   /* hug the sub-headline — one lockup */
   text-shadow: 0 2px 24px rgba(28,18,10,0.65);
 }
 #page-home .hero h1 .ink-underline::after { display: none !important; }   /* keep the pink accent block removed */
+/* sub-headline — the old title line, small and tracked wide under the headline.
+   text-indent mirrors the letter-spacing so the centred line is truly centred
+   (the last letter's trailing space would otherwise nudge it left). */
+#page-home .hero .hero-subline {
+  color: rgba(252,245,230,0.88) !important;
+  font-family: "EB Garamond", serif;
+  font-size: clamp(0.78rem, 1.05vw, 0.95rem);
+  font-style: normal;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  text-transform: uppercase;
+  margin: 0 0 clamp(14px, 2.2vh, 22px);
+  text-shadow: 0 1px 12px rgba(28,18,10,0.6);
+}
 #page-home .hero-copy {
   color: rgba(252,245,230,0.92) !important;
   max-width: 600px !important;
@@ -2203,6 +2217,7 @@ body.sticker-preview-open { overflow: hidden; }
   /* refine the name line + headline for phone widths */
   #page-home .hero .eyebrow { font-size: 0.62rem !important; letter-spacing: 0.14em !important; }
   #page-home .hero h1 { font-size: clamp(2.3rem, 11vw, 3rem) !important; }
+  #page-home .hero .hero-subline { font-size: 0.66rem; letter-spacing: 0.3em; text-indent: 0.3em; margin-bottom: 12px; }
   #page-home .hero-copy { font-size: 0.94rem !important; line-height: 1.55 !important; }
   /* hide the decorative rings so they don't crowd the name line on phones */
   #page-home .hero > .hero-geo { display: none !important; }
