@@ -2151,25 +2151,41 @@ body.sticker-preview-open { overflow: hidden; }
 /* 7 — headline + copy, centred, light over the art. */
 #page-home .hero h1 {
   color: #fdf6e6 !important;
-  font-size: clamp(2.7rem, 5.2vw, 5.2rem) !important;
-  line-height: 1.02 !important;
+  font-size: clamp(1.6rem, 5.4vw, 4.9rem) !important;   /* sized so the line NEVER wraps */
+  line-height: 1.08 !important;
+  white-space: nowrap;
   margin: 0 0 clamp(6px, 1vh, 12px) !important;   /* hug the sub-headline — one lockup */
   text-shadow: 0 2px 24px rgba(28,18,10,0.65);
 }
 #page-home .hero h1 .ink-underline::after { display: none !important; }   /* keep the pink accent block removed */
-/* sub-headline — the old title line, small and tracked wide under the headline.
-   text-indent mirrors the letter-spacing so the centred line is truly centred
-   (the last letter's trailing space would otherwise nudge it left). */
+/* sub-headline — the old title line, hand-written in Caveat with a drawn ink
+   stroke fading out to either side, like a note beneath the headline. */
 #page-home .hero .hero-subline {
-  color: rgba(252,245,230,0.88) !important;
-  font-family: "EB Garamond", serif;
-  font-size: clamp(0.78rem, 1.05vw, 0.95rem);
+  color: rgba(252,245,230,0.95) !important;
+  font-family: "Caveat", cursive;
+  font-size: clamp(1.2rem, 2vw, 1.7rem);
+  font-weight: 500;
   font-style: normal;
-  letter-spacing: 0.42em;
-  text-indent: 0.42em;
-  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-transform: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 1.6vw, 18px);
   margin: 0 0 clamp(14px, 2.2vh, 22px);
   text-shadow: 0 1px 12px rgba(28,18,10,0.6);
+}
+#page-home .hero .hero-subline::before,
+#page-home .hero .hero-subline::after {
+  content: "";
+  flex: 0 0 auto;
+  width: clamp(30px, 4.5vw, 58px);
+  height: 1.5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(252,245,230,0.7));
+}
+#page-home .hero .hero-subline::after {
+  background: linear-gradient(90deg, rgba(252,245,230,0.7), transparent);
 }
 #page-home .hero-copy {
   color: rgba(252,245,230,0.92) !important;
@@ -2216,8 +2232,9 @@ body.sticker-preview-open { overflow: hidden; }
   #page-home .hero { --hdr-h: clamp(80px, 16vw, 104px); }
   /* refine the name line + headline for phone widths */
   #page-home .hero .eyebrow { font-size: 0.62rem !important; letter-spacing: 0.14em !important; }
-  #page-home .hero h1 { font-size: clamp(2.3rem, 11vw, 3rem) !important; }
-  #page-home .hero .hero-subline { font-size: 0.66rem; letter-spacing: 0.3em; text-indent: 0.3em; margin-bottom: 12px; }
+  #page-home .hero h1 { font-size: clamp(1.45rem, 7.6vw, 2.6rem) !important; white-space: nowrap; }
+  #page-home .hero .hero-subline { font-size: 1.1rem; gap: 9px; margin-bottom: 12px; }
+  #page-home .hero .hero-subline::before, #page-home .hero .hero-subline::after { width: 26px; }
   #page-home .hero-copy { font-size: 0.94rem !important; line-height: 1.55 !important; }
   /* hide the decorative rings so they don't crowd the name line on phones */
   #page-home .hero > .hero-geo { display: none !important; }
