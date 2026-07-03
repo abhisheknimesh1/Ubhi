@@ -725,7 +725,12 @@ if (modalForm) {
     if (successMsg) {
       const spaceWord = tickets > 1 ? (tickets + " spaces") : "place";
       const heldWord = tickets > 1 ? "have" : "has";
-      successMsg.innerHTML = `Thank you, <strong>${esc(name)}</strong>. Your ${spaceWord} for <strong>${esc(option.value)}</strong> ${heldWord} been held.`;
+      // Honest wording: only claim "held" when the reservation actually reached
+      // the server; otherwise it needs a manual confirmation from the studio.
+      const bookingLive = !!(window.ubhiSyncStatus && window.ubhiSyncStatus().reachable);
+      successMsg.innerHTML = bookingLive
+        ? `Thank you, <strong>${esc(name)}</strong>. Your ${spaceWord} for <strong>${esc(option.value)}</strong> ${heldWord} been held.`
+        : `Thank you, <strong>${esc(name)}</strong>. Your request for ${spaceWord === "place" ? "a place" : spaceWord} at <strong>${esc(option.value)}</strong> is received — we'll confirm by email within a day.`;
     }
 
     // Go to step 3
@@ -1000,8 +1005,11 @@ if (shopForm) {
       const what = isCartCheckout
         ? `your order of <strong>${itemsList.length} item${itemsList.length > 1 ? "s" : ""}</strong>`
         : `<strong>${esc(productName)}</strong>`;
+      // Honest wording: "confirmed" only when the order actually reached the
+      // server; otherwise it's a request awaiting the studio's confirmation.
+      const orderLive = !!(window.ubhiSyncStatus && window.ubhiSyncStatus().reachable);
       successMsg.innerHTML =
-        `Thank you, <strong>${esc(name)}</strong> — ${what} is confirmed.<br>` +
+        `Thank you, <strong>${esc(name)}</strong> — ${what} ${orderLive ? "is confirmed" : "is received; we'll confirm by email within a day"}.<br>` +
         `<span style="display:inline-block;margin-top:8px;">Order <strong>${esc(orderRef)}</strong> · Total <strong>£${totalStr}</strong> <span style="opacity:.75;">(${shipStr})</span></span><br>` +
         `<span style="opacity:.75;font-size:0.92em;">Download your receipt below to keep for your records.</span>`;
     }
@@ -1927,11 +1935,29 @@ if (snailSubmitBtn) {
       });
     }
 
-    // Update success screen text
+    // Update success screen text — honest about what happens next.
     const successMsg = document.getElementById("snail-success-msg");
+    const snailLive = !!(window.ubhiSyncStatus && window.ubhiSyncStatus().reachable);
     if (successMsg) {
       const planLabel = giftOn ? (giftTerm + "-month gift") : selectedSnailPlan;
-      successMsg.innerHTML = `Thank you, <strong>${esc(nameVal)}</strong>. Your first Snail Mail package under the <strong>${esc(planLabel)}</strong> is being prepared with quiet care.`;
+      successMsg.innerHTML = snailLive
+        ? `Thank you, <strong>${esc(nameVal)}</strong>. Your first Snail Mail package under the <strong>${esc(planLabel)}</strong> is being prepared with quiet care.`
+        : `Thank you, <strong>${esc(nameVal)}</strong>. Your request for the <strong>${esc(planLabel)}</strong> is received — we'll confirm your first posting by email within a day.`;
+    }
+    // A gift deserves something to hand over on the day — offer a
+    // print-at-home gift certificate on the success screen.
+    const certBtn = document.getElementById("snail-gift-cert-btn");
+    if (certBtn) {
+      certBtn.style.display = giftOn ? "" : "none";
+      if (giftOn) {
+        window._ubhiGiftCert = {
+          to: giftFor || "someone lovely",
+          from: nameVal || "",
+          months: Number(giftTerm) || 6,
+          message: giftMessage || "",
+          start: giftStart || ""
+        };
+      }
     }
     
     // Transition to step 3 success screen
@@ -4822,6 +4848,71 @@ function updateBookingsBulkBar() {
     '</span>';
 }
 
+/* ── Gift certificate — a print-at-home page the buyer can hand over ──
+   Gifts are posted to the recipient, so the buyer has nothing to give on the
+   day itself. This prints a warm A4 certificate (same reliable iframe
+   technique as the packing slips) with the term, start month and their note. */
+function printGiftCertificate(cert) {
+  if (!cert) return;
+  let startLabel = "";
+  try {
+    const cycle = snailStartCycleFor(cert.start || undefined);
+    startLabel = snailCycleLabel(cycle);
+  } catch (e) {}
+  let frame = document.getElementById("gift-cert-print-frame");
+  if (frame) frame.remove();
+  frame = document.createElement("iframe");
+  frame.id = "gift-cert-print-frame";
+  frame.setAttribute("aria-hidden", "true");
+  frame.style.cssText = "position:fixed; right:0; bottom:0; width:1px; height:1px; border:0; opacity:0;";
+  document.body.appendChild(frame);
+  const d = frame.contentWindow.document;
+  d.open();
+  d.write(
+    '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Ubhi gift certificate</title>' +
+    '<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=EB+Garamond:ital@0;1&family=Fraunces:ital,opsz,wght@1,9..144,300..500&display=swap" rel="stylesheet">' +
+    '<style>' +
+    '@page{ size:A4 portrait; margin:16mm; }' +
+    'body{ margin:0; font-family:"EB Garamond",Georgia,serif; color:#2b2018; }' +
+    '.cert{ border:2.5px solid #a6741f; border-radius:6px; padding:14mm 12mm; text-align:center; position:relative; }' +
+    '.cert::before{ content:""; position:absolute; inset:3mm; border:1px solid rgba(166,116,31,0.45); border-radius:4px; pointer-events:none; }' +
+    '.brand{ font-size:10pt; letter-spacing:0.34em; text-transform:uppercase; color:#a6741f; margin:0 0 2mm; }' +
+    'h1{ font-family:"Fraunces",Georgia,serif; font-style:italic; font-weight:400; font-size:27pt; margin:2mm 0 1mm; }' +
+    '.script{ font-family:"Caveat",cursive; font-size:16pt; color:#5a462a; margin:0 0 8mm; }' +
+    '.for{ font-size:10pt; letter-spacing:0.22em; text-transform:uppercase; color:#6b5c41; margin:6mm 0 1mm; }' +
+    '.to{ font-family:"Fraunces",Georgia,serif; font-style:italic; font-size:21pt; margin:0 0 6mm; }' +
+    '.what{ font-size:12.5pt; line-height:1.7; max-width:120mm; margin:0 auto 6mm; }' +
+    '.start{ font-size:10.5pt; color:#6b5c41; margin:0 0 8mm; }' +
+    '.note{ font-family:"Caveat",cursive; font-size:15.5pt; line-height:1.5; color:#43331f; max-width:120mm; margin:0 auto 8mm; }' +
+    '.from{ font-size:11pt; font-style:italic; margin:0 0 10mm; }' +
+    '.foot{ font-size:8.5pt; letter-spacing:0.18em; text-transform:uppercase; color:#8a7a5c; }' +
+    '.seal{ font-size:22pt; margin:4mm 0 0; }' +
+    '</style></head><body>' +
+    '<div class="cert">' +
+      '<p class="brand">Ubhi · Snail Mail Club</p>' +
+      '<h1>' + (cert.months === 12 ? "A year of hand-made post" : "A gift of hand-made post") + '</h1>' +
+      '<p class="script">art that arrives in the letterbox</p>' +
+      '<p class="for">This certificate belongs to</p>' +
+      '<p class="to">' + esc(cert.to) + '</p>' +
+      '<p class="what"><strong>' + cert.months + ' month' + (cert.months > 1 ? "s" : "") + '</strong> of letters, original art and small slow rituals — one hand-made envelope, posted on the 5th of every month.</p>' +
+      (startLabel ? '<p class="start">The first envelope is posted in <strong>' + esc(startLabel) + '</strong>.</p>' : '') +
+      (cert.message ? '<p class="note">&ldquo;' + esc(cert.message) + '&rdquo;</p>' : '') +
+      (cert.from ? '<p class="from">With love, ' + esc(cert.from) + '</p>' : '') +
+      '<p class="seal">✻</p>' +
+      '<p class="foot">Look within, to ascend · hello@ubhi.in</p>' +
+    '</div></body></html>'
+  );
+  d.close();
+  const w = frame.contentWindow;
+  const go = () => { try { w.focus(); w.print(); } catch (e) {} };
+  // Give the webfonts a moment to arrive before the print dialog freezes the frame.
+  setTimeout(go, 900);
+}
+window.printGiftCertificate = printGiftCertificate;
+document.addEventListener("click", (e) => {
+  if (e.target && e.target.id === "snail-gift-cert-btn") printGiftCertificate(window._ubhiGiftCert);
+});
+
 /* ── Packing slips — print-ready A4, one slip per selected order ──
    Doubles as a delivery note: bold address block (cut out as a label if
    needed), the parcel contents, and the totals. Printed from an isolated
@@ -5409,6 +5500,18 @@ function renderAdminDesk() {
     row("🎁", (g.member.name || g.member.email) + "'s gift ends in " + g.daysLeft + " day" + (g.daysLeft === 1 ? "" : "s"), "", "snail:admin-sub-snail-members", true);
   } else if (giftsSoon.length > 1) {
     row("🎁", giftsSoon.length + " gift subscriptions end within 2 weeks", "", "snail:admin-sub-snail-members", true);
+  }
+  // Backup nudge — while the business data lives in this browser, one cleared
+  // cache loses everything. Nudge after 30 days (or if never backed up).
+  const hasData = orders.length + members.length + dbRead("workshop-reservations", []).length + dbRead("email-updates", []).length > 0;
+  if (hasData) {
+    const lastBackup = safeLocalRead("ubhi-last-backup");
+    const daysSince = lastBackup ? Math.floor((today - new Date(lastBackup)) / 86400000) : null;
+    if (lastBackup === null || lastBackup === "" ) {
+      row("💾", "No data backup yet — download one from Settings", "", "settings", true);
+    } else if (daysSince > 30) {
+      row("💾", "Last data backup was " + daysSince + " days ago — time for a fresh one", "", "settings", true);
+    }
   }
   if ((safeLocalRead("ubhi-admin-pass") || "ubhi123") === "ubhi123") {
     row("🔐", "You're still using the default admin passcode — change it in Settings", "", "settings", true);
@@ -6161,10 +6264,17 @@ function saveMember(member) {
 }
 
 function memberBillingPortal() {
-  // INTEGRATION: send the customer to the Stripe Customer Portal here
-  // (create a billing-portal session on your server, then redirect to its URL).
-  // Card details are never handled on this site.
-  alert("This opens the secure Stripe portal, where you can update your card, view invoices, or change/cancel your plan.\n\n(Developer: wire this to the Stripe Customer Portal.)");
+  // Until online billing (Stripe Customer Portal) is switched on, plan changes
+  // are handled personally — open the member's email app with a ready note.
+  let email = "";
+  try { email = localStorage.getItem("ubhi-member-email") || ""; } catch (e) {}
+  if (!confirm("Plan changes are handled personally by the studio — your email app will open with a ready-made note. We reply within a day.")) return;
+  const subject = encodeURIComponent("My Snail Mail plan — change request");
+  const body = encodeURIComponent(
+    "Hello Chelsea,\n\nI'd like to make a change to my Snail Mail subscription.\n\n" +
+    "My account email: " + email + "\nWhat I'd like to change: \n\nThank you!"
+  );
+  window.location.href = "mailto:hello@ubhi.in?subject=" + subject + "&body=" + body;
 }
 window.memberBillingPortal = memberBillingPortal;
 
@@ -7063,6 +7173,9 @@ function initOrdersAndBackupListeners() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      // Remember when — the post desk nudges after 30 days without a backup.
+      safeLocalWrite("ubhi-last-backup", new Date().toISOString());
+      if (typeof renderAdminDesk === "function") try { renderAdminDesk(); } catch (e) {}
     });
   }
 
