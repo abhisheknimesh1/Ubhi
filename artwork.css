@@ -1951,6 +1951,20 @@ body.sticker-preview-open { overflow: hidden; }
    (without it the nowrap ticker blows the hero out to ~2800px and looks frozen). */
 #page-art .page-hero-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; width: min(920px, 100%); max-width: 100%; }
 #page-art .page-hero-content h1 { font-family: "Fraunces", Georgia, serif; font-weight: 300; font-style: italic; font-size: clamp(1.8rem, 4.5vw, 3.0rem); letter-spacing: -0.01em; margin-bottom: 8px; }
+/* Rotating geometry ornament — centred faintly BEHIND the title, exactly like
+   Shop / Workshops / Journal / Snail Mail (it previously fell back to the
+   generic style: parked right of the title, twice the opacity). */
+#page-art .page-hero-geo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(260px, 32vw);
+  opacity: 0.18;
+  pointer-events: none;
+  animation: none;
+}
+#page-art .page-hero-geo svg { width: 100%; height: 100%; animation: geoRotate 120s linear infinite; }
 
 /* Hero ticker — same marquee as Shop / Workshop */
 #page-art .page-hero-content .art-ticker { display: flex; overflow: hidden; width: 100%; margin-top: 16px; border-top: 1px solid rgba(201,151,42,0.08); border-bottom: 1px solid rgba(201,151,42,0.08); padding: 8px 0; pointer-events: none; }
@@ -1969,18 +1983,18 @@ body.sticker-preview-open { overflow: hidden; }
 .art-portfolio-empty { grid-column: 1 / -1; text-align: center; color: var(--mist, #5f4b39); padding: 50px 20px; font-style: italic; }
 
 /* Compact grid of small images — click any to browse it enlarged (left / right) */
-.art-portfolio-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.art-portfolio-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
 .art-portfolio-tile { position: relative; margin: 0; border-radius: 12px; overflow: hidden; background: var(--glass-bg, rgba(248,241,223,0.82)); border: 1px solid var(--glass-border, rgba(90,68,42,0.24)); box-shadow: 0 8px 22px -8px rgba(60,42,28,0.3); cursor: zoom-in; transition: transform .25s ease, box-shadow .25s ease; }
 .art-portfolio-tile:hover { transform: translateY(-4px); box-shadow: 0 16px 34px -10px rgba(60,42,28,0.4); }
-.art-portfolio-tile img { display: block; width: 100%; height: 200px; object-fit: cover; transition: transform .4s ease; }
+.art-portfolio-tile img { display: block; width: 100%; height: 230px; object-fit: cover; transition: transform .4s ease; }
 .art-portfolio-tile:hover img { transform: scale(1.06); }
 .art-portfolio-tile figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 12px 10px; font-size: 0.82rem; color: #fdf6e6; background: linear-gradient(to top, rgba(38,28,18,0.8), rgba(38,28,18,0)); opacity: 0; transform: translateY(8px); transition: opacity .25s ease, transform .25s ease; }
 .art-portfolio-tile:hover figcaption { opacity: 1; transform: translateY(0); }
 
 @media (max-width: 920px) { .art-portfolio-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 640px) {
-  .art-portfolio-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .art-portfolio-tile img { height: 150px; }
+  .art-portfolio-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .art-portfolio-tile img { height: 160px; }
   .art-portfolio-tile figcaption { opacity: 1; transform: none; font-size: 0.72rem; padding: 16px 8px 7px; }
 }
 
@@ -2280,6 +2294,20 @@ body.sticker-preview-open { overflow: hidden; }
 .admin-desk-list .desk-go { flex: 0 0 auto; color: var(--mist); font-size: 1.1rem; line-height: 1; }
 @media (max-width: 520px) {
   .admin-desk-list li { font-size: 0.86rem; padding: 9px 11px; gap: 9px; }
+}
+
+/* ════════════ Page heroes: one shared rhythm under the fixed header ════════════
+   The fixed header's height drifts from ~78px on phones to ~92px on wide
+   screens (the logo scales with the viewport). 79px + 1.9vw tracks that
+   drift, so the eyebrow always sits the same calm ~14px beneath the header —
+   an identical breath on Shop, Workshops, Journal, Snail Mail and Art,
+   on every device. */
+#page-shop .page-hero,
+#page-workshops .page-hero,
+#page-journal .page-hero,
+#page-snail-mail .page-hero,
+#page-art .page-hero {
+  padding-top: clamp(92px, 79px + 1.9vw, 106px) !important;
 }
 
 /* Admin on the phone: comfortable tap targets for the daily jobs. */
