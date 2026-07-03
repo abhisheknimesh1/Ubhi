@@ -28,10 +28,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=Gochi+Hand&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=1.6.7" />
-    <link rel="stylesheet" href="world.css?v=1.6.7" />
-    <link rel="stylesheet" href="artwork.css?v=1.6.7" />
-    <link rel="stylesheet" href="embellish.css?v=1.6.7" />
+    <link rel="stylesheet" href="styles.css?v=1.9.0" />
+    <link rel="stylesheet" href="world.css?v=1.9.0" />
+    <link rel="stylesheet" href="artwork.css?v=1.9.0" />
+    <link rel="stylesheet" href="embellish.css?v=1.9.0" />
     <!-- Structured data — helps search engines & rich results.
          DEVELOPER: fill in the real address, phone & social URLs before launch. -->
     <script type="application/ld+json">
@@ -2834,7 +2834,7 @@
               <button type="button" class="admin-tab-btn" data-admin-tab="workshops">Workshops</button>
               <button type="button" class="admin-tab-btn" data-admin-tab="shop">Shop</button>
               <button type="button" class="admin-tab-btn" data-admin-tab="snail">Snail Mail</button>
-              <button type="button" class="admin-tab-btn" data-admin-tab="customers">Customers</button>
+              <button type="button" class="admin-tab-btn" data-admin-tab="customers">People</button>
               <button type="button" class="admin-tab-btn" data-admin-tab="journal">Journal</button>
               <button type="button" class="admin-tab-btn" data-admin-tab="orders">Orders & Bookings</button>
               <button type="button" class="admin-tab-btn" data-admin-tab="updates">Email Updates</button>
@@ -2846,6 +2846,15 @@
             <!-- TAB CONTENT: GALLERY -->
             <!-- ───────── Overview · at-a-glance dashboard ───────── -->
             <div class="admin-tab-content is-active" id="admin-tab-overview">
+              <!-- Today's post desk — the morning queue: everything new or due, one click each -->
+              <div class="admin-section-card" id="admin-desk-card">
+                <div class="admin-card-header-actions">
+                  <h4 style="margin:0;">Today's post desk</h4>
+                  <span id="admin-desk-date" style="color:var(--mist);font-size:0.82rem;"></span>
+                </div>
+                <ul class="admin-desk-list" id="admin-desk-list"><!-- JS populated --></ul>
+              </div>
+
               <div class="admin-section-card ov-insights">
                 <div class="admin-card-header-actions">
                   <h4 style="margin:0;">Business health</h4>
@@ -3100,10 +3109,10 @@
                       <input type="number" id="admin-shop-stock-remaining" placeholder="12" required>
                     </div>
                     <div class="admin-form-group">
-                      <label>Product Image (URL, File or Vector Theme)</label>
+                      <label>Product Images — add several (select multiple files, or comma-separate URLs)</label>
                       <div class="image-upload-wrapper">
-                        <input type="text" id="admin-shop-img-url" placeholder="assets/bowl.png">
-                        <input type="file" id="admin-shop-img-file" accept="image/*">
+                        <input type="text" id="admin-shop-img-url" placeholder="assets/bowl.png, assets/bowl-2.png, …">
+                        <input type="file" id="admin-shop-img-file" accept="image/*" multiple>
                         <select id="admin-shop-vector-theme">
                           <option value="">-- Or Select SVG Theme --</option>
                           <option value="yantra">Yantra Mandala</option>
@@ -3148,6 +3157,7 @@
             <div class="admin-tab-content" id="admin-tab-snail">
               <div class="admin-subtabs" id="admin-snail-subtabs">
                 <button type="button" class="admin-subtab is-active" data-subtab="admin-sub-snail-members">👥 Members</button>
+                <button type="button" class="admin-subtab" data-subtab="admin-sub-snail-addmember">➕ Add Member</button>
                 <button type="button" class="admin-subtab" data-subtab="admin-sub-snail-postrun">📮 Post Run</button>
                 <button type="button" class="admin-subtab" data-subtab="admin-sub-snail-pricing">💷 Pricing</button>
                 <button type="button" class="admin-subtab" data-subtab="admin-sub-snail-archive">📸 Visual Archive</button>
@@ -3158,6 +3168,57 @@
               <div id="admin-sub-snail-postrun" class="admin-subpanel">
                 <p style="font-size:0.9rem; color:var(--mist); margin:0 0 16px; max-width:640px; line-height:1.5;">Everyone due a letter on the upcoming 5th. Tick them off as you post — paused and completed subscribers drop off automatically. Use ‹ Prev / Next › to look back at past runs or ahead.</p>
                 <div id="admin-snail-dispatch"></div>
+              </div>
+
+              <!-- Add Member (offline sign-up) -->
+              <div id="admin-sub-snail-addmember" class="admin-subpanel">
+                <div id="admin-add-member-panel" style="background: rgba(201,151,42,0.07); border: 1px solid var(--glass-border); border-left: 3px solid var(--aurora-gold); border-radius: 8px; padding: 18px;">
+                  <h5 style="margin: 0 0 4px; font-family: 'Fraunces', serif; font-style: italic; color: var(--stardust-full); font-size: 1.25rem;">✍️ Sign up a member by hand</h5>
+                  <p style="margin: 0 0 16px; font-size: 0.86rem; color: var(--mist); line-height: 1.5;">For walk-ins, markets &amp; offline sign-ups — add them straight to the members sheet. They are saved as <strong>Active</strong>.</p>
+                  <form id="admin-add-member-form" class="admin-grid-form">
+                    <div class="admin-form-row col-3">
+                      <div class="admin-form-group">
+                        <label for="admin-m-name">Full Name</label>
+                        <input type="text" id="admin-m-name" required placeholder="Jane Doe">
+                      </div>
+                      <div class="admin-form-group">
+                        <label for="admin-m-email">Email Address</label>
+                        <input type="email" id="admin-m-email" required placeholder="jane@example.com">
+                      </div>
+                      <div class="admin-form-group">
+                        <label for="admin-m-contact">Contact Number</label>
+                        <input type="text" id="admin-m-contact" required placeholder="+44 7700 900011">
+                      </div>
+                    </div>
+                    <div class="admin-form-row col-3">
+                      <div class="admin-form-group">
+                        <label for="admin-m-plan">Plan</label>
+                        <select id="admin-m-plan" required>
+                          <option value="Monthly">Monthly Subscription</option>
+                          <option value="3 Months">3 Months Journey</option>
+                          <option value="6 Months">6 Months Journey</option>
+                          <option value="12 Months">12 Months Journey</option>
+                        </select>
+                      </div>
+                      <div class="admin-form-group">
+                        <label for="admin-m-billing">Billing Rate</label>
+                        <input type="text" id="admin-m-billing" required placeholder="e.g. £18 / month, or £149 every 12 months">
+                      </div>
+                      <div class="admin-form-group">
+                        <label for="admin-m-date">Date Subscribed</label>
+                        <input type="date" id="admin-m-date" required>
+                      </div>
+                    </div>
+                    <div class="admin-form-group">
+                      <label for="admin-m-address">Shipping Address</label>
+                      <textarea id="admin-m-address" required placeholder="14 Primrose Gardens, London, NW3 4YT, United Kingdom" rows="3" style="font-family: inherit; font-size: 0.9rem;"></textarea>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                      <button type="submit" class="button button-primary">Save Subscriber</button>
+                      <button type="button" class="button button-secondary" id="admin-cancel-add-member-btn">Clear form</button>
+                    </div>
+                  </form>
+                </div>
               </div>
 
               <!-- Pricing -->
@@ -3207,55 +3268,6 @@
                     <input type="text" id="admin-snail-members-search" placeholder="Search by name, email, contact number or address..." style="width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 4px; color: var(--gold); font-size: 0.9rem;">
                     <span id="admin-snail-search-clear" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--mist); display: none; font-size: 1.1rem; user-select: none;">&times;</span>
                   </div>
-                  <button type="button" class="button button-primary" id="admin-toggle-add-member-btn" style="padding:9px 18px; font-size:0.72rem; white-space:nowrap; min-height:0;">✚ Add an offline subscriber</button>
-                </div>
-
-                <!-- Sign up a member by hand (offline sign-ups) — opens from the button above -->
-                <div id="admin-add-member-panel" style="display:none; background: rgba(201,151,42,0.07); border: 1px solid var(--glass-border); border-left: 3px solid var(--aurora-gold); border-radius: 8px; padding: 18px; margin-bottom: 18px;">
-                  <h5 style="margin: 0 0 4px; font-family: 'Fraunces', serif; font-style: italic; color: var(--stardust-full); font-size: 1.25rem;">✍️ Sign up a member by hand</h5>
-                  <p style="margin: 0 0 16px; font-size: 0.86rem; color: var(--mist); line-height: 1.5;">For walk-ins, markets &amp; offline sign-ups — add them straight to the members sheet below. They are saved as <strong>Active</strong>.</p>
-                  <form id="admin-add-member-form" class="admin-grid-form">
-                    <div class="admin-form-row col-3">
-                      <div class="admin-form-group">
-                        <label for="admin-m-name">Full Name</label>
-                        <input type="text" id="admin-m-name" required placeholder="Jane Doe">
-                      </div>
-                      <div class="admin-form-group">
-                        <label for="admin-m-email">Email Address</label>
-                        <input type="email" id="admin-m-email" required placeholder="jane@example.com">
-                      </div>
-                      <div class="admin-form-group">
-                        <label for="admin-m-contact">Contact Number</label>
-                        <input type="text" id="admin-m-contact" required placeholder="+44 7700 900011">
-                      </div>
-                    </div>
-                    <div class="admin-form-row col-3">
-                      <div class="admin-form-group">
-                        <label for="admin-m-plan">Plan</label>
-                        <select id="admin-m-plan" required>
-                          <option value="Monthly">Monthly Subscription</option>
-                          <option value="6 Months">6 Months Journey</option>
-                          <option value="12 Months">12 Months Journey</option>
-                        </select>
-                      </div>
-                      <div class="admin-form-group">
-                        <label for="admin-m-billing">Billing Rate</label>
-                        <input type="text" id="admin-m-billing" required placeholder="e.g. £18 / month, or £168 for 12 months">
-                      </div>
-                      <div class="admin-form-group">
-                        <label for="admin-m-date">Date Subscribed</label>
-                        <input type="date" id="admin-m-date" required>
-                      </div>
-                    </div>
-                    <div class="admin-form-group">
-                      <label for="admin-m-address">Shipping Address</label>
-                      <textarea id="admin-m-address" required placeholder="14 Primrose Gardens, London, NW3 4YT, United Kingdom" rows="3" style="font-family: inherit; font-size: 0.9rem;"></textarea>
-                    </div>
-                    <div style="display: flex; gap: 10px; margin-top: 10px;">
-                      <button type="submit" class="button button-primary">Save Subscriber</button>
-                      <button type="button" class="button button-secondary" id="admin-cancel-add-member-btn">Cancel</button>
-                    </div>
-                  </form>
                 </div>
 
                 <div class="admin-table-responsive">
@@ -3534,23 +3546,6 @@
               </div>
               </div>
 
-              <!-- Database Backup Section -->
-              <div class="admin-section-card" style="border: 1px solid var(--aurora-gold);">
-                <h4 style="color: var(--gold);">Local Database Backup & Restoration Tool</h4>
-                <p style="font-size: 0.88rem; color: var(--mist); line-height: 1.5; margin-bottom: 16px;">
-                  Since all site information (gallery photos, workshops catalog, shop items, subscribers database, journal posts, orders, and bookings) is stored directly in your browser's local cache, clearing your cache will reset the database. 
-                  Use this utility to export your entire database as a single file to keep a backup or to move it to another computer/browser.
-                </p>
-                <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
-                  <button type="button" class="button button-primary" id="admin-db-backup-btn" style="padding: 10px 18px;">💾 Download Full Database Backup</button>
-                  <div style="display: flex; align-items: center; gap: 10px; border-left: 1px solid var(--border-color); padding-left: 16px;">
-                    <label for="admin-db-restore-file" class="button button-secondary" style="margin: 0; cursor: pointer; display: inline-block;">📂 Restore Backup File</label>
-                    <input type="file" id="admin-db-restore-file" accept=".json" style="display: none;">
-                    <span id="admin-db-restore-filename" style="color: var(--mist); font-size: 0.85rem; font-style: italic;">No file selected</span>
-                    <button type="button" class="button button-primary" id="admin-db-restore-confirm-btn" style="display: none; background: var(--aurora-teal); border-color: var(--aurora-teal); color: var(--dark-cosmos);">Apply Restore 🔄</button>
-                  </div>
-                </div>
-              </div>
             </div>
 
             <!-- ───────── Email Updates (people subscribed to news) ───────── -->
@@ -3583,21 +3578,33 @@
                   </table>
                 </div>
               </div>
+
+              <!-- Contact-form messages (arrive via the backend /api/contact) -->
+              <div class="admin-section-card" style="margin-top:22px;">
+                <div class="admin-card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
+                  <h4>Messages <span id="admin-messages-count" class="admin-count-pill"></span></h4>
+                </div>
+                <p style="font-size:0.88rem;color:var(--mist);line-height:1.5;margin:6px 0 14px;">
+                  Notes sent through the contact form. They arrive here when the server is connected — reply from your own email app.
+                </p>
+                <div id="admin-messages-list"><!-- JS populated --></div>
+              </div>
             </div>
 
             <!-- ───────── Settings ───────── -->
-            <!-- TAB CONTENT: CUSTOMERS (sign-in accounts) -->
+            <!-- TAB CONTENT: PEOPLE — every customer, member and subscriber in one place -->
             <div class="admin-tab-content" id="admin-tab-customers">
               <div class="admin-section-card">
                 <div class="admin-card-header-actions">
-                  <h4>Customers &mdash; sign-in accounts <span id="admin-customers-count" class="admin-count-pill"></span></h4>
+                  <h4>People &mdash; everyone in one place <span id="admin-customers-count" class="admin-count-pill"></span></h4>
                   <div class="admin-header-buttons">
                     <button type="button" class="button button-primary" id="admin-customer-add-btn">+ Add customer</button>
                   </div>
                 </div>
-                <p style="font-size:0.86rem;color:var(--mist);line-height:1.5;margin:-2px 0 14px;">Everyone with a sign-in account. View their orders &amp; bookings, set or reset a password, or pause access. <em>Snail&nbsp;Mail subscriptions are managed in the <strong>Snail Mail</strong> tab; the newsletter list lives in <strong>Email Updates</strong>.</em></p>
+                <p style="font-size:0.86rem;color:var(--mist);line-height:1.5;margin:-2px 0 14px;">Shoppers, Snail&nbsp;Mail members, the email list and sign-in accounts &mdash; merged by email so you can see one person's whole story. <em>Manage subscriptions in <strong>Snail Mail</strong>; the newsletter list lives in <strong>Email Updates</strong>.</em></p>
+                <div id="admin-people-chips" class="alc-chips" style="margin-bottom:12px;"><!-- JS populated --></div>
                 <div style="margin-bottom:14px;position:relative;">
-                  <input type="text" class="admin-list-search" id="admin-customers-search" placeholder="Search customers by name or email&hellip;" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border-color);border-radius:4px;color:var(--gold);font-size:0.9rem;">
+                  <input type="text" class="admin-list-search" id="admin-customers-search" placeholder="Search people by name or email&hellip;" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border-color);border-radius:4px;color:var(--gold);font-size:0.9rem;">
                 </div>
                 <div class="admin-table-responsive">
                   <table class="admin-table">
@@ -3605,10 +3612,11 @@
                       <tr>
                         <th>Name</th>
                         <th>Email</th>
-                        <th>Joined</th>
+                        <th>First seen</th>
                         <th style="text-align:center;">Orders</th>
-                        <th>Subscription</th>
-                        <th>Status</th>
+                        <th>Snail Mail</th>
+                        <th style="text-align:center;">Email list</th>
+                        <th>Sign-in</th>
                         <th style="text-align:center;">Manage</th>
                       </tr>
                     </thead>
@@ -3707,9 +3715,27 @@
                 </form>
               </div>
 
+              <!-- Database Backup Section (system tools live here in Settings) -->
+              <div class="admin-section-card" style="border: 1px solid var(--aurora-gold);">
+                <h4 style="color: var(--gold);">Local Database Backup & Restoration Tool</h4>
+                <p style="font-size: 0.88rem; color: var(--mist); line-height: 1.5; margin-bottom: 16px;">
+                  Since all site information (gallery photos, workshops catalog, shop items, subscribers database, journal posts, orders, and bookings) is stored directly in your browser's local cache, clearing your cache will reset the database.
+                  Use this utility to export your entire database as a single file to keep a backup or to move it to another computer/browser.
+                </p>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+                  <button type="button" class="button button-primary" id="admin-db-backup-btn" style="padding: 10px 18px;">💾 Download Full Database Backup</button>
+                  <div style="display: flex; align-items: center; gap: 10px; border-left: 1px solid var(--border-color); padding-left: 16px;">
+                    <label for="admin-db-restore-file" class="button button-secondary" style="margin: 0; cursor: pointer; display: inline-block;">📂 Restore Backup File</label>
+                    <input type="file" id="admin-db-restore-file" accept=".json" style="display: none;">
+                    <span id="admin-db-restore-filename" style="color: var(--mist); font-size: 0.85rem; font-style: italic;">No file selected</span>
+                    <button type="button" class="button button-primary" id="admin-db-restore-confirm-btn" style="display: none; background: var(--aurora-teal); border-color: var(--aurora-teal); color: var(--dark-cosmos);">Apply Restore 🔄</button>
+                  </div>
+                </div>
+              </div>
+
               <div class="admin-section-card" style="max-width:540px; border-left:3px solid var(--aurora-rose);">
                 <h4>Reset to fresh data</h4>
-                <p style="font-size:0.88rem;color:var(--mist);line-height:1.5;margin:-2px 0 14px;">If the saved data ever gets into a strange state, this wipes <strong>all</strong> content stored in this browser — orders, bookings, members, subscribers, and any workshops, products or posts you've added — and restores the original sample content. Your passcode is kept. <strong>This cannot be undone</strong>, so download a backup first (Orders &amp; Bookings → Database Backup) if you might want the data back.</p>
+                <p style="font-size:0.88rem;color:var(--mist);line-height:1.5;margin:-2px 0 14px;">If the saved data ever gets into a strange state, this wipes <strong>all</strong> content stored in this browser — orders, bookings, members, subscribers, and any workshops, products or posts you've added — and restores the original sample content. Your passcode is kept. <strong>This cannot be undone</strong>, so download a backup first (the backup tool above) if you might want the data back.</p>
                 <button type="button" class="button button-secondary" id="admin-reset-data-btn" style="background:var(--aurora-rose);border-color:var(--aurora-rose);color:#fff;padding:9px 18px;font-size:0.72rem;min-height:0;">Reset to fresh data ⚠️</button>
               </div>
             </div>
@@ -4134,16 +4160,20 @@
       </div>
     </noscript>
 
-    <script src="script.js?v=1.6.7"></script>
-    <script src="world.js?v=1.6.7" defer></script>
-    <script src="artwork.js?v=1.6.7" defer></script>
-    <script src="updates.js?v=1.6.7" defer></script>
-    <!-- Connects the storefront to the backend (content sync + image hosting). Safe no-op if the API is unreachable. -->
-    <script src="ubhi-sync.js?v=1.6.7"></script>
+    <script src="script.js?v=1.9.0"></script>
+    <script src="world.js?v=1.9.0" defer></script>
+    <script src="artwork.js?v=1.9.0" defer></script>
+    <script src="updates.js?v=1.9.0" defer></script>
+    <!-- BACKEND ADDRESS — once the backend is deployed (see DEPLOY.md), un-comment
+         the line below and point it at your server (it must end with /api).
+         Until then the site auto-detects: local dev talks to http://localhost:8090/api. -->
+    <!-- <script>window.UBHI_API_BASE = "https://YOUR-BACKEND.onrender.com/api";</script> -->
+    <!-- Connects the storefront to the backend (content sync + image hosting + orders reaching the owner). Safe no-op if the API is unreachable. -->
+    <script src="ubhi-sync.js?v=1.9.0"></script>
     <!-- Owner-only click-to-edit text across the whole site. -->
-    <script src="editmode.js?v=1.6.7"></script>
+    <script src="editmode.js?v=1.9.0"></script>
     <!-- Hand-made ink details: dividers, snail mascot, marginalia, wax-seal + postmark moments. -->
-    <script src="embellish.js?v=1.6.7" defer></script>
+    <script src="embellish.js?v=1.9.0" defer></script>
   </body>
 </html>
 

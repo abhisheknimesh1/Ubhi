@@ -58,8 +58,11 @@
         form.reset();
         return;
       }
-      list.push({ name: name, email: email, interest: interest, date: new Date().toISOString().split('T')[0] });
+      list.push({ name: name, email: email, interest: interest, date: new Date().toISOString() });
       write(list);
+      // Also hand the signup to the backend so the owner sees it on every
+      // device — silent no-op when the server is unreachable.
+      if (typeof window.ubhiSubmit === 'function') window.ubhiSubmit('update', { name: name, email: email, interest: interest });
       form.reset();
       say("You're on the list — thank you for wandering in ✿", true);
       renderAdmin();
@@ -86,7 +89,7 @@
         '<td>' + esc(x.name || '—') + '</td>' +
         '<td>' + esc(x.email) + '</td>' +
         '<td>' + esc(x.interest || 'Everything') + '</td>' +
-        '<td>' + esc(x.date || '') + '</td>' +
+        '<td>' + esc(String(x.date || '').slice(0, 10)) + '</td>' +
         '<td style="text-align:center;"><button type="button" class="admin-mini-del" data-updates-del="' + i + '" title="Remove">✕</button></td>' +
         '</tr>';
     }).join('');
@@ -97,7 +100,7 @@
     if (!list.length) { alert('No emails to export yet.'); return; }
     var csv = 'Name,Email,Interested In,Date Subscribed\n';
     list.forEach(function (x) {
-      var row = [x.name || '', x.email || '', x.interest || 'Everything', x.date || ''].map(function (f) {
+      var row = [x.name || '', x.email || '', x.interest || 'Everything', String(x.date || '').slice(0, 10)].map(function (f) {
         f = String(f).replace(/"/g, '""');
         return /[",\n]/.test(f) ? '"' + f + '"' : f;
       }).join(',');
@@ -120,7 +123,13 @@
     if (exportBtn) exportBtn.addEventListener('click', exportCsv);
     var clearBtn = document.getElementById('admin-updates-clear-btn');
     if (clearBtn) clearBtn.addEventListener('click', function () {
-      if (confirm('Clear the entire email update list? This cannot be undone.')) { write([]); renderAdmin(); }
+      if (confirm('Clear the entire email update list? This cannot be undone.')) {
+        // Remove the server copies too, or they'd re-appear on the next pull.
+        if (typeof window.ubhiDelete === 'function') {
+          read().forEach(function (x) { if (x._sid) window.ubhiDelete('update', x._sid); });
+        }
+        write([]); renderAdmin();
+      }
     });
     var body = document.getElementById('admin-updates-table-body');
     if (body) body.addEventListener('click', function (e) {
@@ -128,7 +137,8 @@
       if (!del) return;
       var i = +del.getAttribute('data-updates-del');
       var list = read();
-      list.splice(i, 1);
+      var removed = list.splice(i, 1)[0];
+      if (removed && removed._sid && typeof window.ubhiDelete === 'function') window.ubhiDelete('update', removed._sid);
       write(list);
       renderAdmin();
     });
@@ -176,8 +186,9 @@
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { say('Hmm, that email looks off — mind checking it?', false); return; }
       var list = read();
       if (list.some(function (x) { return (x.email || '').toLowerCase() === email.toLowerCase(); })) { say("You're already on the list — lovely to have you ✿", true); form.reset(); return; }
-      list.push({ name: '', email: email, interest: 'Journal', date: new Date().toISOString().split('T')[0] });
+      list.push({ name: '', email: email, interest: 'Journal', date: new Date().toISOString() });
       write(list);
+      if (typeof window.ubhiSubmit === 'function') window.ubhiSubmit('update', { email: email, interest: 'Journal' });
       form.reset();
       say("You're on the list — thank you for wandering in ✿", true);
       renderAdmin();

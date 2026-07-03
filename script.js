@@ -693,6 +693,16 @@ if (modalForm) {
         session_date: reservationObj.date,
         price: (totalPrice === "custom" ? 0 : totalPrice),
         note: note
+      }).then(r => {
+        // Stamp the server id onto the saved copy so an admin pull on this
+        // device recognises the booking instead of duplicating it.
+        if (r && r.ok && r.data) {
+          try {
+            const list = dbRead("workshop-reservations", []);
+            const mine = list.find(x => x.reservedAt === reservationObj.reservedAt);
+            if (mine) { mine._sid = r.data.id; dbWrite("workshop-reservations", list); }
+          } catch (e) {}
+        }
       });
     }
 
@@ -957,6 +967,13 @@ if (shopForm) {
           try {
             const o = JSON.parse(localStorage.getItem("ubhi-shop-order"));
             if (o) { o.backendId = r.data.id; o.backendRef = r.data.order_ref; localStorage.setItem("ubhi-shop-order", JSON.stringify(o)); }
+          } catch (e) {}
+          // Stamp the server id onto the saved list copy too, so an admin pull
+          // on this device recognises the order instead of duplicating it.
+          try {
+            const list = dbRead("shop-orders", []);
+            const mine = list.find(x => x.orderRef === orderRef);
+            if (mine) { mine._sid = r.data.id; dbWrite("shop-orders", list); }
           } catch (e) {}
         }
       });
@@ -1277,10 +1294,10 @@ function renderAdminSnailPrices() {
   wrap.innerHTML =
     '<p style="font-weight:600; margin:0 0 10px; color:var(--gold);">Subscriptions</p>' +
     row("Monthly (rolling)", "plan", "Monthly", monthly, "/ month") +
-    row("3 Months (prepaid)", "plan", "3 Months", threeTotal, "once total") +
-    row("6 Months (prepaid)", "plan", "6 Months", sixTotal, "once total") +
-    row("12 Months (prepaid)", "plan", "12 Months", twelveTotal, "once total") +
-    '<p style="font-size:0.82rem; color:var(--mist); margin:14px 0 0;">Gifts reuse these prepaid totals automatically — £49 for 3 months, £95 for 6, £149 for 12.</p>';
+    row("3 Months (recurring)", "plan", "3 Months", threeTotal, "every 3 months") +
+    row("6 Months (recurring)", "plan", "6 Months", sixTotal, "every 6 months") +
+    row("12 Months (recurring)", "plan", "12 Months", twelveTotal, "every 12 months") +
+    '<p style="font-size:0.82rem; color:var(--mist); margin:14px 0 0;">Subscriptions auto-renew each term. Gifts reuse these totals as a one-time charge — £' + esc(String(threeTotal)) + ' for 3 months, £' + esc(String(sixTotal)) + ' for 6, £' + esc(String(twelveTotal)) + ' for 12.</p>';
 }
 
 function saveSnailPrices() {
@@ -1894,6 +1911,19 @@ if (snailSubmitBtn) {
         price: Number(selectedSnailPrice) || 0,
         address: [addressVal, cityVal, postcodeVal, countryVal].filter(Boolean).join(", "),
         date_subscribed: new Date().toISOString()
+      }).then(r => {
+        // Stamp the server id onto the member record so an admin pull on this
+        // device recognises the subscription instead of duplicating it.
+        if (r && r.ok && r.data) {
+          try {
+            const ms = dbRead("snail-members", []);
+            for (let i = ms.length - 1; i >= 0; i--) {
+              if (String(ms[i].email || "").toLowerCase() === emailVal.toLowerCase() && !ms[i]._sid) {
+                ms[i]._sid = r.data.id; dbWrite("snail-members", ms); break;
+              }
+            }
+          } catch (e) {}
+        }
       });
     }
 
@@ -3107,6 +3137,34 @@ if (!dbRead("workshops-topup-v2", null)) {
 if (!dbRead("shop-catalog", null)) {
   dbWrite("shop-catalog", defaultShopCatalog);
 }
+// LAUNCH-CLEAN: demo data must never sit in a real shop. This one-time
+// migration removes the old demo seeds from browsers where they had already
+// run: the two "example gallery" products (added only to demo the image zoom)
+// and the fake demo customer with their fabricated order history.
+(function purgeDemoData() {
+  if (safeLocalRead("ubhi-demo-data-purged-v1") === "1") return;
+  try {
+    // Example photo-gallery products — matched by name AND their seeded cover
+    // image, so a real product the owner later makes with the same name survives.
+    const exNames = { "Block-Print Art Set": "assets/gallery-block-print.png", "Studio Ritual Bundle": "assets/ubhi-workshop-generated.png" };
+    const cat = dbRead("shop-catalog", null);
+    if (Array.isArray(cat)) {
+      const kept = cat.filter(p => !(p && exNames[p.name] && p.image === exNames[p.name]));
+      if (kept.length !== cat.length) dbWrite("shop-catalog", kept);
+    }
+    // The demo customer (abhi@ubhi.in) and their fabricated history.
+    const demo = (e) => String(e || "").toLowerCase() === "abhi@ubhi.in";
+    const mem = dbRead("members", null);
+    if (Array.isArray(mem)) dbWrite("members", mem.filter(m => !demo(m.email)));
+    const so = dbRead("shop-orders", null);
+    if (Array.isArray(so)) dbWrite("shop-orders", so.filter(o => !demo(o.email || o.customerEmail)));
+    const wr = dbRead("workshop-reservations", null);
+    if (Array.isArray(wr)) dbWrite("workshop-reservations", wr.filter(b => !demo(b.email)));
+    const sm = dbRead("snail-members", null);
+    if (Array.isArray(sm)) dbWrite("snail-members", sm.filter(m => !demo(m.email)));
+  } catch (e) { /* best effort — never block boot */ }
+  safeLocalWrite("ubhi-demo-data-purged-v1", "1");
+})();
 if (!dbRead("snail-photos", null)) {
   dbWrite("snail-photos", defaultSnailPhotos);
 }
@@ -3161,6 +3219,7 @@ let adminOrdersPerPage = 25;          // 25 | 50 | 100 | 0 (=all)
 let adminOrdersPageIds = [];
 const adminOrdersSelected = new Set();
 let adminBookingsWorkshop = "all";    // "all" | <workshop title>
+let adminBookingsWhen = "all";        // all | upcoming — filter by the workshop's session date
 let adminBookingsSort = "date-desc";  // date-desc | date-asc | price-desc | price-asc | name-asc
 let adminBookingsPage = 1;
 let adminBookingsPerPage = 25;
@@ -4264,7 +4323,7 @@ function renderAdminSnailMail() {
             <label class="admin-checkbox-switch">
               <input type="checkbox" ${m.status === 'Active' ? 'checked' : ''} onchange="toggleMemberStatus('${m.email}')">
               <span class="switch-slider"></span>
-              <span style="margin-left:8px;" class="status-badge ${m.status === 'Active' ? 'active' : 'inactive'}">${m.status}</span>${(m.autoExpired && m.status !== 'Active') ? '<span title="Fixed-term subscription has ended" style="margin-left:6px;font-size:0.7rem;color:var(--mist);font-style:italic;">· lapsed</span>' : ''}
+              <span style="margin-left:8px;" class="status-badge ${m.status === 'Active' ? 'active' : 'inactive'}">${m.status}</span>${(m.autoExpired && m.status !== 'Active') ? '<span title="Fixed-term subscription has ended" style="margin-left:6px;font-size:0.7rem;color:var(--mist);font-style:italic;">· lapsed</span>' : ''}${snailGiftEndNote(m)}
             </label>
           </td>
           <td style="text-align:center;">
@@ -4421,9 +4480,42 @@ function orderStatusKey(o) {
   return "preparing";
 }
 function orderRowId(o) { return String(o.reservedAt || o.date || o.orderedAt || ""); }
+// Orders have stored their line items under BOTH names over time ("items" at
+// checkout, "itemsList" in older admin code) — read whichever is present.
+function orderItems(o) {
+  if (o && Array.isArray(o.itemsList) && o.itemsList.length) return o.itemsList;
+  if (o && Array.isArray(o.items) && o.items.length) return o.items;
+  return [];
+}
 function orderTotalNum(o) { return parseFloat(o.totalPrice || o.price || 0) || 0; }
 function orderDateNum(o) { return new Date(o.reservedAt || o.date || o.orderedAt || 0).getTime() || 0; }
 function bookingDateNum(b) { return new Date(b.reservedAt || 0).getTime() || 0; }
+
+// Best-effort parse of a session label like "Sunday 6 September · 11:00–14:30"
+// into a Date (end of that day). Yearless dates assume this year; if that
+// lands more than ~6 weeks in the past, the session is taken to be next year
+// (sessions are booked ahead, not months after they happened). Returns null
+// when nothing date-like is found.
+function bookingSessionTime(b) {
+  const s = String(b.date || b.session_date || "").trim();
+  if (!s) return null;
+  const m = s.match(/(\d{1,2})(?:st|nd|rd|th)?\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s*(\d{4})?/i);
+  if (!m) return null;
+  const day = +m[1];
+  const monthIdx = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"].indexOf(m[2].slice(0, 3).toLowerCase());
+  if (monthIdx === -1 || !day || day > 31) return null;
+  const now = new Date();
+  const year = m[3] ? +m[3] : now.getFullYear();
+  let dt = new Date(year, monthIdx, day, 23, 59, 59);
+  if (!m[3] && dt < now && (now - dt) > 45 * 86400000) dt = new Date(year + 1, monthIdx, day, 23, 59, 59);
+  return dt;
+}
+// Upcoming = session day hasn't passed. Unparseable dates stay visible (never
+// silently hide a real reservation behind a filter).
+function bookingIsUpcoming(b) {
+  const t = bookingSessionTime(b);
+  return t === null ? true : t >= new Date();
+}
 
 function buildPagerHtml(scope, total, start, shown, pages, page) {
   if (total === 0) return "";
@@ -4502,7 +4594,7 @@ function renderAdminShopOrders() {
         (o.productName || "").toLowerCase().includes(q) ||
         streetVal.toLowerCase().includes(q) ||
         cityVal.toLowerCase().includes(q) ||
-        (o.itemsList && o.itemsList.some(item => (item.name || "").toLowerCase().includes(q)))
+        orderItems(o).some(item => (item.name || "").toLowerCase().includes(q))
       );
     });
   }
@@ -4551,7 +4643,8 @@ function renderAdminShopOrders() {
       let dateStr = "—";
       try { if (o.reservedAt || o.date || o.orderedAt) dateStr = new Date(o.reservedAt || o.date || o.orderedAt).toISOString().split('T')[0]; } catch (e) {}
       let itemsStr = "—";
-      if (o.itemsList && o.itemsList.length > 0) itemsStr = o.itemsList.map(item => `${esc(item.name)} (x${esc(item.quantity)})`).join(", ");
+      const oItems = orderItems(o);
+      if (oItems.length > 0) itemsStr = oItems.map(item => `${esc(item.name)} (x${esc(item.quantity || 1)})`).join(", ");
       else if (o.productName) itemsStr = `${esc(o.productName)} (x1)`;
       const addr = o.shippingAddress || o.address;
       const addressStr = addr ? `${esc(addr.street || "")}, ${esc(addr.city || "")}, ${esc(addr.postcode || "")}` : "Direct Booking";
@@ -4619,6 +4712,11 @@ function renderAdminWorkshopBookings() {
   }
 
   // workshop counts + filter
+  // "Upcoming" keeps only sessions whose date hasn't passed yet.
+  const allCount = rows.length;
+  const upcomingCount = rows.filter(bookingIsUpcoming).length;
+  if (adminBookingsWhen === "upcoming") rows = rows.filter(bookingIsUpcoming);
+
   const wsCounts = {};
   rows.forEach(b => { const w = b.workshop || "—"; wsCounts[w] = (wsCounts[w] || 0) + 1; });
   let filtered = adminBookingsWorkshop === "all" ? rows.slice() : rows.filter(b => (b.workshop || "—") === adminBookingsWorkshop);
@@ -4648,8 +4746,10 @@ function renderAdminWorkshopBookings() {
     const wsOptions = '<option value="all"' + (adminBookingsWorkshop === "all" ? " selected" : "") + '>All workshops (' + rows.length + ')</option>' +
       wsKeys.map(w => '<option value="' + esc(w) + '"' + (adminBookingsWorkshop === w ? " selected" : "") + '>' + esc(w) + ' (' + wsCounts[w] + ')</option>').join("");
     const ppOpts = [25, 50, 100].map(n => '<option value="' + n + '"' + (adminBookingsPerPage === n ? " selected" : "") + '>' + n + '</option>').join("") + '<option value="0"' + (adminBookingsPerPage === 0 ? " selected" : "") + '>All</option>';
+    const bwChip = (key, label, n) => '<button type="button" class="alc-chip' + (adminBookingsWhen === key ? " is-active" : "") + '" data-bwhen="' + key + '">' + label + ' <span class="alc-n">' + n + '</span></button>';
     controls.innerHTML =
-      '<div class="alc-right" style="margin-left:0;width:100%;justify-content:flex-start;">' +
+      '<div class="alc-chips">' + bwChip("all", "All", allCount) + bwChip("upcoming", "Upcoming", upcomingCount) + '</div>' +
+      '<div class="alc-right">' +
         '<label class="alc-field">Workshop <select id="bookings-workshop">' + wsOptions + '</select></label>' +
         '<label class="alc-field">Show <select id="bookings-perpage">' + ppOpts + '</select></label>' +
       '</div>';
@@ -4702,6 +4802,7 @@ function updateOrdersBulkBar() {
     '<span class="bulk-actions">' +
       '<button type="button" class="button button-secondary bulk-btn" data-obulk="shipped">Mark Shipped</button>' +
       '<button type="button" class="button button-secondary bulk-btn" data-obulk="delivered">Mark Delivered</button>' +
+      '<button type="button" class="button button-secondary bulk-btn" data-obulk="slips">🖨 Packing slips</button>' +
       '<button type="button" class="button button-secondary bulk-btn" data-obulk="delete" style="background:var(--aurora-rose);border-color:var(--aurora-rose);color:var(--dark-cosmos);">Delete</button>' +
       '<button type="button" class="bulk-clear" data-obulk="clear">Clear</button>' +
     '</span>';
@@ -4720,6 +4821,133 @@ function updateBookingsBulkBar() {
       '<button type="button" class="bulk-clear" data-bbulk="clear">Clear</button>' +
     '</span>';
 }
+
+/* ── Packing slips — print-ready A4, one slip per selected order ──
+   Doubles as a delivery note: bold address block (cut out as a label if
+   needed), the parcel contents, and the totals. Printed from an isolated
+   iframe — the same reliable technique as the address stickers. */
+function printPackingSlips(orders) {
+  const money = (v) => {
+    const n = Number(v) || 0;
+    return "£" + (n % 1 === 0 ? String(n) : n.toFixed(2));
+  };
+  const slip = (o) => {
+    const addr = o.shippingAddress || o.address || {};
+    const items = orderItems(o);
+    const rows = items.length
+      ? items.map(it => '<tr><td>' + esc(it.name || "Item") + '</td><td class="qty">× ' + esc(it.quantity || 1) + '</td></tr>').join("")
+      : '<tr><td>' + esc(o.productName || "Order") + '</td><td class="qty">× 1</td></tr>';
+    let dateStr = "";
+    try { if (o.orderedAt || o.date) dateStr = new Date(o.orderedAt || o.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }); } catch (e) {}
+    return '<div class="slip">' +
+      '<div class="slip-head"><span class="brand">UBHI · Soul Shop</span><span class="ref">' + esc(o.orderRef || o.backendRef || "") + '</span></div>' +
+      '<div class="slip-meta">' + esc(dateStr) + (o.status ? " · " + esc(o.status) : "") + '</div>' +
+      '<div class="slip-cols">' +
+        '<div class="ship-to"><h3>Deliver to</h3><p><strong>' + esc(o.name || o.customerName || "") + '</strong><br>' +
+          [addr.street, addr.city, addr.postcode, addr.country].filter(Boolean).map(esc).join("<br>") +
+          ((o.phone || o.mobile) ? '<br>' + esc(o.phone || o.mobile) : '') + '</p></div>' +
+        '<div class="items"><h3>Inside this parcel</h3><table><tbody>' + rows + '</tbody></table>' +
+          '<p class="totals">' + (o.subtotal != null ? 'Subtotal ' + money(o.subtotal) + ' · ' : '') + (o.shipping ? 'Post ' + money(o.shipping) + ' · ' : '') + '<strong>Total ' + money(o.totalPrice || o.price) + '</strong></p></div>' +
+      '</div>' +
+      '<p class="slip-foot">Packed with care in the Ubhi studio · hello@ubhi.in · Look within, to ascend</p>' +
+    '</div>';
+  };
+
+  let frame = document.getElementById("slips-print-frame");
+  if (frame) frame.remove();
+  frame = document.createElement("iframe");
+  frame.id = "slips-print-frame";
+  frame.setAttribute("aria-hidden", "true");
+  frame.style.cssText = "position:fixed; right:0; bottom:0; width:1px; height:1px; border:0; opacity:0;";
+  document.body.appendChild(frame);
+  const d = frame.contentWindow.document;
+  d.open();
+  d.write(
+    '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Packing slips</title><style>' +
+    '@page{ size:A4 portrait; margin:12mm; }' +
+    'body{ font-family:Georgia,"Times New Roman",serif; color:#201409; margin:0; }' +
+    '.slip{ page-break-after:always; break-inside:avoid; border:1px solid #d8cdb4; border-radius:6px; padding:10mm; }' +
+    '.slip:last-child{ page-break-after:auto; }' +
+    '.slip-head{ display:flex; justify-content:space-between; align-items:baseline; border-bottom:2px solid #201409; padding-bottom:4mm; }' +
+    '.brand{ font-size:15pt; letter-spacing:0.08em; font-weight:bold; }' +
+    '.ref{ font-family:"Courier New",monospace; font-size:11pt; }' +
+    '.slip-meta{ color:#6b5c41; font-size:9.5pt; margin:2mm 0 6mm; }' +
+    '.slip-cols{ display:flex; gap:10mm; }' +
+    '.ship-to,.items{ flex:1; min-width:0; }' +
+    'h3{ font-size:8.5pt; text-transform:uppercase; letter-spacing:0.14em; color:#6b5c41; margin:0 0 2mm; font-family:Arial,sans-serif; }' +
+    '.ship-to p{ font-size:12pt; line-height:1.55; margin:0; }' +
+    '.items table{ width:100%; border-collapse:collapse; font-size:10.5pt; }' +
+    '.items td{ padding:1.6mm 0; border-bottom:1px dotted #c9bda0; }' +
+    '.items .qty{ text-align:right; white-space:nowrap; }' +
+    '.totals{ font-size:9.5pt; color:#4a3c26; margin-top:3mm; }' +
+    '.slip-foot{ margin-top:8mm; font-size:8.5pt; color:#8a7a5c; font-style:italic; text-align:center; }' +
+    '</style></head><body>' + orders.map(slip).join("") + '</body></html>'
+  );
+  d.close();
+  const w = frame.contentWindow;
+  const go = () => { try { w.focus(); w.print(); } catch (e) {} };
+  if (d.readyState === "complete") setTimeout(go, 250);
+  else { w.onload = () => setTimeout(go, 250); setTimeout(go, 600); }
+}
+window.printPackingSlips = printPackingSlips;
+
+/* ── Contact-form messages (arrive via the backend /api/contact) ──
+   Rendered inside the Email Updates tab. Read/delete write back to the
+   server (ubhiPatch/ubhiDelete) so every device stays in step. */
+function renderAdminMessages() {
+  const wrap = document.getElementById("admin-messages-list");
+  if (!wrap) return;
+  const list = dbRead("contact-messages", []);
+  const countEl = document.getElementById("admin-messages-count");
+  const unread = list.filter(m => !m.read).length;
+  if (countEl) countEl.textContent = list.length ? (unread ? unread + " new" : String(list.length)) : "";
+  if (!list.length) {
+    wrap.innerHTML = '<p style="color:var(--mist);font-size:0.88rem;margin:0;">No messages yet. When someone writes through the contact form (with the server connected), it lands here.</p>';
+    return;
+  }
+  const sorted = list.slice().sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+  wrap.innerHTML = sorted.map(m => {
+    const idx = list.indexOf(m);
+    let when = "";
+    try { if (m.date) when = new Date(m.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }); } catch (e) {}
+    return '<div class="admin-msg" style="border:1px solid var(--border-color);border-radius:8px;padding:12px 14px;margin-bottom:10px;' + (m.read ? 'opacity:0.72;' : '') + '">' +
+      '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline;">' +
+        '<strong>' + esc(m.name || m.email || "—") + '</strong>' +
+        '<span style="color:var(--mist);font-size:0.78rem;">' + esc(when) + (m.read ? '' : ' · <strong style="color:var(--aurora-gold);">new</strong>') + '</span>' +
+      '</div>' +
+      '<div style="font-size:0.8rem;color:var(--mist);margin-top:2px;">' + esc(m.email || "") + (m.subject ? ' · ' + esc(m.subject) : '') + '</div>' +
+      '<p style="font-size:0.88rem;line-height:1.55;margin:8px 0;white-space:pre-wrap;">' + esc(m.message || "") + '</p>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+        '<a class="admin-mini-btn" style="text-decoration:none;" href="mailto:' + esc(m.email || "") + '?subject=' + encodeURIComponent('Re: ' + (m.subject || 'your note to Ubhi')) + '">Reply ✉</a>' +
+        '<button type="button" class="admin-mini-btn" onclick="adminToggleMessageRead(' + idx + ')">' + (m.read ? 'Mark unread' : 'Mark read') + '</button>' +
+        '<button type="button" class="admin-action-btn-danger" style="padding:4px 9px;font-size:0.72rem;" onclick="adminDeleteMessage(' + idx + ')">Delete</button>' +
+      '</div>' +
+    '</div>';
+  }).join("");
+}
+
+function adminToggleMessageRead(idx) {
+  const list = dbRead("contact-messages", []);
+  const m = list[idx];
+  if (!m) return;
+  m.read = !m.read;
+  dbWrite("contact-messages", list);
+  if (m._sid && window.ubhiPatch) window.ubhiPatch("contact", m._sid, { read: m.read });
+  renderAdminMessages();
+  if (typeof updateAdminNavBadges === "function") updateAdminNavBadges();
+}
+
+function adminDeleteMessage(idx) {
+  if (!confirm("Delete this message?")) return;
+  const list = dbRead("contact-messages", []);
+  const removed = list.splice(idx, 1)[0];
+  dbWrite("contact-messages", list);
+  if (removed && removed._sid && window.ubhiDelete) window.ubhiDelete("contact", removed._sid);
+  renderAdminMessages();
+  if (typeof updateAdminNavBadges === "function") updateAdminNavBadges();
+}
+window.adminToggleMessageRead = adminToggleMessageRead;
+window.adminDeleteMessage = adminDeleteMessage;
 
 function renderAdminDashboard() {
   // Flip any lapsed fixed-term subscriptions to Inactive before drawing figures.
@@ -4742,10 +4970,25 @@ function renderAdminDashboard() {
   safe(renderAdminCustomers, "customers");
   safe(renderAdminJournal, "journal");
   safe(renderAdminOrders, "orders");
+  safe(renderAdminMessages, "messages");
+  safe(updateAdminNavBadges, "badges");
   safe(populateSiteSettingsForm, "site-profile");
   safe(restoreAdminTab, "active-tab");
   safe(restoreAdminSubtabs, "subtabs");
+  // Connected admin: fetch fresh orders/bookings/subscribers from the server
+  // (throttled inside the bridge; fires "ubhi:records-pulled" when new ones land).
+  try { if (window.ubhiPullRecords) window.ubhiPullRecords(); } catch (e) {}
 }
+
+// When the sync bridge merges fresh server records in, redraw the open admin
+// panel once so they appear without a manual refresh.
+document.addEventListener("ubhi:records-pulled", () => {
+  try {
+    const dash = document.getElementById("admin-dashboard");
+    if (dash && dash.offsetParent !== null && typeof renderAdminDashboard === "function") renderAdminDashboard();
+    if (typeof updateAdminNavBadges === "function") updateAdminNavBadges();
+  } catch (e) {}
+});
 
 // Restore the last-viewed admin tab after a refresh (so it doesn't jump back to Overview).
 function restoreAdminTab() {
@@ -4756,76 +4999,126 @@ function restoreAdminTab() {
   document.querySelectorAll(".admin-tab-content").forEach(c => c.classList.toggle("is-active", c.id === "admin-tab-" + saved));
 }
 
-/* ════ Customers — sign-in account management (the identity hub) ════
-   Lists everyone with a login account (the "members" store), joins in their
-   order count + Snail-Mail subscription (read-only), and lets the owner view a
-   customer, set/reset a password, pause access, add or delete an account.
+/* ════ People — every human across the business, merged by email ════
+   One row per person, joined from four sources: sign-in accounts ("members"
+   store), Snail-Mail members, the email-updates list, and order/booking
+   customers who never made an account. Chips filter by type; the detail
+   panel shows one person's whole story. Account management (password /
+   pause / delete) applies only to rows that have a sign-in account.
    DEMO security note: passwords are stored locally in plain text here — in the
    live site, replace with a real auth provider + secure password-reset links. */
 let adminCustomersSearch = "";
+let adminPeopleType = "all";   // all | account | snail | news | shopper
 
 function renderAdminCustomers() {
   const body = document.getElementById("admin-customers-table-body");
   if (!body) return;
-  const members = dbRead("members", []);
+  const accounts = dbRead("members", []);
   const orders = dbRead("shop-orders", []);
+  const bookings = dbRead("workshop-reservations", []);
   const subs = dbRead("snail-members", []);
-  const countEl = document.getElementById("admin-customers-count");
-  if (countEl) countEl.textContent = members.length ? String(members.length) : "";
+  const news = dbRead("email-updates", []);
 
+  // Merge every source into one person per (lowercased) email.
+  const people = new Map();
+  const personFor = (email, name) => {
+    const key = String(email || "").toLowerCase().trim();
+    if (!key) return null;
+    if (!people.has(key)) people.set(key, { email: String(email).trim(), name: "", types: {}, orders: 0, bookings: 0, sub: null, account: null, onList: false, firstSeen: "" });
+    const p = people.get(key);
+    if (name && !p.name) p.name = String(name);
+    return p;
+  };
+  const seenDate = (p, d) => { const s = String(d || "").slice(0, 10); if (s && (!p.firstSeen || s < p.firstSeen)) p.firstSeen = s; };
+  accounts.forEach(a => { const p = personFor(a.email, a.name); if (p) { p.account = a; p.types.account = true; seenDate(p, a.joinedAt); } });
+  subs.forEach(s => { const p = personFor(s.email, s.name); if (p) { p.sub = s; p.types.snail = true; seenDate(p, s.dateSubscribed); } });
+  news.forEach(n => { const p = personFor(n.email, n.name); if (p) { p.onList = true; p.types.news = true; seenDate(p, n.date); } });
+  orders.forEach(o => { const p = personFor(o.email || o.customerEmail, o.name || o.customerName); if (p) { p.orders++; p.types.shopper = true; seenDate(p, o.orderedAt || o.date); } });
+  bookings.forEach(b => { const p = personFor(b.email, b.name); if (p) { p.bookings++; p.types.shopper = true; seenDate(p, b.reservedAt); } });
+
+  let list = Array.from(people.values());
+  const counts = {
+    all: list.length,
+    account: list.filter(p => p.types.account).length,
+    snail: list.filter(p => p.types.snail).length,
+    news: list.filter(p => p.types.news).length,
+    shopper: list.filter(p => p.types.shopper).length,
+  };
+  const chipsEl = document.getElementById("admin-people-chips");
+  if (chipsEl) {
+    const chip = (k, label) => '<button type="button" class="alc-chip' + (adminPeopleType === k ? " is-active" : "") + '" data-people-type="' + k + '">' + label + ' <span class="alc-n">' + counts[k] + '</span></button>';
+    chipsEl.innerHTML = chip("all", "Everyone") + chip("snail", "Snail Mail") + chip("shopper", "Shoppers") + chip("news", "Email list") + chip("account", "Sign-in accounts");
+  }
+  const countEl = document.getElementById("admin-customers-count");
+  if (countEl) countEl.textContent = counts.all ? String(counts.all) : "";
+
+  if (adminPeopleType !== "all") list = list.filter(p => p.types[adminPeopleType]);
   const q = adminCustomersSearch.toLowerCase().trim();
-  const list = members.filter(m => !q || (m.name || "").toLowerCase().includes(q) || (m.email || "").toLowerCase().includes(q));
-  list.sort((a, b) => new Date(b.joinedAt || 0) - new Date(a.joinedAt || 0));
+  if (q) list = list.filter(p => (p.name || "").toLowerCase().includes(q) || (p.email || "").toLowerCase().includes(q));
+  list.sort((a, b) => String(b.firstSeen || "").localeCompare(String(a.firstSeen || "")));
 
   if (!list.length) {
-    body.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:26px;color:var(--mist);">${members.length ? "No customers match your search." : "No sign-in accounts yet — add one, or they'll appear here as customers register."}</td></tr>`;
+    body.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:26px;color:var(--mist);">${counts.all ? "No one matches this filter or search." : "No people yet — they'll appear here as orders, subscriptions and signups come in."}</td></tr>`;
     return;
   }
-  body.innerHTML = list.map(m => {
-    const email = String(m.email || "");
-    const el = email.toLowerCase();
-    const orderCount = orders.filter(o => String(o.email || o.customerEmail || "").toLowerCase() === el).length;
-    const sub = subs.find(s => String(s.email || "").toLowerCase() === el);
-    const subLabel = sub ? esc(sub.plan || "Subscriber") + (sub.status && sub.status !== "Active" ? " · " + esc(sub.status) : "") : "—";
-    const active = m.active !== false;
-    const enc = encodeURIComponent(email);
+  body.innerHTML = list.map(p => {
+    const enc = encodeURIComponent(p.email);
+    const subLabel = p.sub ? esc(p.sub.plan || "Subscriber") + (p.sub.status && p.sub.status !== "Active" ? " · " + esc(p.sub.status) : "") : "—";
+    const acct = p.account;
+    const acctCell = acct
+      ? `<span class="status-badge ${acct.active !== false ? "active" : "inactive"}">${acct.active !== false ? "Active" : "Paused"}</span>`
+      : '<span style="color:var(--mist);">—</span>';
+    const ordersCell = (p.orders || p.bookings)
+      ? String(p.orders) + (p.bookings ? ` <span style="color:var(--mist);font-size:0.78em;">· ${p.bookings} wkshp</span>` : "")
+      : "0";
+    const actions = [`<button type="button" class="admin-mini-btn" onclick="adminViewCustomer('${enc}')">View</button>`]
+      .concat(acct ? [
+        `<button type="button" class="admin-mini-btn" onclick="adminSetCustomerPassword('${enc}')">Password</button>`,
+        `<button type="button" class="admin-mini-btn" onclick="adminToggleCustomer('${enc}')">${acct.active !== false ? "Pause" : "Activate"}</button>`,
+        `<button type="button" class="admin-action-btn-danger" style="padding:4px 9px;font-size:0.72rem;" onclick="adminDeleteCustomer('${enc}')">Delete</button>`,
+      ] : []).join(" ");
     return `<tr>
-      <td class="admin-table-title">${esc(m.name || "—")}</td>
-      <td>${esc(email)}</td>
-      <td style="white-space:nowrap;">${esc(m.joinedAt || "—")}</td>
-      <td style="text-align:center;">${orderCount}</td>
+      <td class="admin-table-title">${esc(p.name || "—")}</td>
+      <td>${esc(p.email)}</td>
+      <td style="white-space:nowrap;">${esc(p.firstSeen || "—")}</td>
+      <td style="text-align:center;">${ordersCell}</td>
       <td>${subLabel}</td>
-      <td><span class="status-badge ${active ? "active" : "inactive"}">${active ? "Active" : "Paused"}</span></td>
-      <td style="text-align:center;white-space:nowrap;">
-        <button type="button" class="admin-mini-btn" onclick="adminViewCustomer('${enc}')">View</button>
-        <button type="button" class="admin-mini-btn" onclick="adminSetCustomerPassword('${enc}')">Password</button>
-        <button type="button" class="admin-mini-btn" onclick="adminToggleCustomer('${enc}')">${active ? "Pause" : "Activate"}</button>
-        <button type="button" class="admin-action-btn-danger" style="padding:4px 9px;font-size:0.72rem;" onclick="adminDeleteCustomer('${enc}')">Delete</button>
-      </td>
+      <td style="text-align:center;">${p.onList ? "✓" : '<span style="color:var(--mist);">—</span>'}</td>
+      <td>${acctCell}</td>
+      <td style="text-align:center;white-space:nowrap;">${actions}</td>
     </tr>`;
   }).join("");
 }
 
 function adminViewCustomer(enc) {
   const email = decodeURIComponent(enc), el = email.toLowerCase();
-  const m = findMember(email);
   const detail = document.getElementById("admin-customer-detail");
-  if (!m || !detail) return;
+  if (!detail) return;
+  // A person may exist without a sign-in account (shopper / member / list-only).
+  const m = (typeof findMember === "function" ? findMember(email) : null);
   const mine = (o) => String(o.email || o.customerEmail || "").toLowerCase() === el;
   const orders = dbRead("shop-orders", []).filter(mine);
   const books = dbRead("workshop-reservations", []).filter(mine);
   const sub = dbRead("snail-members", []).find(s => String(s.email || "").toLowerCase() === el);
-  const addr = [m.address, m.city, m.postcode, m.country].filter(Boolean).map(esc).join(", ");
-  const orderRows = orders.length ? orders.map(o => `<li>${esc((o.items && o.items.length) ? o.items.map(i => i.name).join(", ") : (o.productName || "Order"))} — £${esc(o.totalPrice || o.price || 0)} <span style="color:var(--mist);">· ${esc(o.status || "")}</span></li>`).join("") : "<li style='color:var(--mist);'>No orders.</li>";
+  const onList = dbRead("email-updates", []).some(u => String(u.email || "").toLowerCase() === el);
+  const displayName = (m && m.name) || (sub && sub.name) || (orders[0] && (orders[0].name || orders[0].customerName)) || (books[0] && books[0].name) || email;
+  const phone = (m && m.phone) || (sub && sub.contact) || (orders[0] && (orders[0].phone || orders[0].mobile)) || "";
+  const addr = m
+    ? [m.address, m.city, m.postcode, m.country].filter(Boolean).map(esc).join(", ")
+    : (sub && sub.address ? esc(sub.address) : "");
+  const orderRows = orders.length ? orders.map(o => `<li>${esc(orderItems(o).length ? orderItems(o).map(i => i.name).join(", ") : (o.productName || "Order"))} — £${esc(o.totalPrice || o.price || 0)} <span style="color:var(--mist);">· ${esc(o.status || "")}</span></li>`).join("") : "<li style='color:var(--mist);'>No orders.</li>";
   const bookRows = books.length ? books.map(b => `<li>${esc(b.workshop)} <span style="color:var(--mist);">· ${esc(b.date || "")}</span></li>`).join("") : "<li style='color:var(--mist);'>No bookings.</li>";
+  const accountLine = m
+    ? "Joined " + esc(m.joinedAt || "—") + " · " + (m.active === false ? "Paused" : "Active") + " sign-in"
+    : "No sign-in account";
   detail.innerHTML = `
     <div class="admin-card-header-actions">
-      <h4 style="margin:0;">${esc(m.name || email)}</h4>
+      <h4 style="margin:0;">${esc(displayName)}</h4>
       <button type="button" class="admin-mini-btn" onclick="document.getElementById('admin-customer-detail').style.display='none'">Close ✕</button>
     </div>
     <p style="font-size:0.86rem;color:var(--mist);margin:4px 0 14px;line-height:1.5;">
-      ${esc(email)}${m.phone ? " · " + esc(m.phone) : ""}${addr ? "<br>" + addr : ""}<br>
-      Joined ${esc(m.joinedAt || "—")} · ${m.active === false ? "Paused" : "Active"}
+      ${esc(email)}${phone ? " · " + esc(phone) : ""}${addr ? "<br>" + addr : ""}<br>
+      ${accountLine} · ${onList ? "On the email list ✓" : "Not on the email list"}
     </p>
     <div class="admin-customer-detail-grid">
       <div><h5>Subscription</h5><p style="font-size:0.86rem;margin:0;">${sub ? esc(sub.plan || "Subscriber") + " · " + esc(sub.billing || "") + " · " + esc(sub.status || "") : "<span style='color:var(--mist);'>No Snail Mail subscription. (Manage in the Snail Mail tab.)</span>"}</p></div>
@@ -4983,7 +5276,7 @@ function renderAdminOverview() {
   const ranking = [];
   if (activeSubs.length) ranking.push({ name: "Snail Mail Club", count: activeSubs.length, unit: "active" });
   const prodCount = {};
-  orders.forEach(o => (o.items || []).forEach(it => { const n = it.name || "Item"; prodCount[n] = (prodCount[n] || 0) + (Number(it.quantity) || 1); }));
+  orders.forEach(o => orderItems(o).forEach(it => { const n = it.name || "Item"; prodCount[n] = (prodCount[n] || 0) + (Number(it.quantity) || 1); }));
   Object.keys(prodCount).forEach(n => ranking.push({ name: n, count: prodCount[n], unit: "sold" }));
   const wsCount = {};
   bookings.forEach(b => { const n = b.workshop || b.title || "Workshop"; wsCount[n] = (wsCount[n] || 0) + 1; });
@@ -4993,7 +5286,161 @@ function renderAdminOverview() {
   if (topEl) topEl.innerHTML = ranking.length
     ? ranking.slice(0, 5).map((r, i) => '<li><span class="ov-top-n">' + (i + 1) + ' · ' + esc(r.name) + '</span><span class="ov-top-v">' + r.count + " " + r.unit + "</span></li>").join("")
     : '<li><span class="ov-top-n">No sales yet — your numbers will appear here.</span></li>';
+
+  renderAdminDesk();
 }
+
+/* ════ Today's post desk + new-item badges ════════════════════════════
+   The morning queue: everything new since the owner last looked, plus
+   what's due (post run, low stock, gifts ending, security nudges) — each
+   row is one click from the thing it describes. "Seen" timestamps are
+   stamped when the matching tab is opened. */
+
+// Days until a gift subscription's fixed term ends (null for non-gifts,
+// inactive members, or unparseable dates).
+function snailGiftDaysLeft(m) {
+  if (!m || m.status !== "Active" || !(m.isGift || m.giftOn)) return null;
+  const term = parseInt(m.giftTermMonths, 10) || 0;
+  const startStr = m.giftStart || m.dateSubscribed;
+  if (!term || !startStr) return null;
+  const start = new Date(startStr);
+  if (isNaN(start.getTime())) return null;
+  const ends = new Date(start);
+  ends.setMonth(ends.getMonth() + term);
+  return Math.ceil((ends - new Date()) / 86400000);
+}
+
+// Gifts (fixed-term) ending within the next `days` days — for warnings.
+function snailGiftsEndingSoon(days) {
+  const out = [];
+  dbRead("snail-members", []).forEach((m) => {
+    const daysLeft = snailGiftDaysLeft(m);
+    if (daysLeft !== null && daysLeft >= 0 && daysLeft <= days) out.push({ member: m, daysLeft: daysLeft });
+  });
+  return out;
+}
+
+// Small inline chip for the Members table when a gift ends within 2 weeks —
+// a nudge to invite the recipient to carry on with their own subscription.
+function snailGiftEndNote(m) {
+  const daysLeft = snailGiftDaysLeft(m);
+  if (daysLeft === null || daysLeft < 0 || daysLeft > 14) return "";
+  const when = daysLeft === 0 ? "today" : "in " + daysLeft + " day" + (daysLeft === 1 ? "" : "s");
+  return '<span title="This gift\'s final letter is near — a lovely moment to invite them to continue" style="margin-left:6px;font-size:0.7rem;color:#a8402f;font-weight:600;white-space:nowrap;">🎁 ends ' + when + '</span>';
+}
+
+// Jump straight to an admin tab (and optionally a sub-tab) from the desk.
+function adminGoTab(tab, subtab) {
+  const btn = document.querySelector('.admin-tab-btn[data-admin-tab="' + tab + '"]');
+  if (btn) btn.click();
+  if (!subtab) return;
+  setTimeout(() => {
+    const sb = document.querySelector('button[data-subtab="' + subtab + '"]');
+    if (sb) sb.click();
+  }, 0);
+}
+window.adminGoTab = adminGoTab;
+
+function setNavBadge(tab, n, warn) {
+  const btn = document.querySelector('.admin-tab-btn[data-admin-tab="' + tab + '"]');
+  if (!btn) return;
+  let b = btn.querySelector(".admin-nav-badge");
+  if (!n) { if (b) b.remove(); return; }
+  if (!b) { b = document.createElement("span"); b.className = "admin-nav-badge"; btn.appendChild(b); }
+  b.textContent = n > 99 ? "99+" : String(n);
+  b.classList.toggle("is-warn", !!warn);
+}
+
+// Counts of records newer than the per-tab "seen" stamps; also paints the
+// sidebar badges. First ever run stamps everything as seen (no noise).
+function updateAdminNavBadges() {
+  const nowIso = new Date().toISOString();
+  if (!safeLocalRead("ubhi-admin-seen-orders")) {
+    ["orders", "bookings", "updates"].forEach(c => safeLocalWrite("ubhi-admin-seen-" + c, nowIso));
+  }
+  const seen = c => safeLocalRead("ubhi-admin-seen-" + c) || nowIso;
+  const newO = dbRead("shop-orders", []).filter(o => String(o.orderedAt || o.date || "") > seen("orders")).length;
+  const newB = dbRead("workshop-reservations", []).filter(b => String(b.reservedAt || "") > seen("bookings")).length;
+  const newU = dbRead("email-updates", []).filter(u => String(u.date || "") > seen("updates")).length;
+  const unreadM = dbRead("contact-messages", []).filter(m => !m.read).length;
+  const gifts = snailGiftsEndingSoon(14).length;
+  setNavBadge("orders", newO + newB);
+  setNavBadge("updates", newU + unreadM);
+  setNavBadge("snail", gifts, true);
+  return { newO: newO, newB: newB, newU: newU, unreadM: unreadM, gifts: gifts };
+}
+
+function renderAdminDesk() {
+  const list = document.getElementById("admin-desk-list");
+  if (!list) return;
+  const dateEl = document.getElementById("admin-desk-date");
+  const today = new Date();
+  if (dateEl) dateEl.textContent = today.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+
+  const c = updateAdminNavBadges();
+  const orders = dbRead("shop-orders", []);
+  const preparing = orders.filter(o => (o.status || "").toLowerCase().indexOf("prepar") > -1).length;
+  const members = dbRead("snail-members", []);
+  const cycle = snailNowCycle();
+  const due = members.filter(m => snailDueInCycle(m, cycle)).length;
+  const sentThis = members.filter(m => (m.sentCycles || []).indexOf(cycle) !== -1).length;
+  const lowStock = dbRead("shop-catalog", []).filter(p => Number(p.remainingStock) <= 5).length;
+  const giftsSoon = snailGiftsEndingSoon(14);
+
+  const rows = [];
+  const row = (icon, text, n, go, warn) => rows.push({ icon: icon, text: text, n: n, go: go, warn: warn });
+
+  if (c.newO) row("📦", c.newO + " new order" + (c.newO > 1 ? "s" : "") + " arrived", preparing ? preparing + " to ship" : "", "orders:orders");
+  else if (preparing) row("📦", preparing + " order" + (preparing > 1 ? "s" : "") + " waiting to ship", "", "orders:orders");
+  if (c.newB) row("🎟️", c.newB + " new workshop booking" + (c.newB > 1 ? "s" : ""), "", "orders:bookings");
+  if (due) {
+    const d = today.getDate();
+    let when;
+    if (d < SNAIL_DISPATCH_DAY) when = "post day in " + (SNAIL_DISPATCH_DAY - d) + " day" + (SNAIL_DISPATCH_DAY - d > 1 ? "s" : "");
+    else if (d === SNAIL_DISPATCH_DAY) when = "post day is today";
+    else when = "past the 5th";
+    row("📮", "Post run · " + snailCycleLabel(cycle) + " — " + due + " letter" + (due > 1 ? "s" : "") + " to send" + (sentThis ? " (" + sentThis + " done)" : ""), when, "snail:admin-sub-snail-postrun", d >= SNAIL_DISPATCH_DAY);
+  }
+  if (c.newU) row("✿", c.newU + " new email signup" + (c.newU > 1 ? "s" : ""), "", "updates");
+  if (c.unreadM) row("💌", c.unreadM + " unread message" + (c.unreadM > 1 ? "s" : ""), "", "updates");
+  if (lowStock) row("⚠️", lowStock + " shop piece" + (lowStock > 1 ? "s" : "") + " low on stock", "", "shop", true);
+  if (giftsSoon.length === 1) {
+    const g = giftsSoon[0];
+    row("🎁", (g.member.name || g.member.email) + "'s gift ends in " + g.daysLeft + " day" + (g.daysLeft === 1 ? "" : "s"), "", "snail:admin-sub-snail-members", true);
+  } else if (giftsSoon.length > 1) {
+    row("🎁", giftsSoon.length + " gift subscriptions end within 2 weeks", "", "snail:admin-sub-snail-members", true);
+  }
+  if ((safeLocalRead("ubhi-admin-pass") || "ubhi123") === "ubhi123") {
+    row("🔐", "You're still using the default admin passcode — change it in Settings", "", "settings", true);
+  }
+
+  list.innerHTML = rows.length
+    ? rows.map(r =>
+        '<li class="' + (r.warn ? "warn" : "") + '" data-desk-go="' + esc(r.go || "") + '" role="button" tabindex="0">' +
+        '<span class="desk-ico" aria-hidden="true">' + r.icon + '</span>' +
+        '<span class="desk-text">' + esc(r.text) + '</span>' +
+        (r.n ? '<span class="desk-n">' + esc(r.n) + '</span>' : '') +
+        '<span class="desk-go" aria-hidden="true">›</span></li>').join("")
+    : '<li class="calm"><span class="desk-ico" aria-hidden="true">🌿</span><span class="desk-text">The desk is clear — nothing waiting. Enjoy the quiet.</span></li>';
+}
+
+// One click (or Enter) on a desk row jumps to the matching tab/sub-tab.
+document.addEventListener("click", (e) => {
+  const li = e.target.closest("#admin-desk-list li[data-desk-go]");
+  if (!li) return;
+  const go = li.getAttribute("data-desk-go");
+  if (!go) return;
+  const parts = go.split(":");
+  adminGoTab(parts[0], parts[1]);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const li = e.target.closest && e.target.closest("#admin-desk-list li[data-desk-go]");
+  if (!li) return;
+  e.preventDefault();
+  const parts = (li.getAttribute("data-desk-go") || "").split(":");
+  adminGoTab(parts[0], parts[1]);
+});
 
 // --- 5. Global Action Handlers ---
 
@@ -5068,6 +5515,7 @@ function toggleMemberStatus(email) {
   if (member) {
     member.status = member.status === 'Active' ? 'Inactive' : 'Active';
     dbWrite("snail-members", members);
+    if (member._sid && window.ubhiPatch) window.ubhiPatch("subscriber", member._sid, { status: member.status });
     renderAdminSnailMail();
   }
 }
@@ -5075,8 +5523,10 @@ function toggleMemberStatus(email) {
 function deleteSnailMember(email) {
   if (confirm("Are you sure you want to delete this subscriber?")) {
     const members = dbRead("snail-members", []);
+    const removedMembers = members.filter(m => m.email.toLowerCase() === email.toLowerCase());
     const updated = members.filter(m => m.email.toLowerCase() !== email.toLowerCase());
     dbWrite("snail-members", updated);
+    if (window.ubhiDelete) removedMembers.forEach(m => { if (m._sid) window.ubhiDelete("subscriber", m._sid); });
     const pageSize = parseInt(snailMembersPageSize, 10);
     const totalPages = Math.ceil(updated.length / pageSize) || 1;
     if (snailMembersPage > totalPages) {
@@ -5124,6 +5574,7 @@ function toggleOrderStatus(orderId) {
   if (order) {
     order.status = order.status === "Shipped" ? "Preparing with care" : "Shipped";
     dbWrite("shop-orders", orders);
+    if (order._sid && window.ubhiPatch) window.ubhiPatch("order", order._sid, { status: order.status });
     renderAdminOrders();
   }
 }
@@ -5134,6 +5585,8 @@ function setOrderStatus(orderId, value) {
   if (order) {
     order.status = value;
     dbWrite("shop-orders", orders);
+    // Reflect the change on the server copy so every device sees it.
+    if (order._sid && window.ubhiPatch) window.ubhiPatch("order", order._sid, { status: value });
     renderAdminOrders();
     if (typeof renderAdminOverview === "function") renderAdminOverview();
   }
@@ -5142,8 +5595,10 @@ function setOrderStatus(orderId, value) {
 function deleteOrder(orderId) {
   if (confirm("Are you sure you want to delete this order record? This cannot be undone.")) {
     const orders = dbRead("shop-orders", []);
+    const removed = orders.find(o => (o.reservedAt || o.date || o.orderedAt) === orderId);
     const updated = orders.filter(o => (o.reservedAt || o.date || o.orderedAt) !== orderId);
     dbWrite("shop-orders", updated);
+    if (removed && removed._sid && window.ubhiDelete) window.ubhiDelete("order", removed._sid);
     renderAdminOrders();
   }
 }
@@ -5151,8 +5606,10 @@ function deleteOrder(orderId) {
 function deleteBooking(reservedAt) {
   if (confirm("Are you sure you want to delete this booking reservation?")) {
     const bookings = dbRead("workshop-reservations", []);
+    const removed = bookings.find(b => b.reservedAt === reservedAt);
     const updated = bookings.filter(b => b.reservedAt !== reservedAt);
     dbWrite("workshop-reservations", updated);
+    if (removed && removed._sid && window.ubhiDelete) window.ubhiDelete("booking", removed._sid);
     renderAdminOrders();
   }
 }
@@ -5203,6 +5660,43 @@ function fileToBase64(file) {
   });
 }
 
+// Resize/compress an uploaded image before storing. With no backend connected the
+// image lives as base64 in localStorage — a full-size phone photo (several MB) would
+// overflow the ~5MB quota and the save would silently fail (product never appears).
+// Downscaling to ~1280px JPEG keeps each image ~80–250KB. Falls back to the original
+// data URL if anything goes wrong, so it can never block a save.
+function resizeImageFile(file, maxDim, quality) {
+  maxDim = maxDim || 1280;
+  quality = quality || 0.85;
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      const img = new Image();
+      img.onload = () => {
+        try {
+          let w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+          if (!w || !h) { resolve(dataUrl); return; }
+          const scale = Math.min(1, maxDim / Math.max(w, h));
+          const cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+          const canvas = document.createElement("canvas");
+          canvas.width = cw; canvas.height = ch;
+          const ctx = canvas.getContext("2d");
+          ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, cw, ch);   // flatten transparency to white
+          ctx.drawImage(img, 0, 0, cw, ch);
+          // Always use the downscaled JPEG so every stored image is bounded in BOTH
+          // dimensions (≤maxDim) and size — guarantees it fits localStorage.
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        } catch (e) { resolve(dataUrl); }
+      };
+      img.onerror = () => resolve(dataUrl);   // not a resizable image — keep as-is
+      img.src = dataUrl;
+    };
+    reader.onerror = (err) => reject(err);
+    reader.readAsDataURL(file);
+  });
+}
+
 // Turn a base64 data URL into a hosted image URL when the backend is connected
 // (keeps localStorage / the DB small); otherwise keep the base64 string.
 async function hostImage(dataUrl) {
@@ -5216,7 +5710,7 @@ async function getFormImageSource(urlInputId, fileInputId) {
   const fileInput = document.getElementById(fileInputId);
   if (fileInput && fileInput.files && fileInput.files[0]) {
     try {
-      return await hostImage(await fileToBase64(fileInput.files[0]));
+      return await hostImage(await resizeImageFile(fileInput.files[0]));
     } catch (err) {
       console.error("Error reading file:", err);
     }
@@ -5224,6 +5718,40 @@ async function getFormImageSource(urlInputId, fileInputId) {
   const urlInput = document.getElementById(urlInputId);
   return urlInput ? urlInput.value.trim() : "";
 }
+
+// Like getFormImageSource but returns an ARRAY — ALL selected files (each resized)
+// plus any comma/newline-separated URLs. For records that hold an image gallery.
+async function getFormImageList(urlInputId, fileInputId) {
+  const out = [];
+  const fileInput = document.getElementById(fileInputId);
+  if (fileInput && fileInput.files && fileInput.files.length) {
+    for (let i = 0; i < fileInput.files.length; i++) {
+      try { out.push(await hostImage(await resizeImageFile(fileInput.files[i]))); }
+      catch (err) { console.error("Error reading file:", err); }
+    }
+  }
+  const urlInput = document.getElementById(urlInputId);
+  if (urlInput && urlInput.value.trim()) {
+    urlInput.value.split(/[\n,]+/).map(s => s.trim()).filter(Boolean).forEach(u => out.push(u));
+  }
+  return out;
+}
+
+// Lightweight admin confirmation toast — so publishing/saving gives visible feedback.
+function adminToast(msg) {
+  let t = document.getElementById("admin-toast");
+  if (!t) {
+    t = document.createElement("div");
+    t.id = "admin-toast";
+    t.style.cssText = "position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:99999;background:#2b2018;color:#f7f0da;padding:11px 22px;border-radius:6px;font-family:'EB Garamond',Georgia,serif;font-size:0.92rem;letter-spacing:0.02em;box-shadow:0 14px 36px -10px rgba(40,28,16,0.6);opacity:0;transition:opacity .25s ease;pointer-events:none;";
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = "1";
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(function () { t.style.opacity = "0"; }, 2400);
+}
+window.adminToast = adminToast;
 
 // Bind Submit Forms
 const addGalleryForm = document.getElementById("admin-add-gallery-form");
@@ -5336,6 +5864,11 @@ if (addWorkshopForm) {
     const list = dbRead("workshops", []);
     list.push({ title, eyebrow, desc, time, place, price, capacity, image });
     dbWrite("workshops", list);
+    // Confirm it persisted — a too-large poster can overflow localStorage.
+    if (dbRead("workshops", []).length < list.length) {
+      adminToast("⚠ Couldn't save — the poster image is too large. Please use a smaller image.");
+      return;
+    }
 
     const capacities = dbRead("workshops-capacities", {});
     capacities[title] = { total: capacity, booked: 0 };
@@ -5344,6 +5877,7 @@ if (addWorkshopForm) {
     addWorkshopForm.reset();
     renderWorkshops();
     renderAdminWorkshops();
+    adminToast("✓ Workshop published");
   });
 }
 
@@ -5357,7 +5891,8 @@ if (addShopForm) {
     const totalStock = parseInt(document.getElementById("admin-shop-stock-total")?.value || "10", 10);
     const remainingStock = parseInt(document.getElementById("admin-shop-stock-remaining")?.value || "10", 10);
     const vector = document.getElementById("admin-shop-vector-theme")?.value || "";
-    const image = await getFormImageSource("admin-shop-img-url", "admin-shop-img-file");
+    const images = await getFormImageList("admin-shop-img-url", "admin-shop-img-file");
+    const image = images[0] || "";   // primary image (card thumbnail + back-compat)
     const description = document.getElementById("admin-shop-desc-text")?.value || "";
 
     const list = dbRead("shop-catalog", []);
@@ -5366,12 +5901,19 @@ if (addShopForm) {
     if (dupe && !confirm('A product called "' + name.trim() + '" already exists. Add it again anyway?')) {
       return;
     }
-    list.push({ name, category, price, totalStock, remainingStock, vector, image, description });
+    list.push({ name, category, price, totalStock, remainingStock, vector, image, images, description });
     dbWrite("shop-catalog", list);
+    // Confirm it persisted — a too-large image can overflow localStorage and the
+    // write fails silently, so the product would never appear.
+    if (dbRead("shop-catalog", []).length < list.length) {
+      adminToast("⚠ Couldn't save — the image is too large. Please use a smaller image.");
+      return;
+    }
 
     addShopForm.reset();
     renderShop();
     renderAdminShop();
+    adminToast("✓ Product published");
   });
 }
 
@@ -5691,34 +6233,9 @@ function renderMemberDashboard() {
   }
 }
 
-// Seed a demo member + a little history so the profile shows real data.
-if (!dbRead("members", null)) {
-  dbWrite("members", [{
-    name: "Abhi", email: "abhi@ubhi.in", password: "ubhi123",
-    phone: "+44 7700 900000", address: "14 Primrose Gardens", city: "London",
-    postcode: "NW3 4YT", country: "United Kingdom", marketingOptIn: true, joinedAt: "2026-01-10"
-  }]);
-}
-if (!dbRead("members-seeded-history", null)) {
-  dbWrite("members-seeded-history", true);
-  const _so = dbRead("shop-orders", []);
-  _so.push(
-    { items: [{ name: "AUM Geometry Print", quantity: 1 }], totalPrice: 32, name: "Abhi", email: "abhi@ubhi.in", address: { street: "14 Primrose Gardens", city: "London", postcode: "NW3 4YT" }, orderedAt: "2026-05-28T10:00:00.000Z", status: "Delivered" },
-    { items: [{ name: "Indigo Clay Bowl", quantity: 1 }], totalPrice: 42, name: "Abhi", email: "abhi@ubhi.in", address: { street: "14 Primrose Gardens", city: "London", postcode: "NW3 4YT" }, orderedAt: "2026-06-10T10:00:00.000Z", status: "Shipped" }
-  );
-  dbWrite("shop-orders", _so);
-  const _wr = dbRead("workshop-reservations", []);
-  _wr.push(
-    { workshop: "Somatic Silk Dyeing", name: "Abhi", email: "abhi@ubhi.in", note: "", date: "Sunday 6 September · 11:00–14:30", price: "64", reservedAt: "2026-04-02T10:00:00.000Z", status: "Confirmed" },
-    { workshop: "Kintsugi & Self-Compassion", name: "Abhi", email: "abhi@ubhi.in", note: "", date: "Sunday 4 October · 13:00–16:00", price: "62", reservedAt: "2026-06-01T10:00:00.000Z", status: "Confirmed" }
-  );
-  dbWrite("workshop-reservations", _wr);
-  const _sm = dbRead("snail-members", []);
-  if (!_sm.find((m) => String(m.email || "").toLowerCase() === "abhi@ubhi.in")) {
-    _sm.push({ name: "Abhi", email: "abhi@ubhi.in", contact: "+44 7700 900000", plan: "6 Months", billing: "£16 / month", address: "14 Primrose Gardens, London, NW3 4YT, United Kingdom", dateSubscribed: "2026-03-01", status: "Active" });
-    dbWrite("snail-members", _sm);
-  }
-}
+// (LAUNCH-CLEAN: the demo member "Abhi" and his fabricated order/booking
+// history are no longer seeded — real accounts are created at the admin's
+// People tab, and existing browsers are cleaned by purgeDemoData() above.)
 
 const memberLoginForm = document.getElementById("member-login-form");
 if (memberLoginForm) {
@@ -5733,7 +6250,7 @@ if (memberLoginForm) {
       if (msg) {
         msg.style.display = "block";
         msg.style.color = "#a23b52";
-        msg.textContent = "Those details don't match. Demo sign-in: abhi@ubhi.in / ubhi123";
+        msg.textContent = "Those details don't match an account. If you've shopped with us and would like sign-in access, send us a note via the Contact page.";
       }
       return;
     }
@@ -5959,6 +6476,15 @@ tabButtons.forEach(btn => {
       }
     });
 
+    // Opening a tab marks its arrivals as seen — the badge starts fresh.
+    const seenIso = new Date().toISOString();
+    if (targetTab === "orders") {
+      safeLocalWrite("ubhi-admin-seen-orders", seenIso);
+      safeLocalWrite("ubhi-admin-seen-bookings", seenIso);
+    }
+    if (targetTab === "updates") safeLocalWrite("ubhi-admin-seen-updates", seenIso);
+    if (typeof updateAdminNavBadges === "function") updateAdminNavBadges();
+
     if (targetTab === "overview" && typeof renderAdminOverview === "function") {
       renderAdminOverview();
     }
@@ -5996,6 +6522,14 @@ tabButtons.forEach(btn => {
 (function initAdminCustomerControls() {
   const addBtn = document.getElementById("admin-customer-add-btn");
   if (addBtn) addBtn.addEventListener("click", adminAddCustomer);
+  // People-type filter chips (Everyone / Snail Mail / Shoppers / Email list / Accounts).
+  const chips = document.getElementById("admin-people-chips");
+  if (chips) chips.addEventListener("click", (e) => {
+    const chip = e.target.closest("[data-people-type]");
+    if (!chip) return;
+    adminPeopleType = chip.getAttribute("data-people-type");
+    renderAdminCustomers();
+  });
 })();
 
 // Per-list search inputs (Gallery / Workshops / Shop / Journal)
@@ -6081,8 +6615,8 @@ function initSnailMailCRMListeners() {
     if (nameEl) nameEl.focus();
   }
   function closeAddMember() {
-    if (addPanel) addPanel.style.display = "none";
-    if (toggleAddBtn) toggleAddBtn.textContent = ADD_MEMBER_LABEL;
+    // The form lives in its own "Add Member" sub-tab now, so "Clear form" just
+    // resets the fields (nothing to hide).
     if (addForm) addForm.reset();
   }
 
@@ -6267,15 +6801,28 @@ function initOrdersAndBackupListeners() {
     if (!btn) return;
     const action = btn.getAttribute("data-obulk");
     if (action === "clear") { adminOrdersSelected.clear(); renderAdminShopOrders(); return; }
+    if (action === "slips") {
+      const sel = dbRead("shop-orders", []).filter(o => adminOrdersSelected.has(orderRowId(o)));
+      if (sel.length) printPackingSlips(sel);
+      return;
+    }
     if (action === "delete") {
       if (!confirm("Delete " + adminOrdersSelected.size + " selected order(s)? This cannot be undone.")) return;
-      const kept = dbRead("shop-orders", []).filter(o => !adminOrdersSelected.has(orderRowId(o)));
+      const allOrders = dbRead("shop-orders", []);
+      const dropped = allOrders.filter(o => adminOrdersSelected.has(orderRowId(o)));
+      const kept = allOrders.filter(o => !adminOrdersSelected.has(orderRowId(o)));
       dbWrite("shop-orders", kept);
+      if (window.ubhiDelete) dropped.forEach(o => { if (o._sid) window.ubhiDelete("order", o._sid); });
       adminOrdersSelected.clear();
     } else {
       const newStatus = action === "shipped" ? "Shipped" : "Delivered";
       const orders = dbRead("shop-orders", []);
-      orders.forEach(o => { if (adminOrdersSelected.has(orderRowId(o))) o.status = newStatus; });
+      orders.forEach(o => {
+        if (adminOrdersSelected.has(orderRowId(o))) {
+          o.status = newStatus;
+          if (o._sid && window.ubhiPatch) window.ubhiPatch("order", o._sid, { status: newStatus });
+        }
+      });
       dbWrite("shop-orders", orders);
       adminOrdersSelected.clear();
     }
@@ -6289,6 +6836,13 @@ function initOrdersAndBackupListeners() {
     if (e.target.id === "bookings-workshop") { adminBookingsWorkshop = e.target.value; adminBookingsPage = 1; renderAdminWorkshopBookings(); }
     else if (e.target.id === "bookings-sort") { adminBookingsSort = e.target.value; renderAdminWorkshopBookings(); }
     else if (e.target.id === "bookings-perpage") { adminBookingsPerPage = parseInt(e.target.value, 10) || 0; adminBookingsPage = 1; renderAdminWorkshopBookings(); }
+  });
+  if (bookingsControls) bookingsControls.addEventListener("click", (e) => {
+    const chip = e.target.closest("[data-bwhen]");
+    if (!chip) return;
+    adminBookingsWhen = chip.getAttribute("data-bwhen");
+    adminBookingsPage = 1;
+    renderAdminWorkshopBookings();
   });
   const bookingsPager = document.getElementById("admin-bookings-pagination");
   if (bookingsPager) bookingsPager.addEventListener("click", (e) => {
@@ -6322,8 +6876,11 @@ function initOrdersAndBackupListeners() {
     if (action === "clear") { adminBookingsSelected.clear(); renderAdminWorkshopBookings(); return; }
     if (action === "delete") {
       if (!confirm("Delete " + adminBookingsSelected.size + " selected reservation(s)? This cannot be undone.")) return;
-      const kept = dbRead("workshop-reservations", []).filter(b => !adminBookingsSelected.has(String(b.reservedAt || "")));
+      const allBookings = dbRead("workshop-reservations", []);
+      const droppedB = allBookings.filter(b => adminBookingsSelected.has(String(b.reservedAt || "")));
+      const kept = allBookings.filter(b => !adminBookingsSelected.has(String(b.reservedAt || "")));
       dbWrite("workshop-reservations", kept);
+      if (window.ubhiDelete) droppedB.forEach(b => { if (b._sid) window.ubhiDelete("booking", b._sid); });
       adminBookingsSelected.clear();
       renderAdminWorkshopBookings();
       if (typeof renderAdminOverview === "function") renderAdminOverview();
@@ -6390,8 +6947,9 @@ function initOrdersAndBackupListeners() {
 
       orders.forEach(o => {
         let itemsStr = "";
-        if (o.itemsList && o.itemsList.length > 0) {
-          itemsStr = o.itemsList.map(item => `${item.name} (x${item.quantity})`).join("; ");
+        const csvItems = orderItems(o);
+        if (csvItems.length > 0) {
+          itemsStr = csvItems.map(item => `${item.name} (x${item.quantity || 1})`).join("; ");
         } else if (o.productName) {
           itemsStr = `${o.productName} (x1)`;
         }
@@ -6619,9 +7177,9 @@ try { initSnailMailCRMListeners(); } catch (e) { console.error("Snail CRM listen
 })();
 
 // ── CONTACT FORM ──────────────────────────────────────────────
-// INTEGRATION: POST these fields to your transactional email service (e.g. a
-// /api/contact endpoint that emails hello@ubhi.in). For now it validates and
-// shows a friendly confirmation so the flow is demonstrable.
+// Messages POST to the backend (/api/contact) and appear in the admin panel's
+// Messages list on every device. If the backend is unreachable, the visitor's
+// email app opens pre-filled (mailto:) so the message can still reach the owner.
 (function initContactForm() {
   const form = document.getElementById("contact-form");
   if (!form) return;
@@ -6640,20 +7198,37 @@ try { initSnailMailCRMListeners(); } catch (e) { console.error("Snail CRM listen
       }
       return;
     }
-    // Real fallback (no backend needed): open the visitor's email app pre-filled so the
-    // message actually reaches hello@ubhi.in. DEVELOPER: for a seamless server-side send,
-    // POST these fields to a transactional email service instead of using mailto.
     const subject = document.getElementById("contact-subject")?.value || "Website enquiry";
-    const body = "From: " + name + " <" + email + ">\n\n" + message;
-    const mailto = "mailto:hello@ubhi.in?subject=" + encodeURIComponent("Ubhi enquiry — " + subject) + "&body=" + encodeURIComponent(body);
-    const a = document.createElement("a");
-    a.href = mailto; document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    form.reset();
-    if (msg) {
-      msg.style.display = "block";
-      msg.style.color = "var(--forest, #3a6b52)";
-      msg.textContent = "Thank you, " + name + " — your email app is opening so you can send this to hello@ubhi.in. (No app? Write to us directly at hello@ubhi.in.)";
-    }
+
+    // Preferred path: hand the message to the backend, where it lands in the
+    // owner's admin inbox on every device. Falls back to the old mailto:
+    // behaviour whenever the server can't take it.
+    const openMailApp = () => {
+      const body = "From: " + name + " <" + email + ">\n\n" + message;
+      const mailto = "mailto:hello@ubhi.in?subject=" + encodeURIComponent("Ubhi enquiry — " + subject) + "&body=" + encodeURIComponent(body);
+      const a = document.createElement("a");
+      a.href = mailto; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      if (msg) {
+        msg.style.display = "block";
+        msg.style.color = "var(--forest, #3a6b52)";
+        msg.textContent = "Thank you, " + name + " — your email app is opening so you can send this to hello@ubhi.in. (No app? Write to us directly at hello@ubhi.in.)";
+      }
+    };
+    const submitP = (typeof window !== "undefined" && typeof window.ubhiSubmit === "function")
+      ? window.ubhiSubmit("contact", { name: name, email: email, subject: subject, message: message })
+      : Promise.resolve({ ok: false, offline: true });
+    submitP.then((r) => {
+      form.reset();
+      if (r && r.ok) {
+        if (msg) {
+          msg.style.display = "block";
+          msg.style.color = "var(--forest, #3a6b52)";
+          msg.textContent = "Thank you, " + name + " — your message is on its way. We reply to " + email + ", usually within a day or two.";
+        }
+      } else {
+        openMailApp();
+      }
+    });
   });
 })();
 
@@ -6882,6 +7457,99 @@ try { initSnailMailCRMListeners(); } catch (e) { console.error("Snail CRM listen
   function init() { initGiftToggle(); initICSBtn(); initReceiptBtns(); }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
+})();
+
+// ── Click-to-expand image zoom WITH left/right navigation ──────────────────
+// Workshop posters open a single image; shop products open their whole image
+// gallery (prev/next + counter). Any <img class="zoomable"> works too.
+(function initImageZoom() {
+  let imgs = [], idx = 0, capLabel = "";
+  function show() {
+    const el = document.getElementById("ubhi-img-zoom-img");
+    if (!el || !imgs.length) return;
+    idx = (idx % imgs.length + imgs.length) % imgs.length;
+    el.src = imgs[idx];
+    el.alt = capLabel || "";
+    const multi = imgs.length > 1;
+    const p = document.getElementById("ubhi-img-zoom-prev");
+    const n = document.getElementById("ubhi-img-zoom-next");
+    const c = document.getElementById("ubhi-img-zoom-count");
+    if (p) p.style.display = multi ? "flex" : "none";
+    if (n) n.style.display = multi ? "flex" : "none";
+    if (c) { c.style.display = multi ? "block" : "none"; c.textContent = (idx + 1) + " / " + imgs.length; }
+  }
+  function step(d) { if (imgs.length > 1) { idx += d; show(); } }
+  function ensureOverlay() {
+    let ov = document.getElementById("ubhi-img-zoom");
+    if (ov) return ov;
+    ov = document.createElement("div");
+    ov.id = "ubhi-img-zoom";
+    ov.setAttribute("role", "dialog");
+    ov.setAttribute("aria-modal", "true");
+    ov.style.cssText = "position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;padding:4vmin;background:rgba(28,18,10,0.9);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);opacity:0;transition:opacity .2s ease;";
+    const navBtn = "position:absolute;top:50%;transform:translateY(-50%);width:48px;height:48px;display:none;align-items:center;justify-content:center;border:0;border-radius:50%;background:rgba(255,255,255,0.16);color:#fbf3df;font-size:1.9rem;line-height:1;cursor:pointer;";
+    ov.innerHTML =
+      '<button id="ubhi-img-zoom-prev" type="button" aria-label="Previous image" style="' + navBtn + 'left:16px;">&#8249;</button>' +
+      '<img id="ubhi-img-zoom-img" alt="" style="max-width:90vw;max-height:90vh;border-radius:5px;background:#fff;box-shadow:0 30px 80px -18px rgba(0,0,0,0.75);" />' +
+      '<button id="ubhi-img-zoom-next" type="button" aria-label="Next image" style="' + navBtn + 'right:16px;">&#8250;</button>' +
+      '<div id="ubhi-img-zoom-count" style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:none;color:#fbf3df;font-family:\'EB Garamond\',serif;font-size:0.9rem;letter-spacing:0.08em;background:rgba(0,0,0,0.4);padding:5px 14px;border-radius:20px;"></div>' +
+      '<button id="ubhi-img-zoom-close" type="button" aria-label="Close" style="position:absolute;top:16px;right:20px;width:42px;height:42px;border:0;border-radius:50%;background:rgba(255,255,255,0.16);color:#fbf3df;font-size:1.7rem;line-height:1;cursor:pointer;">&times;</button>';
+    document.body.appendChild(ov);
+    function close() {
+      ov.style.opacity = "0";
+      document.body.style.overflow = "";
+      setTimeout(function () { ov.style.display = "none"; }, 200);
+    }
+    ov.addEventListener("click", function (e) {
+      const t = e.target;
+      if (t === ov || t.id === "ubhi-img-zoom-close") { close(); return; }
+      if (t.id === "ubhi-img-zoom-prev") { step(-1); return; }
+      if (t.id === "ubhi-img-zoom-next") { step(1); return; }
+    });
+    document.addEventListener("keydown", function (e) {
+      if (ov.style.display === "none") return;
+      if (e.key === "Escape") close();
+      else if (e.key === "ArrowLeft") step(-1);
+      else if (e.key === "ArrowRight") step(1);
+    });
+    return ov;
+  }
+  window.openImageZoom = function (images, startIndex, alt) {
+    const arr = (Array.isArray(images) ? images : [images]).filter(Boolean);
+    if (!arr.length) return;
+    imgs = arr; idx = Math.max(0, Math.min(startIndex || 0, arr.length - 1)); capLabel = alt || "";
+    const ov = ensureOverlay();
+    show();
+    ov.style.display = "flex";
+    document.body.style.overflow = "hidden";
+    setTimeout(function () { ov.style.opacity = "1"; }, 10);
+  };
+  // cursor hint on expandable images
+  const st = document.createElement("style");
+  st.textContent = "#page-workshops .card-image-wrap img, #page-shop .product-image-wrap img, img.zoomable { cursor: zoom-in; }";
+  document.head.appendChild(st);
+  // delegated click → expand. Shop products open their whole gallery (prev/next).
+  document.addEventListener("click", function (e) {
+    const img = e.target.closest && e.target.closest("#page-workshops .card-image-wrap img, #page-shop .product-image-wrap img, img.zoomable");
+    if (!img) return;
+    e.preventDefault();
+    e.stopPropagation();
+    // Use the RAW src attribute (relative path or base64) so it matches what the
+    // catalog stored — img.currentSrc would be the absolute URL and never match.
+    const src = img.getAttribute("src") || img.currentSrc;
+    if (img.closest("#page-shop")) {
+      try {
+        const prod = dbRead("shop-catalog", []).find(function (p) {
+          return (Array.isArray(p.images) && p.images.indexOf(src) !== -1) || p.image === src;
+        });
+        const gallery = prod && Array.isArray(prod.images) && prod.images.length ? prod.images : [src];
+        const start = Math.max(0, gallery.indexOf(src));
+        window.openImageZoom(gallery, start, prod ? prod.name : img.getAttribute("alt"));
+        return;
+      } catch (err) { /* fall through to single image */ }
+    }
+    window.openImageZoom(src, 0, img.getAttribute("alt"));
+  }, true);
 })();
 
 // ── Hero art rotator — slowly cross-fade the full-bleed background slides. ──

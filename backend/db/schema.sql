@@ -138,6 +138,17 @@ CREATE TABLE IF NOT EXISTS journal_posts (
   created_at  timestamptz NOT NULL DEFAULT now()
 );
 
+-- Contact-form messages from the storefront.
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name        text,
+  email       text,
+  subject     text,
+  message     text,
+  read        boolean NOT NULL DEFAULT false,
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+
 -- Key/value settings store.
 CREATE TABLE IF NOT EXISTS settings (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),

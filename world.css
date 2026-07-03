@@ -216,37 +216,8 @@ p { color: var(--mist); }
 .stamp-label { font-size: 0.46rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ochre); }
 .stamp-value { font-family: "Fraunces", serif; font-size: 1.1rem; line-height: 1; color: var(--ink); }
 
-/* circular postmark to cancel a stamp */
-.postmark {
-  position: absolute;
-  width: 92px;
-  height: 92px;
-  border: 2px solid rgba(58, 73, 106, 0.55);
-  border-radius: 50%;
-  color: rgba(58, 73, 106, 0.62);
-  font-family: "EB Garamond", sans-serif;
-  font-size: 0.4rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  display: grid;
-  place-items: center;
-  text-align: center;
-  transform: rotate(-13deg);
-  mix-blend-mode: multiply;
-  opacity: 0.8;
-  pointer-events: none;
-}
-.postmark::before, .postmark::after {
-  content: "";
-  position: absolute;
-  left: 8px; right: 8px;
-  height: 0;
-  border-top: 1.5px solid rgba(58, 73, 106, 0.45);
-}
-.postmark::before { top: 16px; }
-.postmark::after  { bottom: 16px; }
-.postmark span { display: block; }
-.postmark .pm-arc { font-size: 0.34rem; }
+/* (the old circular hero postmark was retired with the hero wax-stamp;
+   the live one on the Snail Mail page is .snail-peek-postmark in artwork.css) */
 
 /* — paper clip ———————————————————————————————————————— */
 .paper-clip {
@@ -744,14 +715,8 @@ input[type="file"]::file-selector-button:hover { background: var(--ochre); color
 
 /* hero ephemera — pinned around the letter on the desk */
 .hero-ephemera { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
-.he-stamp { position: absolute; z-index: 6; top: 10px; left: 16px; transform: rotate(-7deg) scale(0.7); transform-origin: top left; pointer-events: none; }
+/* (.he-stamp — the hero wax stamp/postmark — was removed in the hero redesign) */
 #page-home .hero-content { padding-top: clamp(56px, 6vw, 72px); }
-.he-stamp .stamp { width: 86px; }
-.he-stamp .stamp-value { font-size: 0.82rem; }
-.he-stamp .stamp-art { width: 40px; height: 40px; }
-.he-stamp .postmark { top: -6px; left: 6px; width: 58px; height: 58px; font-size: 0.3rem; }
-.he-stamp .postmark::before { top: 11px; }
-.he-stamp .postmark::after { bottom: 11px; }
 .he-fern {
   position: absolute;
   right: clamp(18px, 7vw, 118px);
@@ -772,9 +737,6 @@ input[type="file"]::file-selector-button:hover { background: var(--ochre); color
 @media (max-width: 860px) { .he-note-1, .he-note-2 { display: none; } }
 @media (max-width: 600px) {
   .he-fern { display: none; }
-  .he-stamp { top: 6px; left: 10px; transform: rotate(-7deg) scale(0.5); }
-  .he-stamp .postmark { display: none; }
-  #page-home .hero .eyebrow { padding-left: 50px !important; }
   /* the wax seal kisses the cart amulet on phones — let it rest */
   #page-home .hero-content::before { display: none; }
 }

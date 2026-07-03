@@ -1355,9 +1355,42 @@
 }
 
 /* ── Snail-mail plan tiles: fluid 5→3→2→1 instead of a 5→1 jump at 900px ── */
-#page-snail-mail .snail-plans-grid { grid-template-columns: repeat(4, 1fr) !important; max-width: 1000px; }
-@media (max-width: 920px) { #page-snail-mail .snail-plans-grid { grid-template-columns: repeat(2, 1fr) !important; max-width: 520px; } }
-@media (max-width: 520px) { #page-snail-mail .snail-plans-grid { grid-template-columns: 1fr !important; } }
+/* Narrower 4-up plan tiles (horizontally compact). */
+#page-snail-mail .snail-plans-grid { grid-template-columns: repeat(4, 1fr) !important; max-width: 860px; gap: 12px !important; }
+@media (max-width: 920px) { #page-snail-mail .snail-plans-grid { grid-template-columns: repeat(2, 1fr) !important; max-width: 560px; } }
+/* Phones: keep all FOUR plans visible as a 2×2 grid (like the home-hero tiles). */
+@media (max-width: 520px) {
+  #page-snail-mail .snail-plans-grid { grid-template-columns: repeat(2, 1fr) !important; max-width: 100% !important; gap: 10px !important; }
+  #page-snail-mail .snail-plan-card { padding: 16px 11px 58px !important; min-height: 0 !important; }   /* reserve space for the pinned Subscribe button */
+  #page-snail-mail .snail-plan-featured { transform: none !important; }   /* sit flush in the grid */
+  #page-snail-mail .snail-plan-term { font-size: 0.6rem !important; }
+  #page-snail-mail .snail-plan-price { font-size: 1.5rem !important; }
+  #page-snail-mail .snail-plan-period { font-size: 0.62rem !important; }
+  #page-snail-mail .snail-plan-desc { font-size: 0.72rem !important; line-height: 1.4 !important; }
+  #page-snail-mail .snail-plan-tag { font-size: 0.56rem !important; }
+  #page-snail-mail .snail-plan-subscribe { font-size: 0.66rem !important; padding: 9px 8px !important; }
+}
+
+/* Shorter plan tiles — reduce vertical size (drop the 240px min-height + tighten
+   internal spacing; keep ~54px at the base for the pinned Subscribe button). */
+#page-snail-mail .snail-plan-card { min-height: 0 !important; padding-top: 16px !important; padding-bottom: 50px !important; }
+#page-snail-mail .snail-plan-term { margin-bottom: 5px !important; }
+#page-snail-mail .snail-plan-tag { margin-top: 0 !important; margin-bottom: 7px !important; }
+#page-snail-mail .snail-plan-price { margin-bottom: 1px !important; }
+#page-snail-mail .snail-plan-period { margin-bottom: 7px !important; }
+#page-snail-mail .snail-plan-saving { margin-top: 6px !important; margin-bottom: 6px !important; font-size: 0.82rem !important; line-height: 1.1 !important; }
+#page-snail-mail .snail-plan-price { font-size: 1.5rem !important; }
+#page-snail-mail .snail-plan-period { font-size: 0.72rem !important; }
+/* clamp the description so a long one doesn't make every tile tall */
+#page-snail-mail .snail-plan-desc {
+  margin-top: 7px !important;
+  font-size: 0.76rem !important;
+  line-height: 1.4 !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+}
 
 /* ── Workshops grid: add a 3-column tier on standard breakpoints ── */
 @media (max-width: 1120px) { #page-workshops .workshop-grid { grid-template-columns: repeat(3, 1fr) !important; } }
@@ -1630,20 +1663,6 @@
   .nav-account{ display:none !important; }   /* mobile uses the in-menu "Sign in" + social row */
   .nav-links.is-open .nav-social{ display:flex; gap:28px; margin-top:8px; }
   .nav-links.is-open .nav-social a{ width:34px; height:34px; }
-}
-
-/* ── Home hero: keep the decorative postage-stamp out of the "Yoga" heading ──
-   The hero-compaction reduced the heading's top padding, pulling the title up
-   under the stamp. Move the stamp to the top-right (where a real stamp sits on
-   a letter), clear of the left-aligned heading. */
-@media (min-width: 901px){
-  #page-home .he-stamp{
-    left: auto !important;
-    right: 4px;
-    top: 4px;
-    transform-origin: top right;
-    transform: rotate(5deg) scale(0.64);
-  }
 }
 
 /* ════════════ ADMIN — collapsible sidebar, mobile drawer, Customers tab ════════════ */
@@ -2192,3 +2211,52 @@ body.sticker-preview-open { overflow: hidden; }
 }
 
 /* (rotating art is back on — fixed via the even scrim above, not by removing it) */
+
+/* ════════════ Admin: Today's post desk + sidebar new-item badges ════════════
+   The desk is the owner's morning queue on Overview — each row is one click
+   from the thing it describes. Badges ride the nav buttons (absolute, so the
+   button layout is untouched) and show what arrived since the tab was last
+   opened. */
+.admin-nav-badge {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: var(--ochre, #a6741f); color: var(--paper-cream, #f7f0da);
+  font-family: 'Inter', Arial, sans-serif; font-style: normal;
+  font-size: 0.64rem; font-weight: 700; line-height: 1.65;
+  border-radius: 999px; padding: 0 7px; min-width: 21px; text-align: center;
+  letter-spacing: 0.02em;
+}
+.admin-nav-badge.is-warn { background: #a8402f; }
+
+.admin-desk-list { list-style: none; margin: 0; padding: 0; }
+.admin-desk-list li {
+  display: flex; align-items: center; gap: 11px;
+  padding: 10px 13px; margin-bottom: 8px;
+  border: 1px solid var(--border-color, rgba(90, 70, 40, 0.25));
+  border-radius: 8px; font-size: 0.92rem; line-height: 1.4;
+  cursor: pointer; transition: background 160ms ease, border-color 160ms ease;
+}
+.admin-desk-list li:hover, .admin-desk-list li:focus-visible {
+  background: rgba(166, 116, 31, 0.08);
+  border-color: var(--ochre, #a6741f);
+}
+.admin-desk-list li.warn { border-left: 3px solid #a8402f; }
+.admin-desk-list li.calm { cursor: default; color: var(--mist); }
+.admin-desk-list li.calm:hover { background: none; border-color: var(--border-color, rgba(90, 70, 40, 0.25)); }
+.admin-desk-list .desk-ico { flex: 0 0 auto; font-size: 1.02rem; }
+.admin-desk-list .desk-text { flex: 1 1 auto; }
+.admin-desk-list .desk-n { flex: 0 0 auto; color: var(--ochre, #a6741f); font-weight: 600; font-size: 0.8rem; white-space: nowrap; }
+.admin-desk-list .desk-go { flex: 0 0 auto; color: var(--mist); font-size: 1.1rem; line-height: 1; }
+@media (max-width: 520px) {
+  .admin-desk-list li { font-size: 0.86rem; padding: 9px 11px; gap: 9px; }
+}
+
+/* Admin on the phone: comfortable tap targets for the daily jobs. */
+@media (max-width: 680px) {
+  #admin-dashboard .admin-status-select { font-size: 0.88rem !important; padding: 8px 10px !important; min-height: 40px; }
+  #admin-dashboard .admin-row-check,
+  #admin-dashboard .admin-row-check-b { width: 20px; height: 20px; }
+  #admin-dashboard .admin-mini-btn { padding: 8px 12px !important; font-size: 0.8rem !important; min-height: 36px; }
+  #admin-dashboard .admin-action-btn-danger { padding: 8px 12px !important; font-size: 0.78rem !important; min-height: 36px; }
+  #admin-dashboard .bulk-btn { min-height: 40px; }
+  #admin-dashboard .alc-chip { min-height: 36px; padding: 6px 12px; }
+}

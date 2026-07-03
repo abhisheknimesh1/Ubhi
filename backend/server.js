@@ -71,6 +71,7 @@ const mounts = [
   ['/api/subscribers', './routes/subscribers'],
   ['/api/updates', './routes/updates'],
   ['/api/customers', './routes/customers'],
+  ['/api/contact', './routes/contact'],
   ['/api/settings', './routes/settings'],
   ['/api/state', './routes/state'],
   ['/api/upload', './routes/upload'],
