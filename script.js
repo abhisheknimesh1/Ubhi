@@ -4431,8 +4431,8 @@ function renderAdminSnailMail() {
     const photos = dbRead("snail-photos", []);
     photosEl.innerHTML = photos.map((p, idx) => `
       <div class="admin-slider-card">
-        <img class="admin-slider-card-img" src="${p.src}" alt="${p.caption}" />
-        <div class="admin-slider-card-meta">${p.caption}</div>
+        <img class="admin-slider-card-img" src="${esc(p.src)}" alt="${esc(p.caption)}" />
+        <div class="admin-slider-card-meta">${esc(p.caption)}${p.month ? ` <span style="color:var(--aurora-gold);font-size:0.72rem;">· ${esc(p.month)}</span>` : ""}</div>
         <div class="admin-slider-card-actions">
           <button type="button" class="admin-action-btn-danger" onclick="deleteSnailPhoto(${idx})">Delete</button>
         </div>
@@ -6019,6 +6019,7 @@ if (addSnailPhotoForm) {
     e.preventDefault();
     const src = await getFormImageSource("admin-snail-photo-url", "admin-snail-photo-file");
     const caption = document.getElementById("admin-snail-photo-caption")?.value || "";
+    const month = document.getElementById("admin-snail-photo-month")?.value || "";
 
     if (!src) {
       alert("Please enter an image URL or select a local file.");
@@ -6026,7 +6027,7 @@ if (addSnailPhotoForm) {
     }
 
     const list = dbRead("snail-photos", []);
-    list.push({ src, caption });
+    list.push({ src, caption, month });
     dbWrite("snail-photos", list);
 
     addSnailPhotoForm.reset();
@@ -6857,7 +6858,16 @@ function enhanceMarquee(container, loopSeconds) {
     const dx = e.clientX - startX; moved += Math.abs(dx);
     off = startOff - dx; wrapOff(); apply();
   });
-  const end = () => { if (!dragging) return; dragging = false; container.classList.remove("is-dragging"); };
+  const end = () => {
+    if (!dragging) return; dragging = false; container.classList.remove("is-dragging");
+    // Flag a real drag briefly so document-level capture listeners (the
+    // lightbox opens in capture phase, BEFORE this container's own click
+    // suppression can run) know to ignore the click that follows.
+    if (moved > 6) {
+      container.dataset.justDragged = "1";
+      setTimeout(() => { delete container.dataset.justDragged; }, 150);
+    }
+  };
   container.addEventListener("pointerup", end);
   container.addEventListener("pointercancel", end);
   container.addEventListener("lostpointercapture", end);
@@ -7597,20 +7607,30 @@ try { initSnailMailCRMListeners(); } catch (e) { console.error("Snail CRM listen
 // Workshop posters open a single image; shop products open their whole image
 // gallery (prev/next + counter). Any <img class="zoomable"> works too.
 (function initImageZoom() {
+  // Gallery items are plain src strings, or { src, label } objects — the label
+  // (e.g. "January — Vol. 01: AUM") is shown in a pill above the counter.
   let imgs = [], idx = 0, capLabel = "";
+  function itemSrc(it) { return typeof it === "string" ? it : (it && it.src) || ""; }
+  function itemLabel(it) { return (it && typeof it === "object" && it.label) || capLabel || ""; }
   function show() {
     const el = document.getElementById("ubhi-img-zoom-img");
     if (!el || !imgs.length) return;
     idx = (idx % imgs.length + imgs.length) % imgs.length;
-    el.src = imgs[idx];
-    el.alt = capLabel || "";
+    el.src = itemSrc(imgs[idx]);
+    el.alt = itemLabel(imgs[idx]);
     const multi = imgs.length > 1;
     const p = document.getElementById("ubhi-img-zoom-prev");
     const n = document.getElementById("ubhi-img-zoom-next");
     const c = document.getElementById("ubhi-img-zoom-count");
+    const lab = document.getElementById("ubhi-img-zoom-label");
     if (p) p.style.display = multi ? "flex" : "none";
     if (n) n.style.display = multi ? "flex" : "none";
     if (c) { c.style.display = multi ? "block" : "none"; c.textContent = (idx + 1) + " / " + imgs.length; }
+    if (lab) {
+      const t = imgs[idx] && typeof imgs[idx] === "object" ? (imgs[idx].label || "") : "";
+      lab.textContent = t;
+      lab.style.display = t ? "block" : "none";
+    }
   }
   function step(d) { if (imgs.length > 1) { idx += d; show(); } }
   function ensureOverlay() {
@@ -7627,6 +7647,7 @@ try { initSnailMailCRMListeners(); } catch (e) { console.error("Snail CRM listen
       '<img id="ubhi-img-zoom-img" alt="" style="max-width:90vw;max-height:90vh;border-radius:5px;background:#fff;box-shadow:0 30px 80px -18px rgba(0,0,0,0.75);" />' +
       '<button id="ubhi-img-zoom-next" type="button" aria-label="Next image" style="' + navBtn + 'right:16px;">&#8250;</button>' +
       '<div id="ubhi-img-zoom-count" style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:none;color:#fbf3df;font-family:\'EB Garamond\',serif;font-size:0.9rem;letter-spacing:0.08em;background:rgba(0,0,0,0.4);padding:5px 14px;border-radius:20px;"></div>' +
+      '<div id="ubhi-img-zoom-label" style="position:absolute;bottom:58px;left:50%;transform:translateX(-50%);display:none;max-width:84vw;text-align:center;color:#fbf3df;font-family:\'EB Garamond\',serif;font-size:1rem;letter-spacing:0.04em;background:rgba(0,0,0,0.4);padding:6px 16px;border-radius:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>' +
       '<button id="ubhi-img-zoom-close" type="button" aria-label="Close" style="position:absolute;top:16px;right:20px;width:42px;height:42px;border:0;border-radius:50%;background:rgba(255,255,255,0.16);color:#fbf3df;font-size:1.7rem;line-height:1;cursor:pointer;">&times;</button>';
     document.body.appendChild(ov);
     function close() {
@@ -7658,19 +7679,70 @@ try { initSnailMailCRMListeners(); } catch (e) { console.error("Snail CRM listen
     document.body.style.overflow = "hidden";
     setTimeout(function () { ov.style.opacity = "1"; }, 10);
   };
+  // ── Snail Mail archive: group photos month by month ────────────────────
+  const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  function snailPhotoMonthLabel(p) {
+    const m = String(p.month || "").match(/^(\d{4})-(\d{1,2})/);
+    if (m) return MONTH_NAMES[Math.min(11, Math.max(0, +m[2] - 1))] + " " + m[1];
+    const c = String(p.caption || "").trim().match(/^(January|February|March|April|May|June|July|August|September|October|November|December)/i);
+    if (c) return c[1].charAt(0).toUpperCase() + c[1].slice(1).toLowerCase();
+    return "The archive";
+  }
+  // One group per month, in the order the archive presents them, so browsing
+  // runs through all of January's photos, then February's, and so on.
+  function snailPhotoGroups(list) {
+    const order = [], byLabel = {};
+    list.forEach(function (p) {
+      const label = snailPhotoMonthLabel(p);
+      if (!byLabel[label]) { byLabel[label] = { label: label, photos: [] }; order.push(byLabel[label]); }
+      byLabel[label].photos.push(p);
+    });
+    return order;
+  }
+
   // cursor hint on expandable images
   const st = document.createElement("style");
-  st.textContent = "#page-workshops .card-image-wrap img, #page-shop .product-image-wrap img, img.zoomable { cursor: zoom-in; }";
+  st.textContent = "#page-workshops .card-image-wrap img, #page-shop .product-image-wrap img, #page-snail-mail .snail-photo-card img, img.zoomable { cursor: zoom-in; }";
   document.head.appendChild(st);
   // delegated click → expand. Shop products open their whole gallery (prev/next).
   document.addEventListener("click", function (e) {
-    const img = e.target.closest && e.target.closest("#page-workshops .card-image-wrap img, #page-shop .product-image-wrap img, img.zoomable");
+    const img = e.target.closest && e.target.closest("#page-workshops .card-image-wrap img, #page-shop .product-image-wrap img, #page-snail-mail .snail-photo-card img, img.zoomable");
     if (!img) return;
+    // A drag along a carousel must not open the lightbox on release.
+    const marquee = img.closest(".js-marquee");
+    if (marquee && marquee.dataset.justDragged) return;
     e.preventDefault();
     e.stopPropagation();
     // Use the RAW src attribute (relative path or base64) so it matches what the
     // catalog stored — img.currentSrc would be the absolute URL and never match.
     const src = img.getAttribute("src") || img.currentSrc;
+    // Snail Mail archive: the whole archive opens as ONE gallery, ordered
+    // month by month, starting from the photo that was clicked.
+    if (img.closest("#page-snail-mail") && img.closest(".snail-photo-card")) {
+      try {
+        const list = dbRead("snail-photos", []);
+        if (list.length) {
+          const scope = marquee || document.getElementById("snail-photos-carousel-container") || document;
+          const cards = Array.prototype.slice.call(scope.querySelectorAll(".snail-photo-card img"));
+          const recIdx = Math.max(0, cards.indexOf(img)) % list.length;   // the track is duplicated for the loop
+          const flat = [];
+          snailPhotoGroups(list).forEach(function (g) {
+            g.photos.forEach(function (p) {
+              const cap = String(p.caption || "");
+              const monthWord = g.label.split(" ")[0].toLowerCase();
+              const label = cap
+                ? (cap.toLowerCase().indexOf(monthWord) === 0 ? cap : g.label + " · " + cap)
+                : g.label;
+              flat.push({ src: p.src, label: label, _rec: p });
+            });
+          });
+          let start = 0;
+          for (let i = 0; i < flat.length; i++) { if (flat[i]._rec === list[recIdx]) { start = i; break; } }
+          window.openImageZoom(flat, start, "Snail Mail archive");
+          return;
+        }
+      } catch (err) { /* fall through to single image */ }
+    }
     if (img.closest("#page-shop")) {
       try {
         const prod = dbRead("shop-catalog", []).find(function (p) {
