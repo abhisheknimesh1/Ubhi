@@ -6855,15 +6855,19 @@ function enhanceMarquee(container, loopSeconds) {
   });
   container.addEventListener("pointermove", (e) => {
     if (!dragging) return;
-    const dx = e.clientX - startX; moved += Math.abs(dx);
+    const dx = e.clientX - startX;
+    // Peak distance from the press point — NOT accumulated per event, or the
+    // tiny tremor inside a normal click would read as a "drag" and eat it.
+    moved = Math.max(moved, Math.abs(dx));
     off = startOff - dx; wrapOff(); apply();
   });
+  const DRAG_THRESHOLD = 10;
   const end = () => {
     if (!dragging) return; dragging = false; container.classList.remove("is-dragging");
     // Flag a real drag briefly so document-level capture listeners (the
     // lightbox opens in capture phase, BEFORE this container's own click
     // suppression can run) know to ignore the click that follows.
-    if (moved > 6) {
+    if (moved > DRAG_THRESHOLD) {
       container.dataset.justDragged = "1";
       setTimeout(() => { delete container.dataset.justDragged; }, 150);
     }
@@ -6872,7 +6876,7 @@ function enhanceMarquee(container, loopSeconds) {
   container.addEventListener("pointercancel", end);
   container.addEventListener("lostpointercapture", end);
   // a drag shouldn't also fire a click (e.g. open the lightbox)
-  container.addEventListener("click", (e) => { if (moved > 6) { e.preventDefault(); e.stopPropagation(); } }, true);
+  container.addEventListener("click", (e) => { if (moved > DRAG_THRESHOLD) { e.preventDefault(); e.stopPropagation(); } }, true);
 }
 
 enhanceMarquee(document.getElementById("home-gallery-container"), 42);
@@ -7702,11 +7706,11 @@ try { initSnailMailCRMListeners(); } catch (e) { console.error("Snail CRM listen
 
   // cursor hint on expandable images
   const st = document.createElement("style");
-  st.textContent = "#page-workshops .card-image-wrap img, #page-shop .product-image-wrap img, #page-snail-mail .snail-photo-card img, img.zoomable { cursor: zoom-in; }";
+  st.textContent = "#page-workshops .card-image-wrap img, #page-shop .product-image-wrap img, #page-snail-mail .snail-photo-card img, #home-gallery-container .gallery-item img, img.zoomable { cursor: zoom-in; }";
   document.head.appendChild(st);
   // delegated click → expand. Shop products open their whole gallery (prev/next).
   document.addEventListener("click", function (e) {
-    const img = e.target.closest && e.target.closest("#page-workshops .card-image-wrap img, #page-shop .product-image-wrap img, #page-snail-mail .snail-photo-card img, img.zoomable");
+    const img = e.target.closest && e.target.closest("#page-workshops .card-image-wrap img, #page-shop .product-image-wrap img, #page-snail-mail .snail-photo-card img, #home-gallery-container .gallery-item img, img.zoomable");
     if (!img) return;
     // A drag along a carousel must not open the lightbox on release.
     const marquee = img.closest(".js-marquee");
@@ -7716,6 +7720,20 @@ try { initSnailMailCRMListeners(); } catch (e) { console.error("Snail CRM listen
     // Use the RAW src attribute (relative path or base64) so it matches what the
     // catalog stored — img.currentSrc would be the absolute URL and never match.
     const src = img.getAttribute("src") || img.currentSrc;
+    // Home gallery: open the whole carousel as one gallery from the clicked photo.
+    if (img.closest("#home-gallery-container")) {
+      try {
+        const items = dbRead("gallery-items", []);
+        if (items.length) {
+          const scope = marquee || document.getElementById("home-gallery-container");
+          const gImgs = Array.prototype.slice.call(scope.querySelectorAll(".gallery-item img"));
+          const recIdx = Math.max(0, gImgs.indexOf(img)) % items.length;   // track is duplicated for the loop
+          const flat = items.map(function (g) { return { src: g.src, label: g.alt || g.caption || "" }; });
+          window.openImageZoom(flat, recIdx, "Ubhi gallery");
+          return;
+        }
+      } catch (err) { /* fall through to single image */ }
+    }
     // Snail Mail archive: the whole archive opens as ONE gallery, ordered
     // month by month, starting from the photo that was clicked.
     if (img.closest("#page-snail-mail") && img.closest(".snail-photo-card")) {
