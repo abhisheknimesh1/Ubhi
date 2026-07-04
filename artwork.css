@@ -713,22 +713,43 @@
   width: 17px !important; height: 17px !important; left: 14px !important;
 }
 
-/* ════ the snail-mail letter is now hand-written & compact ═══════ */
-#page-snail-mail .snail-letter-story { max-width: 440px !important; width: 100%; }
+/* ════ the snail-mail letter: hand-written, compact & calibrated ═══════
+   Same note-card shape, but noticeably shorter: smaller (still legible)
+   handwriting, tighter rhythm, trimmed padding — tuned per screen size. */
+#page-snail-mail .snail-letter-story {
+  max-width: 440px !important; width: 100%;
+  padding: 18px 26px 16px !important;
+}
 #page-snail-mail .snail-letter-salutation {
   font-family: "Caveat", cursive !important;
-  font-size: clamp(1.9rem, 3.6vw, 2.4rem) !important; font-weight: 600;
+  font-size: clamp(1.55rem, 3vw, 1.9rem) !important; font-weight: 600;
   color: var(--ink) !important; letter-spacing: 0;
 }
-#page-snail-mail .snail-letter-date { font-family: "Caveat", cursive !important; font-size: 1.25rem !important; }
+/* indent the salutation clear of the corner stamp (56px wide, rotated, at left:16px) */
+#page-snail-mail .snail-letter-header { margin-bottom: 8px; padding-left: 60px; }
+#page-snail-mail .snail-letter-date { font-family: "Caveat", cursive !important; font-size: 1.05rem !important; }
 #page-snail-mail .snail-letter-body p {
   font-family: "Caveat", cursive !important;
-  font-size: 1.52rem !important; line-height: 1.5 !important;
-  color: var(--ink-soft) !important; margin-bottom: 0.7em;
+  font-size: 1.22rem !important; line-height: 1.42 !important;
+  color: var(--ink-soft) !important; margin-bottom: 0.5em;
 }
 #page-snail-mail .snail-letter-signature {
   font-family: "Caveat", cursive !important;
-  font-size: 1.95rem !important; color: var(--indigo) !important; line-height: 1.2;
+  font-size: 1.55rem !important; color: var(--indigo) !important; line-height: 1.2;
+  margin-top: 6px;
+}
+/* margin notes: float beside the compact sheet, never over the handwriting */
+#page-snail-mail .snail-letter-story .snail-marginalia.note-top-right { top: 18px !important; right: -118px !important; max-width: 104px !important; }
+#page-snail-mail .snail-letter-story .snail-marginalia.note-bottom-left { bottom: 30px !important; left: -122px !important; max-width: 108px !important; }
+@media (max-width: 760px) {
+  #page-snail-mail .snail-letter-story .snail-marginalia { display: none !important; }
+}
+/* phones: a touch smaller again so the opened note sits comfortably on one screen */
+@media (max-width: 480px) {
+  #page-snail-mail .snail-letter-story { padding: 15px 20px 13px !important; }
+  #page-snail-mail .snail-letter-salutation { font-size: 1.4rem !important; }
+  #page-snail-mail .snail-letter-body p { font-size: 1.1rem !important; line-height: 1.4 !important; }
+  #page-snail-mail .snail-letter-signature { font-size: 1.35rem !important; }
 }
 
 /* ════ CTAs in sage — the pink didn't suit the cards ════════════ */
