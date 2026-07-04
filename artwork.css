@@ -713,22 +713,27 @@
   width: 17px !important; height: 17px !important; left: 14px !important;
 }
 
-/* ════ the snail-mail letter is now hand-written & compact ═══════ */
-#page-snail-mail .snail-letter-story { max-width: 440px !important; width: 100%; }
+/* ════ the snail-mail letter: hand-written, landscape & compact ═══════
+   Opened, it reads like a wide sheet rather than a tall scroll — generous
+   horizontal room, calmer type, roughly half the old vertical height. */
+#page-snail-mail .snail-letter-story {
+  max-width: min(680px, 94vw) !important; width: 100%;
+  padding: 22px 40px 20px !important;
+}
 #page-snail-mail .snail-letter-salutation {
   font-family: "Caveat", cursive !important;
-  font-size: clamp(1.9rem, 3.6vw, 2.4rem) !important; font-weight: 600;
+  font-size: clamp(1.55rem, 3vw, 1.9rem) !important; font-weight: 600;
   color: var(--ink) !important; letter-spacing: 0;
 }
-#page-snail-mail .snail-letter-date { font-family: "Caveat", cursive !important; font-size: 1.25rem !important; }
+#page-snail-mail .snail-letter-date { font-family: "Caveat", cursive !important; font-size: 1.05rem !important; }
 #page-snail-mail .snail-letter-body p {
   font-family: "Caveat", cursive !important;
-  font-size: 1.52rem !important; line-height: 1.5 !important;
-  color: var(--ink-soft) !important; margin-bottom: 0.7em;
+  font-size: 1.28rem !important; line-height: 1.45 !important;
+  color: var(--ink-soft) !important; margin-bottom: 0.55em;
 }
 #page-snail-mail .snail-letter-signature {
   font-family: "Caveat", cursive !important;
-  font-size: 1.95rem !important; color: var(--indigo) !important; line-height: 1.2;
+  font-size: 1.55rem !important; color: var(--indigo) !important; line-height: 1.2;
 }
 
 /* ════ CTAs in sage — the pink didn't suit the cards ════════════ */
@@ -781,6 +786,8 @@
    OPEN: the letter pops in (display + keyframe — reliable, unlike a
    max-height transition). */
 .snail-letter-mount.js-envelope { position: relative; flex: 0 0 auto; width: min(460px, 92vw); margin: 0 auto; min-height: 400px; }
+/* Opened: the mount widens so the letter can spread out horizontally. */
+.snail-letter-mount.js-envelope.is-open { width: min(720px, 96vw); min-height: 0; }
 .snail-letter-mount.js-envelope:not(.is-open) .snail-letter-story { display: none; }
 .snail-letter-mount.js-envelope.is-open .snail-letter-story {
   display: block; animation: letterPop .6s cubic-bezier(.2, .8, .2, 1) both;
