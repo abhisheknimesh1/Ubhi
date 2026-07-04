@@ -203,7 +203,7 @@ function triggerInnerPageReveals(pageEl) {
 // ── SPA ROUTER ────────────────────────────────────────────────
 let currentPageId = null;
 
-function navigate(hash, scrollToBooking = false) {
+function navigate(hash) {
   // Known route → its page. Unknown non-empty hash → 404 (empty/"#" → home).
   let pageId = PAGE_MAP[hash];
   if (!pageId) pageId = (hash && hash !== "#") ? "page-404" : "page-home";
@@ -290,14 +290,8 @@ function navigate(hash, scrollToBooking = false) {
   document.body.style.overflow = "";
   document.body.classList.remove("menu-open");
 
-  // Optional: open the booking modal
-  if (scrollToBooking) {
-    setTimeout(() => {
-      if (typeof openBookingModal === "function") {
-        openBookingModal();
-      }
-    }, 120);
-  }
+  // ("Reserve a space" now simply lands on the Workshops page — the booking
+  // form only opens when a specific workshop's Book button is chosen.)
 }
 
 // Expose so the world.js safety net can re-route to the correct page on load.
@@ -361,24 +355,23 @@ document.addEventListener("click", (e) => {
     return;
   }
 
-  const el = e.target.closest("a[href^='#'], [data-page-link], [data-goto-booking]");
+  const el = e.target.closest("a[href^='#'], [data-page-link]");
   if (!el) return;
 
-  const gotoBooking = el.hasAttribute("data-goto-booking");
-  const pageLink    = el.dataset.pageLink;
-  const href        = el.getAttribute?.("href") || "";
+  const pageLink = el.dataset.pageLink;
+  const href     = el.getAttribute?.("href") || "";
 
   if (pageLink) {
     e.preventDefault();
     const newHash = "#" + pageLink;
-    navigate(newHash, gotoBooking);
+    navigate(newHash);
     setUrlHash(newHash);
     return;
   }
 
   if (href && href.startsWith("#") && href !== "#") {
     e.preventDefault();
-    navigate(href, gotoBooking);
+    navigate(href);
     setUrlHash(href);
   }
 });
