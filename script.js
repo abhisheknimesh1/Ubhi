@@ -6825,7 +6825,8 @@ function enhanceMarquee(container, loopSeconds) {
   container.classList.add("js-marquee");
 
   const reduce = false; // owner wants the gentle marquees to keep gliding regardless of the OS setting
-  let hovering = false, dragging = false, startX = 0, startOff = 0, moved = 0, last = 0, off = 0;
+  const DRAG_THRESHOLD = 10;
+  let hovering = false, pressing = false, dragging = false, startX = 0, startOff = 0, moved = 0, last = 0, off = 0, activeId = null;
   const setWidth = () => { const t = container.firstElementChild; return t ? t.offsetWidth : 0; };  // one set's width
   const wrapOff = () => { const w = setWidth(); if (w > 0) { off %= w; if (off < 0) off += w; } };
   const apply = () => { const tx = "translateX(" + (-off) + "px)"; for (const t of container.children) t.style.transform = tx; };
@@ -6834,7 +6835,7 @@ function enhanceMarquee(container, loopSeconds) {
     if (!last) last = ts;
     let dt = ts - last; last = ts;
     if (dt > 100) dt = 16;   // returning from a hidden tab shouldn't make it leap
-    if (!dragging && !hovering && !reduce) {
+    if (!pressing && !hovering && !reduce) {
       const w = setWidth();
       if (w > 0) { off += (w / loopSeconds) * (dt / 1000); wrapOff(); apply(); }
     }
@@ -6847,36 +6848,46 @@ function enhanceMarquee(container, loopSeconds) {
   container.addEventListener("mouseleave", () => { hovering = false; });
   container.addEventListener("dragstart", (e) => e.preventDefault());
 
-  // drag to move left / right — works for mouse AND touch, loops both ways
+  // Drag to move left / right (mouse + touch). CRUCIAL: we do NOT capture the
+  // pointer on pointerdown. Capturing there retargets the pointerup to this
+  // container, so the browser sees down-on-image / up-on-container and never
+  // fires a `click` — which silently killed the tap-to-open-lightbox. We only
+  // start capturing once real movement crosses the drag threshold, so a plain
+  // click never captures and its native `click` fires normally.
   container.addEventListener("pointerdown", (e) => {
-    dragging = true; moved = 0; startX = e.clientX; startOff = off;
-    container.classList.add("is-dragging");
-    if (container.setPointerCapture) { try { container.setPointerCapture(e.pointerId); } catch (_) {} }
+    if (e.button != null && e.button > 0) return;         // primary button / touch only
+    pressing = true; dragging = false; moved = 0;
+    startX = e.clientX; startOff = off; activeId = e.pointerId;
   });
   container.addEventListener("pointermove", (e) => {
-    if (!dragging) return;
+    if (!pressing) return;
     const dx = e.clientX - startX;
     // Peak distance from the press point — NOT accumulated per event, or the
-    // tiny tremor inside a normal click would read as a "drag" and eat it.
+    // tiny tremor inside a normal click would read as a "drag".
     moved = Math.max(moved, Math.abs(dx));
-    off = startOff - dx; wrapOff(); apply();
+    if (!dragging && moved > DRAG_THRESHOLD) {
+      dragging = true;
+      container.classList.add("is-dragging");
+      if (container.setPointerCapture && activeId != null) { try { container.setPointerCapture(activeId); } catch (_) {} }
+    }
+    if (dragging) { off = startOff - dx; wrapOff(); apply(); }
   });
-  const DRAG_THRESHOLD = 10;
   const end = () => {
-    if (!dragging) return; dragging = false; container.classList.remove("is-dragging");
-    // Flag a real drag briefly so document-level capture listeners (the
-    // lightbox opens in capture phase, BEFORE this container's own click
-    // suppression can run) know to ignore the click that follows.
-    if (moved > DRAG_THRESHOLD) {
+    if (!pressing) return;
+    pressing = false;
+    if (dragging) {
+      dragging = false; container.classList.remove("is-dragging");
+      // Flag a real drag briefly so the click that follows (if any) is ignored.
       container.dataset.justDragged = "1";
       setTimeout(() => { delete container.dataset.justDragged; }, 150);
     }
+    activeId = null;
   };
   container.addEventListener("pointerup", end);
   container.addEventListener("pointercancel", end);
   container.addEventListener("lostpointercapture", end);
-  // a drag shouldn't also fire a click (e.g. open the lightbox)
-  container.addEventListener("click", (e) => { if (moved > DRAG_THRESHOLD) { e.preventDefault(); e.stopPropagation(); } }, true);
+  // belt-and-braces: a real drag must never also fire a click (open the lightbox)
+  container.addEventListener("click", (e) => { if (container.dataset.justDragged) { e.preventDefault(); e.stopPropagation(); } }, true);
 }
 
 enhanceMarquee(document.getElementById("home-gallery-container"), 42);
