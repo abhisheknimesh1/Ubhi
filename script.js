@@ -6348,39 +6348,51 @@ function renderMemberDashboard() {
 // People tab, and existing browsers are cleaned by purgeDemoData() above.)
 
 const memberLoginForm = document.getElementById("member-login-form");
+let memberGateMode = "signin";   // "signin" | "create" — toggled by the "Create an account" link
 if (memberLoginForm) {
   memberLoginForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const email = (document.getElementById("member-email")?.value || "").trim();
     const pass = document.getElementById("member-pass")?.value || "";
     const msg = document.getElementById("member-login-msg");
+    const say = (text) => { if (msg) { msg.style.display = "block"; msg.style.color = "#a23b52"; msg.textContent = text; } };
+
+    const finishSignIn = (member) => {
+      if (msg) msg.style.display = "none";
+      safeLocalWrite("ubhi-member-authenticated", "true");
+      safeLocalWrite("ubhi-member-email", member.email);
+      safeLocalWrite("ubhi-member-name", member.name || member.email.split("@")[0]);
+      const mGate = document.getElementById("member-gate");
+      const mDash = document.getElementById("member-dashboard");
+      if (mGate) mGate.style.display = "none";
+      if (mDash) mDash.style.display = "block";
+      renderMemberDashboard();
+    };
+
+    // Create mode: a small local sign-up (stored in this browser until real
+    // authentication is wired in). Uses the same email their orders live under.
+    if (memberGateMode === "create") {
+      const nameNew = (document.getElementById("member-name")?.value || "").trim();
+      if (!nameNew) { say("Mind telling us your name?"); return; }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { say("That email looks off — mind checking it?"); return; }
+      if (String(pass).length < 4) { say("Please pick a password of at least 4 characters."); return; }
+      if (findMember(email)) { say("An account with that email already exists — sign in instead."); return; }
+      saveMember({ name: nameNew, email: email, password: pass, joinedAt: new Date().toISOString().split("T")[0], active: true, marketingOptIn: false });
+      finishSignIn({ name: nameNew, email: email });
+      return;
+    }
+
     // INTEGRATION: verify credentials against your real auth provider here.
     const member = findMember(email);
     if (!member || member.password !== pass) {
-      if (msg) {
-        msg.style.display = "block";
-        msg.style.color = "#a23b52";
-        msg.textContent = "Those details don't match an account. If you've shopped with us and would like sign-in access, send us a note via the Contact page.";
-      }
+      say("Those details don't match an account. New here? Tap “Create an account” below.");
       return;
     }
     if (member.active === false) {
-      if (msg) {
-        msg.style.display = "block";
-        msg.style.color = "#a23b52";
-        msg.textContent = "This account is currently paused. Please email hello@ubhi.in for help.";
-      }
+      say("This account is currently paused. Please email hello@ubhi.in for help.");
       return;
     }
-    if (msg) msg.style.display = "none";
-    safeLocalWrite("ubhi-member-authenticated", "true");
-    safeLocalWrite("ubhi-member-email", member.email);
-    safeLocalWrite("ubhi-member-name", member.name || member.email.split("@")[0]);
-    const mGate = document.getElementById("member-gate");
-    const mDash = document.getElementById("member-dashboard");
-    if (mGate) mGate.style.display = "none";
-    if (mDash) mDash.style.display = "block";
-    renderMemberDashboard();
+    finishSignIn(member);
   });
 }
 
@@ -6399,19 +6411,35 @@ if (memberLogoutBtn) {
   });
 }
 
-["member-forgot", "member-create"].forEach((id) => {
-  const el = document.getElementById(id);
-  if (el) el.addEventListener("click", (e) => {
-    e.preventDefault();
-    const msg = document.getElementById("member-login-msg");
-    if (msg) {
-      msg.style.display = "block";
-      msg.style.color = "var(--mist)";
-      msg.textContent = id === "member-forgot"
-        ? "In the live site, this emails you a reset link."
-        : "In the live site, this creates your account.";
-    }
-  });
+// "Create an account" flips the sign-in card into a small sign-up and back.
+const memberCreateLink = document.getElementById("member-create");
+if (memberCreateLink) memberCreateLink.addEventListener("click", (e) => {
+  e.preventDefault();
+  memberGateMode = memberGateMode === "create" ? "signin" : "create";
+  const creating = memberGateMode === "create";
+  const nameField = document.getElementById("member-name-field");
+  const submitBtn = document.querySelector("#member-login-form .member-login-btn");
+  const msg = document.getElementById("member-login-msg");
+  if (nameField) nameField.style.display = creating ? "" : "none";
+  if (submitBtn) submitBtn.textContent = creating ? "Create my account" : "Sign in";
+  memberCreateLink.textContent = creating ? "I already have an account" : "Create an account";
+  if (msg) msg.style.display = "none";
+  if (creating) document.getElementById("member-name")?.focus();
+});
+
+// "Forgot password" — handled personally until real auth: opens a ready email.
+const memberForgotLink = document.getElementById("member-forgot");
+if (memberForgotLink) memberForgotLink.addEventListener("click", (e) => {
+  e.preventDefault();
+  const emailVal = (document.getElementById("member-email")?.value || "").trim();
+  const msg = document.getElementById("member-login-msg");
+  if (msg) {
+    msg.style.display = "block";
+    msg.style.color = "var(--mist)";
+    msg.textContent = "Your email app is opening — we'll sort your password personally, usually within a day.";
+  }
+  window.location.href = "mailto:hello@ubhi.in?subject=" + encodeURIComponent("Password help — Your Almanac") +
+    "&body=" + encodeURIComponent("Hello Chelsea,\n\nI can't get into my account" + (emailVal ? " (" + emailVal + ")" : "") + " — could you help me reset the password?\n\nThank you!");
 });
 
 // --- 8. CSV Exporter & Address Stickers Printer ---
