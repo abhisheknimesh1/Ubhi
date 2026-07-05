@@ -3333,11 +3333,12 @@ details p { margin: 14px 0 4px; font-size: 0.96rem; }
 
 .page.is-active {
   display: block;
-  animation: pageFadeIn 420ms ease;
+  /* a sheet of paper laid gently on the desk — quick fade + small rise */
+  animation: pageFadeIn 300ms cubic-bezier(0.25, 0.7, 0.3, 1);
 }
 
 @keyframes pageFadeIn {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 

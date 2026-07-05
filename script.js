@@ -3532,20 +3532,51 @@ function renderShop() {
     if (p.image && p.image !== "") {
       visualHtml = `<div class="product-image-wrap"><img src="${p.image}" alt="${p.name}" loading="lazy" /></div>`;
     } else {
+      // Ink plates — confident, letterpress-style line art (the old whisper-faint
+      // strokes made cards look blank). One ink + paper tint per theme, tint in CSS.
       const themeClass = p.vector || "lotus";
-      let svgMarkup = `<svg viewBox="0 0 200 200" fill="none" width="100%" height="100%"><circle cx="100" cy="100" r="90" stroke="rgba(201,151,42,0.4)" stroke-width="0.8"/><circle cx="100" cy="100" r="10" stroke="rgba(201,151,42,0.5)" stroke-width="0.6"/></svg>`;
-      
-      if (themeClass === "yantra") {
-        svgMarkup = `<svg viewBox="0 0 200 200" fill="none" width="100%" height="100%"><circle cx="100" cy="100" r="90" stroke="rgba(201,151,42,0.4)" stroke-width="0.8"/><polygon points="100,20 172,155 28,155" stroke="rgba(201,151,42,0.5)" stroke-width="0.8"/><polygon points="100,180 172,45 28,45" stroke="rgba(181,96,122,0.4)" stroke-width="0.8"/></svg>`;
-      } else if (themeClass === "lotus") {
-        svgMarkup = `<svg viewBox="0 0 200 200" fill="none" width="100%" height="100%"><circle cx="100" cy="100" r="80" stroke="rgba(201,151,42,0.4)" stroke-width="0.8"/><circle cx="100" cy="30" r="60" stroke="rgba(201,151,42,0.12)" stroke-width="0.5"/><circle cx="150" cy="65" r="60" stroke="rgba(201,151,42,0.12)" stroke-width="0.5"/><circle cx="150" cy="135" r="60" stroke="rgba(201,151,42,0.12)" stroke-width="0.5"/><circle cx="100" cy="170" r="60" stroke="rgba(201,151,42,0.12)" stroke-width="0.5"/><circle cx="50" cy="135" r="60" stroke="rgba(201,151,42,0.12)" stroke-width="0.5"/><circle cx="50" cy="65" r="60" stroke="rgba(201,151,42,0.12)" stroke-width="0.5"/></svg>`;
-      } else if (themeClass === "concentric") {
-        svgMarkup = `<svg viewBox="0 0 200 200" fill="none" width="100%" height="100%"><circle cx="100" cy="100" r="90" stroke="rgba(45,139,124,0.4)" stroke-width="0.8"/><circle cx="100" cy="100" r="70" stroke="rgba(45,139,124,0.3)" stroke-width="0.7"/><circle cx="100" cy="100" r="50" stroke="rgba(45,139,124,0.25)" stroke-width="0.6"/><circle cx="100" cy="100" r="30" stroke="rgba(45,139,124,0.35)" stroke-width="0.6"/><circle cx="100" cy="100" r="8" fill="rgba(45,139,124,0.5)"/></svg>`;
-      } else if (themeClass === "lines") {
-        svgMarkup = `<svg viewBox="0 0 200 200" fill="none" width="100%" height="100%"><rect x="30" y="30" width="140" height="140" stroke="rgba(201,151,42,0.4)" stroke-width="0.8"/><line x1="30" y1="30" x2="170" y2="170" stroke="rgba(201,151,42,0.25)" stroke-width="0.6"/><line x1="170" y1="30" x2="30" y2="170" stroke="rgba(201,151,42,0.25)" stroke-width="0.6"/><circle cx="100" cy="100" r="50" stroke="rgba(201,151,42,0.35)" stroke-width="0.6"/></svg>`;
-      }
-      
-      visualHtml = `<div class="product-art ${themeClass}">${svgMarkup}</div>`;
+      const PLATES = {
+        lotus: `<svg viewBox="0 0 200 200" fill="none" width="100%" height="100%" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M100 128 C 92 108, 92 84, 100 62 C 108 84, 108 108, 100 128 Z" stroke="#a34d5f" stroke-width="2.4"/>
+          <path d="M100 128 C 82 118, 68 102, 62 80 C 84 84, 96 96, 100 128 Z" stroke="#a34d5f" stroke-width="2.2"/>
+          <path d="M100 128 C 118 118, 132 102, 138 80 C 116 84, 104 96, 100 128 Z" stroke="#a34d5f" stroke-width="2.2"/>
+          <path d="M100 128 C 74 126, 52 116, 40 98 C 66 96, 88 106, 100 128 Z" stroke="#b4596d" stroke-width="2"/>
+          <path d="M100 128 C 126 126, 148 116, 160 98 C 134 96, 112 106, 100 128 Z" stroke="#b4596d" stroke-width="2"/>
+          <path d="M52 140 Q 100 156 148 140" stroke="#8a6a3c" stroke-width="2"/>
+          <path d="M62 150 Q 100 162 138 150" stroke="#8a6a3c" stroke-width="1.8"/>
+          <circle cx="100" cy="52" r="4" fill="#a34d5f"/>
+        </svg>`,
+        yantra: `<svg viewBox="0 0 200 200" fill="none" width="100%" height="100%" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="100" cy="100" r="74" stroke="#a6741f" stroke-width="2.2"/>
+          <polygon points="100,38 154,138 46,138" stroke="#a6741f" stroke-width="2.4"/>
+          <polygon points="100,162 154,62 46,62" stroke="#a34d5f" stroke-width="2.2"/>
+          <circle cx="100" cy="100" r="10" stroke="#a6741f" stroke-width="2.2"/>
+          <circle cx="100" cy="100" r="3.4" fill="#a34d5f"/>
+          <path d="M100 14 v12 M100 174 v12 M14 100 h12 M174 100 h12" stroke="#8a6a3c" stroke-width="2.2"/>
+        </svg>`,
+        concentric: `<svg viewBox="0 0 200 200" fill="none" width="100%" height="100%" stroke-linecap="round">
+          <circle cx="100" cy="100" r="78" stroke="#2d6b60" stroke-width="2.4"/>
+          <circle cx="100" cy="100" r="58" stroke="#2d6b60" stroke-width="2" stroke-dasharray="2 9"/>
+          <circle cx="100" cy="100" r="40" stroke="#3c8577" stroke-width="2.2"/>
+          <circle cx="100" cy="100" r="22" stroke="#2d6b60" stroke-width="2"/>
+          <circle cx="100" cy="100" r="6" fill="#2d6b60"/>
+          <path d="M100 10 v10 M100 180 v10 M10 100 h10 M180 100 h10 M35 35 l8 8 M157 157 l8 8 M165 35 l-8 8 M43 157 l-8 8" stroke="#8a6a3c" stroke-width="2"/>
+        </svg>`,
+        lines: `<svg viewBox="0 0 200 200" fill="none" width="100%" height="100%" stroke-linecap="round">
+          <rect x="36" y="36" width="128" height="128" stroke="#3a496a" stroke-width="2.4"/>
+          <path d="M36 68 h128 M36 100 h128 M36 132 h128" stroke="#3a496a" stroke-width="1.8"/>
+          <path d="M68 36 v128 M100 36 v128 M132 36 v128" stroke="#54678f" stroke-width="1.8"/>
+          <circle cx="100" cy="100" r="44" stroke="#a34d5f" stroke-width="2.2"/>
+          <circle cx="100" cy="100" r="4" fill="#3a496a"/>
+        </svg>`,
+        default: `<svg viewBox="0 0 200 200" fill="none" width="100%" height="100%" stroke-linecap="round">
+          <path d="M100 26 a74 74 0 1 0 0.5 0" stroke="#a6741f" stroke-width="2.6"/>
+          <path d="M100 44 a56 56 0 1 1 -0.5 0" stroke="#8a6a3c" stroke-width="1.8" stroke-dasharray="1 8"/>
+          <circle cx="100" cy="100" r="5" fill="#a6741f"/>
+        </svg>`
+      };
+      const svgMarkup = PLATES[themeClass] || PLATES.default;
+      visualHtml = `<div class="product-art ${themeClass}"><span class="plate-frame" aria-hidden="true"></span>${svgMarkup}</div>`;
     }
 
     // Stock indicators
@@ -7785,6 +7816,57 @@ try { initSnailMailCRMListeners(); } catch (e) { console.error("Snail CRM listen
     }
     window.openImageZoom(src, 0, img.getAttribute("alt"));
   }, true);
+})();
+
+// ── Ink underlines: a hand-drawn stroke draws itself beneath section headings
+//    the first time they scroll into view (public pages only; one-shot). ──
+(function initInkUnderlines() {
+  if (!("IntersectionObserver" in window)) return;
+  const SEL = [
+    "#page-home .intro h2",
+    "#page-home .practice-journey h2",
+    "#page-home .gallery-section h2",
+    "#page-home .subscribe-section h2",
+    "#page-shop .shop h2",
+    "#page-workshops .workshops h2",
+    "#page-journal .journal-section h2",
+    "#page-journal .subscribe-section h2",
+    "#page-snail-mail .snail-anatomy-section h2",
+    "#page-snail-mail .snail-plans-section h2",
+    "#page-snail-mail .snail-archive-section h2",
+    "#page-snail-mail .snail-testimonials-section h2",
+    "#page-art .section-heading h2",
+    "#page-about .about-content h2"
+  ].join(", ");
+  let heads = [];
+  try { heads = Array.prototype.slice.call(document.querySelectorAll(SEL)); } catch (e) { return; }
+  // never ink the handwritten letter or anything inside a card/modal
+  heads = heads.filter(h => !h.closest(".snail-letter-story") && !h.closest(".modal") && !h.closest("[class*='card']"));
+  if (!heads.length) return;
+
+  const VARIANTS = [
+    "M4 8 C 40 2, 80 12, 116 6 S 180 4, 216 8",
+    "M4 6 C 50 12, 90 2, 140 9 S 190 10, 216 5",
+    "M4 9 C 36 4, 96 11, 150 5 S 196 7, 216 9"
+  ];
+  heads.forEach(function (h, i) {
+    if (h.querySelector(".ink-underline-svg")) return;
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "ink-underline-svg");
+    svg.setAttribute("viewBox", "0 0 220 14");
+    svg.setAttribute("aria-hidden", "true");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", VARIANTS[i % VARIANTS.length]);
+    path.setAttribute("pathLength", "100");   // dash math stays 0–100 whatever the real length
+    svg.appendChild(path);
+    h.appendChild(svg);
+  });
+  const io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) { en.target.classList.add("is-inked"); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.6 });
+  heads.forEach(function (h) { io.observe(h); });
 })();
 
 // ── Hero art rotator — slowly cross-fade the full-bleed background slides. ──
