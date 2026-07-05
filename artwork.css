@@ -2328,6 +2328,37 @@ body.sticker-preview-open { overflow: hidden; }
   border: 1px solid rgba(90, 68, 42, 0.3); background: rgba(255, 252, 243, 0.6);
 }
 .session-chip.is-full { border-color: rgba(168, 64, 47, 0.55); color: #a8402f; }
+
+/* ── cart: the free-post nudge ── */
+.cart-freeship-nudge {
+  margin: 2px 0 8px; font-size: 0.82rem; color: var(--ink-soft, #5a462a);
+  font-family: "Caveat", cursive; font-size: 1.05rem;
+}
+.cart-freeship-nudge .cart-freeship-bar {
+  display: block; height: 5px; margin-top: 5px; border-radius: 999px;
+  background: rgba(120, 96, 60, 0.16); overflow: hidden;
+}
+.cart-freeship-nudge .cart-freeship-bar i {
+  display: block; height: 100%; width: 0;
+  background: linear-gradient(90deg, #a6741f, #c9972a);
+  border-radius: 999px; transition: width 400ms ease;
+}
+.cart-freeship-nudge.is-free { color: #3a6b52; }
+.cart-freeship-nudge.is-free .cart-freeship-bar i { background: linear-gradient(90deg, #4a7060, #5f8369); }
+
+/* ── shop: visitor category chips ── */
+.shop-cat-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 9px; margin: 0 0 22px; }
+.shop-cat-chips:empty { display: none; }
+.shop-cat-chip {
+  border: 1px solid rgba(90, 68, 42, 0.35); border-radius: 999px;
+  background: rgba(255, 252, 243, 0.65); color: var(--ink-soft, #5a462a);
+  font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 7px 15px; cursor: pointer; transition: all 160ms ease;
+}
+.shop-cat-chip:hover { border-color: var(--ochre, #a6741f); color: var(--ochre, #a6741f); }
+.shop-cat-chip.is-active {
+  background: var(--ochre, #a6741f); border-color: var(--ochre, #a6741f); color: #f7f0da;
+}
 @media (max-width: 520px) {
   .admin-desk-list li { font-size: 0.86rem; padding: 9px 11px; gap: 9px; }
 }

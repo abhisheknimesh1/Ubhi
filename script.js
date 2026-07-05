@@ -2544,8 +2544,38 @@ function updateCartDOM(shouldPulse = false) {
     if (shipEl) shipEl.textContent = shipping === 0 ? "Free" : "£" + shipping.toFixed(2);
     if (shipNote) shipNote.textContent = shipping === 0 ? "" : "· free over £" + ubhiFreeShip();
     if (totalEl) totalEl.textContent = "£" + (Number.isInteger(grand) ? grand : grand.toFixed(2));
+
+    // The free-post nudge: how close this bag is to the threshold.
+    const nudge = document.getElementById("cart-freeship-nudge");
+    const nudgeText = document.getElementById("cart-freeship-text");
+    const nudgeFill = document.getElementById("cart-freeship-fill");
+    if (nudge && nudgeText && nudgeFill) {
+      const threshold = ubhiFreeShip();
+      if (subtotal > 0 && subtotal < threshold) {
+        const away = threshold - subtotal;
+        nudgeText.textContent = "£" + (Number.isInteger(away) ? away : away.toFixed(2)) + " more and your post is free ✉";
+        nudgeFill.style.width = Math.min(100, Math.round((subtotal / threshold) * 100)) + "%";
+        nudge.style.display = "";
+        nudge.classList.remove("is-free");
+      } else if (subtotal >= threshold) {
+        nudgeText.textContent = "✓ Your post travels free";
+        nudgeFill.style.width = "100%";
+        nudge.style.display = "";
+        nudge.classList.add("is-free");
+      } else {
+        nudge.style.display = "none";
+      }
+    }
   }
 }
+
+// Shop category chips — filter the public grid.
+document.addEventListener("click", (e) => {
+  const chip = e.target.closest("#shop-cat-chips [data-shop-cat]");
+  if (!chip) return;
+  shopCategoryFilter = chip.getAttribute("data-shop-cat") || "all";
+  renderShop();
+});
 
 // Hijack direct buy clicks to add to cart
 document.querySelectorAll("[data-buy-product]").forEach(btn => {
@@ -3208,6 +3238,32 @@ if (!dbRead("journal-topup-v2", null)) {
   }
   dbWrite("journal-topup-v2", true);
 }
+// One-time re-inking: journal header art was drawn with whisper-faint strokes
+// (0.4–0.6px at 10–45% opacity) from the old theme. Boost every stored SVG to
+// confident letterpress ink — strokes to 2px at 90%, fills gently doubled.
+(function reinkJournalArt() {
+  if (safeLocalRead("ubhi-journal-art-reinked-v1") === "1") return;
+  try {
+    const posts = dbRead("journal-posts", null);
+    if (Array.isArray(posts)) {
+      let changed = false;
+      posts.forEach((p) => {
+        if (!p || typeof p.art !== "string" || p.art.indexOf("<svg") === -1 || p.art.indexOf('stroke="rgba(') === -1) return;
+        const before = p.art;
+        p.art = p.art
+          .replace(/stroke-width="0\.\d+"/g, 'stroke-width="2"')
+          .replace(/stroke="rgba\((\d+,\s*\d+,\s*\d+),\s*0?\.\d+\)"/g, 'stroke="rgba($1,0.9)"')
+          .replace(/fill="rgba\((\d+,\s*\d+,\s*\d+),\s*0?\.(\d+)\)"/g, (m, rgb, dec) => {
+            const v = Math.min(0.55, parseFloat("0." + dec) * 2);
+            return 'fill="rgba(' + rgb + "," + v.toFixed(2) + ')"';
+          });
+        if (p.art !== before) changed = true;
+      });
+      if (changed) { dbWrite("journal-posts", posts); journalEssays = posts; }
+    }
+  } catch (e) { /* cosmetic migration — never block boot */ }
+  safeLocalWrite("ubhi-journal-art-reinked-v1", "1");
+})();
 
 // Sync capacities mapping
 const dbCapacities = dbRead("workshops-capacities", null) || initialCapacities;
@@ -3409,13 +3465,16 @@ function renderWorkshops() {
     if (w.image && w.image !== "") {
       imgHtml = `<div class="card-image-wrap"><img src="${w.image}" alt="${w.title}" loading="lazy" /><div class="card-image-glow"></div></div>`;
     } else {
+      // Ink plate fallback — the singing bowl in confident letterpress line art
+      // (replaces the last surviving dark-cosmos radial from the old theme).
       imgHtml = `
-        <div class="product-art" style="background:radial-gradient(circle at center,rgba(201,151,42,0.08),rgba(7,6,14,0.9));" aria-hidden="true">
-          <svg viewBox="0 0 200 200" fill="none" width="120" height="120">
-            <path d="M50,90 A50,50 0 0,0 150,90 Z" fill="rgba(201,151,42,0.08)" stroke="rgba(201,151,42,0.5)" stroke-width="0.8"/>
-            <line x1="40" y1="90" x2="160" y2="90" stroke="rgba(201,151,42,0.4)" stroke-width="0.8"/>
-            <circle cx="100" cy="90" r="3" fill="rgba(201,151,42,0.6)"/>
-            <circle cx="100" cy="100" r="60" stroke="rgba(201,151,42,0.2)" stroke-width="0.5"/>
+        <div class="product-art" aria-hidden="true"><span class="plate-frame" aria-hidden="true"></span>
+          <svg viewBox="0 0 200 200" fill="none" width="100%" height="100%" stroke-linecap="round">
+            <path d="M52 88 A48 48 0 0 0 148 88 Z" stroke="#a6741f" stroke-width="2.4"/>
+            <path d="M40 88 H160" stroke="#a6741f" stroke-width="2.2"/>
+            <path d="M64 136 Q 100 148 136 136" stroke="#8a6a3c" stroke-width="2"/>
+            <circle cx="100" cy="88" r="4" fill="#a34d5f"/>
+            <path d="M100 30 v14 M78 40 l7 11 M122 40 l-7 11" stroke="#a34d5f" stroke-width="2.2"/>
           </svg>
         </div>
       `;
@@ -3518,13 +3577,51 @@ function highlightSharedProduct() {
   }, 350);
 }
 
+let shopCategoryFilter = "all";
 function renderShop() {
   const container = document.getElementById("shop-products-container");
   if (!container) return;
-  const list = dbRead("shop-catalog", []);
+  const fullList = dbRead("shop-catalog", []);
+
+  if (fullList.length === 0) {
+    container.innerHTML = `<p style="padding:40px;text-align:center;color:var(--mist);grid-column: span 3;">No shop items cataloged yet.</p>`;
+    return;
+  }
+
+  // Category chips — built from whatever categories the catalog holds today.
+  const chipsEl = document.getElementById("shop-cat-chips");
+  if (chipsEl) {
+    const cats = [];
+    fullList.forEach(p => { const c = (p.category || "").trim(); if (c && cats.indexOf(c) === -1) cats.push(c); });
+    if (shopCategoryFilter !== "all" && cats.indexOf(shopCategoryFilter) === -1) shopCategoryFilter = "all";
+    const chip = (key, label) => `<button type="button" class="shop-cat-chip${shopCategoryFilter === key ? " is-active" : ""}" data-shop-cat="${esc(key)}">${esc(label)}</button>`;
+    chipsEl.innerHTML = cats.length > 1 ? chip("all", "Everything") + cats.map(c => chip(c, c)).join("") : "";
+  }
+  const list = shopCategoryFilter === "all" ? fullList : fullList.filter(p => (p.category || "").trim() === shopCategoryFilter);
+
+  // Product structured data — lets search engines show pieces with prices.
+  try {
+    let ld = document.getElementById("shop-jsonld");
+    if (!ld) { ld = document.createElement("script"); ld.type = "application/ld+json"; ld.id = "shop-jsonld"; document.head.appendChild(ld); }
+    ld.textContent = JSON.stringify({
+      "@context": "https://schema.org", "@type": "ItemList",
+      itemListElement: fullList.slice(0, 24).map((p, i) => ({
+        "@type": "ListItem", position: i + 1,
+        item: {
+          "@type": "Product", name: p.name || "Piece",
+          description: (p.description || "").slice(0, 300),
+          image: (p.image && String(p.image).indexOf("data:") !== 0) ? p.image : undefined,
+          offers: {
+            "@type": "Offer", priceCurrency: "GBP", price: String(p.price || 0),
+            availability: Number(p.remainingStock) > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+          }
+        }
+      }))
+    });
+  } catch (e) {}
 
   if (list.length === 0) {
-    container.innerHTML = `<p style="padding:40px;text-align:center;color:var(--mist);grid-column: span 3;">No shop items cataloged yet.</p>`;
+    container.innerHTML = `<p style="padding:40px;text-align:center;color:var(--mist);grid-column: span 3;">Nothing in this corner yet — try another category.</p>`;
     return;
   }
 
@@ -6498,10 +6595,11 @@ if (addJournalForm) {
     // 1. Process Visual Header
     let art = "";
     if (visualType === "vector") {
+      // Confident letterpress ink — matches the re-inked journal headers.
       const vectors = [
-        `<svg viewBox="0 0 160 160" fill="none" width="110" height="110"><circle cx="80" cy="80" r="76" stroke="rgba(201,151,42,0.35)" stroke-width="0.6"/><circle cx="80" cy="80" r="50" stroke="rgba(201,151,42,0.25)" stroke-width="0.5"/><circle cx="80" cy="80" r="25" stroke="rgba(201,151,42,0.4)" stroke-width="0.6"/><polygon points="80,14 138,116 22,116" stroke="rgba(201,151,42,0.4)" stroke-width="0.6" fill="rgba(201,151,42,0.04)"/><polygon points="80,146 138,44 22,44" stroke="rgba(181,96,122,0.3)" stroke-width="0.6" fill="none"/><circle cx="80" cy="80" r="5" fill="rgba(201,151,42,0.6)"/></svg>`,
-        `<svg viewBox="0 0 160 160" fill="none" width="110" height="110"><circle cx="80" cy="80" r="76" stroke="rgba(201,151,42,0.3)" stroke-width="0.6"/><circle cx="80" cy="22" r="58" stroke="rgba(201,151,42,0.1)" stroke-width="0.4"/><circle cx="130" cy="51" r="58" stroke="rgba(201,151,42,0.1)" stroke-width="0.4"/><circle cx="130" cy="109" r="58" stroke="rgba(201,151,42,0.1)" stroke-width="0.4"/><circle cx="80" cy="80" r="8" stroke="rgba(201,151,42,0.5)" stroke-width="0.6"/><circle cx="80" cy="80" r="3" fill="rgba(201,151,42,0.6)"/></svg>`,
-        `<svg viewBox="0 0 160 160" fill="none" width="110" height="110"><rect x="20" y="20" width="120" height="120" stroke="rgba(45,139,124,0.35)" stroke-width="0.6" fill="none"/><rect x="40" y="40" width="80" height="80" stroke="rgba(45,139,124,0.28)" stroke-width="0.5" fill="none" transform="rotate(45 80 80)"/><circle cx="80" cy="80" r="40" stroke="rgba(45,139,124,0.35)" stroke-width="0.6"/><circle cx="80" cy="18" r="18" stroke="rgba(45,139,124,0.5)" stroke-width="0.6"/><circle cx="80" cy="80" r="5" fill="rgba(45,139,124,0.6)"/></svg>`
+        `<svg viewBox="0 0 160 160" fill="none" width="110" height="110" stroke-linecap="round"><circle cx="80" cy="80" r="70" stroke="rgba(166,116,31,0.9)" stroke-width="2"/><polygon points="80,22 128,108 32,108" stroke="rgba(166,116,31,0.9)" stroke-width="2"/><polygon points="80,138 128,52 32,52" stroke="rgba(163,77,95,0.85)" stroke-width="2"/><circle cx="80" cy="80" r="6" fill="rgba(163,77,95,0.6)"/></svg>`,
+        `<svg viewBox="0 0 160 160" fill="none" width="110" height="110" stroke-linecap="round"><circle cx="80" cy="80" r="70" stroke="rgba(166,116,31,0.9)" stroke-width="2"/><circle cx="80" cy="80" r="44" stroke="rgba(166,116,31,0.8)" stroke-width="2" stroke-dasharray="2 8"/><circle cx="80" cy="80" r="18" stroke="rgba(163,77,95,0.85)" stroke-width="2"/><circle cx="80" cy="80" r="5" fill="rgba(166,116,31,0.7)"/></svg>`,
+        `<svg viewBox="0 0 160 160" fill="none" width="110" height="110" stroke-linecap="round"><rect x="26" y="26" width="108" height="108" stroke="rgba(45,107,96,0.9)" stroke-width="2"/><rect x="44" y="44" width="72" height="72" stroke="rgba(45,107,96,0.75)" stroke-width="2" transform="rotate(45 80 80)"/><circle cx="80" cy="80" r="34" stroke="rgba(45,107,96,0.9)" stroke-width="2"/><circle cx="80" cy="80" r="5" fill="rgba(45,107,96,0.7)"/></svg>`
       ];
       art = vectors[Math.floor(Math.random() * vectors.length)];
     } else {
@@ -8282,12 +8380,18 @@ try { initSnailMailCRMListeners(); } catch (e) { console.error("Snail CRM listen
 (function initHeroArtRotator() {
   var slides = Array.prototype.slice.call(document.querySelectorAll(".hero-art-slide"));
   if (slides.length < 2) return;                 // nothing to rotate
-  var i = 0;
-  setInterval(function () {
-    slides[i].classList.remove("is-active");
-    i = (i + 1) % slides.length;
-    slides[i].classList.add("is-active");
-  }, 5500);                                       // dwell ~5.5s; CSS handles the 1.6s fade
+  // The hidden slides carry data-src so the first paint only downloads slide 1.
+  // Hydrate them a moment after load, then start rotating — the first swap
+  // happens at ~6.7s, long after the images have arrived.
+  setTimeout(function () {
+    slides.forEach(function (s) { if (s.dataset.src && !s.getAttribute("src")) s.src = s.dataset.src; });
+    var i = 0;
+    setInterval(function () {
+      slides[i].classList.remove("is-active");
+      i = (i + 1) % slides.length;
+      slides[i].classList.add("is-active");
+    }, 5500);                                     // dwell ~5.5s; CSS handles the 1.6s fade
+  }, 1200);
 })();
 
 // ── INITIAL PAGE LOAD (called LAST — all helpers defined above) ──

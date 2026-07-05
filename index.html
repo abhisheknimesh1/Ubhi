@@ -28,10 +28,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=Gochi+Hand&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=1.11.0" />
-    <link rel="stylesheet" href="world.css?v=1.11.0" />
-    <link rel="stylesheet" href="artwork.css?v=1.11.0" />
-    <link rel="stylesheet" href="embellish.css?v=1.11.0" />
+    <link rel="stylesheet" href="styles.css?v=1.12.0" />
+    <link rel="stylesheet" href="world.css?v=1.12.0" />
+    <link rel="stylesheet" href="artwork.css?v=1.12.0" />
+    <link rel="stylesheet" href="embellish.css?v=1.12.0" />
     <!-- Structured data — helps search engines & rich results.
          DEVELOPER: fill in the real address, phone & social URLs before launch. -->
     <script type="application/ld+json">
@@ -113,10 +113,11 @@
                workshop · geometry · yoga · block-print · snail-mail. -->
           <div class="hero-art-rotator" aria-hidden="true">
             <img class="hero-art-slide is-active" src="assets/ubhi-workshop-generated.png" alt="" fetchpriority="high" decoding="async" />
-            <img class="hero-art-slide" src="assets/gallery-geometry-draw.png" alt="" loading="lazy" decoding="async" />
-            <img class="hero-art-slide" src="assets/gallery-yoga-breath.png" alt="" loading="lazy" decoding="async" />
-            <img class="hero-art-slide" src="assets/gallery-block-print.png" alt="" loading="lazy" decoding="async" />
-            <img class="hero-art-slide" src="assets/ubhi-snail-mail-generated.png" alt="" loading="lazy" decoding="async" />
+            <!-- hidden slides hydrate AFTER first paint (the rotator swaps data-src → src) -->
+            <img class="hero-art-slide" data-src="assets/gallery-geometry-draw.png" alt="" decoding="async" />
+            <img class="hero-art-slide" data-src="assets/gallery-yoga-breath.png" alt="" decoding="async" />
+            <img class="hero-art-slide" data-src="assets/gallery-block-print.png" alt="" decoding="async" />
+            <img class="hero-art-slide" data-src="assets/ubhi-snail-mail-generated.png" alt="" decoding="async" />
           </div>
           <div class="hero-overlay" aria-hidden="true"></div>
 
@@ -1241,6 +1242,8 @@
           <div class="shop-layout">
 
             <div class="shop-scroll-container">
+              <!-- visitor-side category chips (JS populated from the catalog) -->
+              <div id="shop-cat-chips" class="shop-cat-chips" aria-label="Filter by category"></div>
               <div class="product-grid" id="shop-products-container">
 
                 <article class="product-card reveal">
@@ -3903,16 +3906,15 @@
           <div class="legal-wrap">
             <p class="eyebrow">the fine print</p>
             <h1>Shipping &amp; Delivery</h1>
-            <p class="legal-note">⚠️ Placeholder — confirm real dispatch times, carriers &amp; costs before launch.</p>
             <div class="legal-body">
               <h3>Where we deliver</h3>
               <p>The Shop and Snail Mail Club currently post within the United Kingdom.</p>
               <h3>Dispatch &amp; delivery times</h3>
-              <p>Shop orders are dispatched within <em>[3–5 working days]</em>. Snail Mail parcels are posted on the <em>[date]</em> of each month. Delivery is typically <em>[2–3 working days]</em> via <em>[carrier]</em>.</p>
+              <p>Shop orders are made and packed by hand, and dispatched within <strong>3–5 working days</strong>. Snail Mail Club envelopes are posted on the <strong>5th of each month</strong> (join by the 5th and your first letter goes out that same month). Delivery is typically <strong>2–3 working days</strong> from dispatch via Royal&nbsp;Mail.</p>
               <h3>Costs</h3>
-              <p><em>[UK shipping cost / free over £X]</em>.</p>
+              <p>UK delivery is a flat <strong>£3.95</strong> per order — and <strong>free on orders over £50</strong>. Snail Mail Club postage is always included in your subscription.</p>
               <h3>Lost or delayed post</h3>
-              <p>If a parcel hasn't arrived within <em>[X]</em> days, <a href="#contact" data-page-link="contact">contact us</a> and we'll make it right.</p>
+              <p>If a parcel hasn't arrived within <strong>10 working days</strong> of your dispatch note, <a href="#contact" data-page-link="contact">contact us</a> and we'll make it right — a replacement or a full refund, your choice.</p>
             </div>
           </div>
         </div>
@@ -3921,14 +3923,13 @@
           <div class="legal-wrap">
             <p class="eyebrow">the fine print</p>
             <h1>Returns &amp; Refunds</h1>
-            <p class="legal-note">⚠️ Placeholder — review against UK Consumer Contracts Regulations before launch.</p>
             <div class="legal-body">
               <h3>Your 14-day right to cancel</h3>
               <p>For most Shop items you may cancel within 14 days of receiving them and return them unused for a refund, under the Consumer Contracts Regulations 2013.</p>
               <h3>How to return</h3>
               <p><a href="#contact" data-page-link="contact">Email us</a> and we'll share return instructions. Items should be returned in their original condition.</p>
               <h3>Workshops</h3>
-              <p>Cancel a workshop booking up to <em>[X days]</em> before for a full refund or transfer; after that <em>[policy]</em>.</p>
+              <p>Cancel a workshop booking up to <strong>7 days</strong> before the session for a full refund, or transfer your place to a later date free of charge. Within 7 days we can't refund (spaces are small and held for you), but you may transfer once or send a friend in your place — just <a href="#contact" data-page-link="contact">tell us</a> who's coming.</p>
               <h3>Snail Mail subscriptions</h3>
               <p>Cancel any time; you'll receive parcels until the end of your paid period. <em>[Pro-rata refund policy, if any]</em>.</p>
               <h3>Faulty items</h3>
@@ -4127,6 +4128,11 @@
             <span>Shipping <small id="cart-ship-note" style="opacity:.7;"></small></span>
             <span id="cart-shipping-price">Free</span>
           </div>
+          <!-- gentle nudge toward the free-post threshold -->
+          <div id="cart-freeship-nudge" class="cart-freeship-nudge" style="display:none;">
+            <span id="cart-freeship-text"></span>
+            <span class="cart-freeship-bar"><i id="cart-freeship-fill"></i></span>
+          </div>
           <div class="cart-subtotal cart-total-row" style="font-weight:600; border-top:1px solid rgba(120,96,60,0.25); padding-top:10px; margin-top:4px;">
             <span>Total</span>
             <span id="cart-total-price">£0</span>
@@ -4180,20 +4186,20 @@
       </div>
     </noscript>
 
-    <script src="script.js?v=1.11.0"></script>
-    <script src="world.js?v=1.11.0" defer></script>
-    <script src="artwork.js?v=1.11.0" defer></script>
-    <script src="updates.js?v=1.11.0" defer></script>
+    <script src="script.js?v=1.12.0"></script>
+    <script src="world.js?v=1.12.0" defer></script>
+    <script src="artwork.js?v=1.12.0" defer></script>
+    <script src="updates.js?v=1.12.0" defer></script>
     <!-- BACKEND ADDRESS — once the backend is deployed (see DEPLOY.md), un-comment
          the line below and point it at your server (it must end with /api).
          Until then the site auto-detects: local dev talks to http://localhost:8090/api. -->
     <!-- <script>window.UBHI_API_BASE = "https://YOUR-BACKEND.onrender.com/api";</script> -->
     <!-- Connects the storefront to the backend (content sync + image hosting + orders reaching the owner). Safe no-op if the API is unreachable. -->
-    <script src="ubhi-sync.js?v=1.11.0"></script>
+    <script src="ubhi-sync.js?v=1.12.0"></script>
     <!-- Owner-only click-to-edit text across the whole site. -->
-    <script src="editmode.js?v=1.11.0"></script>
+    <script src="editmode.js?v=1.12.0"></script>
     <!-- Hand-made ink details: dividers, snail mascot, marginalia, wax-seal + postmark moments. -->
-    <script src="embellish.js?v=1.11.0" defer></script>
+    <script src="embellish.js?v=1.12.0" defer></script>
   </body>
 </html>
 
