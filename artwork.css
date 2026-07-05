@@ -2316,6 +2316,18 @@ body.sticker-preview-open { overflow: hidden; }
 .admin-desk-list .desk-text { flex: 1 1 auto; }
 .admin-desk-list .desk-n { flex: 0 0 auto; color: var(--ochre, #a6741f); font-weight: 600; font-size: 0.8rem; white-space: nowrap; }
 .admin-desk-list .desk-go { flex: 0 0 auto; color: var(--mist); font-size: 1.1rem; line-height: 1; }
+.admin-desk-list .desk-act {
+  flex: 0 0 auto; border: 1px solid var(--ochre, #a6741f); background: rgba(166, 116, 31, 0.08);
+  color: var(--ochre, #a6741f); font-size: 0.74rem; font-weight: 600;
+  padding: 4px 10px; border-radius: 999px; cursor: pointer; white-space: nowrap;
+}
+.admin-desk-list .desk-act:hover { background: var(--ochre, #a6741f); color: #f7f0da; }
+.session-summary { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; margin-bottom: 10px; }
+.session-chip {
+  font-size: 0.76rem; padding: 4px 11px; border-radius: 999px;
+  border: 1px solid rgba(90, 68, 42, 0.3); background: rgba(255, 252, 243, 0.6);
+}
+.session-chip.is-full { border-color: rgba(168, 64, 47, 0.55); color: #a8402f; }
 @media (max-width: 520px) {
   .admin-desk-list li { font-size: 0.86rem; padding: 9px 11px; gap: 9px; }
 }

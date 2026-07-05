@@ -950,6 +950,8 @@ if (shopForm) {
     try { localStorage.setItem("ubhi-shop-order", JSON.stringify(orderData)); } catch (e) {}
     // Quota-safe append to the cumulative list (returns false if storage is full).
     const savedLocally = persistAppend("shop-orders", orderData);
+    // Take the purchased pieces off the shelf (restored if the order is deleted).
+    adjustStockFor(orderData, +1);
 
     // Send the order to the backend so it reaches the owner on EVERY device — not
     // only this browser. No-op when the backend isn't deployed/reachable.
@@ -3798,6 +3800,7 @@ function renderAdminGallery() {
       <img src="${item.src}" alt="${item.alt}" loading="lazy" />
       <div class="admin-gallery-card-info">${item.alt}</div>
       <div class="delete-overlay">
+        <button type="button" class="admin-mini-btn" onclick="adminEditGalleryItem(${idx})">Edit</button>
         <button type="button" class="admin-action-btn-danger" onclick="deleteGalleryItem(${idx})">Delete</button>
       </div>
     </div>
@@ -3919,7 +3922,9 @@ function renderAdminWorkshops() {
         </td>
         <td style="color:var(--aurora-gold);">£${w.price}</td>
         <td>${cap.total - cap.booked} left (${cap.booked} / ${cap.total} booked)</td>
-        <td>
+        <td style="white-space:nowrap;">
+          <button type="button" class="admin-mini-btn" onclick="adminEditWorkshop(${idx})">Edit</button>
+          <button type="button" class="admin-mini-btn" onclick="adminDuplicateWorkshop(${idx})">Duplicate</button>
           <button type="button" class="admin-action-btn-danger" onclick="deleteWorkshop(${idx})">Remove</button>
         </td>
       </tr>
@@ -3939,7 +3944,7 @@ function renderAdminShop() {
     (p.description || "").toLowerCase().includes(q));
 
   if (rows.length === 0) {
-    tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--mist);">${q ? 'No products match "' + adminShopSearch + '".' : "No products yet."}</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--mist);">${q ? 'No products match "' + adminShopSearch + '".' : "No products yet."}</td></tr>`;
     return;
   }
 
@@ -3955,8 +3960,15 @@ function renderAdminShop() {
       </td>
       <td>${p.category}</td>
       <td style="color:var(--aurora-gold);">£${p.price}</td>
-      <td>${p.remainingStock} remaining (Total: ${p.totalStock})${badge}</td>
-      <td>
+      <td style="white-space:nowrap;">
+        <button type="button" class="admin-mini-btn stock-step" onclick="adminStepStock(${idx}, -1)" aria-label="One fewer in stock">−</button>
+        <strong style="display:inline-block;min-width:2.2ch;text-align:center;">${p.remainingStock}</strong>
+        <button type="button" class="admin-mini-btn stock-step" onclick="adminStepStock(${idx}, 1)" aria-label="One more in stock">+</button>
+        <span class="admin-table-sub"> / ${p.totalStock}</span>${badge}
+      </td>
+      <td style="white-space:nowrap;">
+        <button type="button" class="admin-mini-btn" onclick="adminEditShopProduct(${idx})">Edit</button>
+        <button type="button" class="admin-mini-btn" onclick="adminDuplicateProduct(${idx})">Duplicate</button>
         <button type="button" class="admin-action-btn-danger" onclick="deleteShopProduct(${idx})">Remove</button>
       </td>
     </tr>
@@ -4376,7 +4388,8 @@ function renderAdminSnailMail() {
               <span style="margin-left:8px;" class="status-badge ${m.status === 'Active' ? 'active' : 'inactive'}">${m.status}</span>${(m.autoExpired && m.status !== 'Active') ? '<span title="Fixed-term subscription has ended" style="margin-left:6px;font-size:0.7rem;color:var(--mist);font-style:italic;">· lapsed</span>' : ''}${snailGiftEndNote(m)}
             </label>
           </td>
-          <td style="text-align:center;">
+          <td style="text-align:center;white-space:nowrap;">
+            <button type="button" class="admin-mini-btn" style="padding:4px 8px;font-size:0.72rem;" onclick="adminEditSnailMemberByEmail('${m.email}')">Edit</button>
             <button type="button" class="admin-action-btn-danger" style="padding:4px 8px;font-size:0.75rem;" onclick="deleteSnailMember('${m.email}')">Delete</button>
           </td>
         </tr>
@@ -4513,7 +4526,8 @@ function renderAdminJournal() {
         <td>${essay.tag}</td>
         <td>${essay.date}</td>
         <td>${typeLabel}</td>
-        <td>
+        <td style="white-space:nowrap;">
+          <button type="button" class="admin-mini-btn" onclick="adminEditJournalPost(${idx})">Edit</button>
           <button type="button" class="admin-action-btn-danger" onclick="deleteJournalPost(${idx})">Delete</button>
         </td>
       </tr>
@@ -4536,6 +4550,45 @@ function orderItems(o) {
   if (o && Array.isArray(o.itemsList) && o.itemsList.length) return o.itemsList;
   if (o && Array.isArray(o.items) && o.items.length) return o.items;
   return [];
+}
+
+// ── Stock is REAL: checkout takes pieces off the shelf, deleting an order
+//    puts them back (never below 0, never above the edition's total). ──
+function adjustStockFor(order, direction) {
+  try {
+    const cat = dbRead("shop-catalog", []);
+    let touched = false;
+    orderItems(order).forEach((it) => {
+      const prod = cat.find(p => p.name === it.name);
+      if (!prod || prod.remainingStock == null) return;
+      const qty = (Number(it.quantity) || 1) * direction;
+      let next = Number(prod.remainingStock) - qty;
+      if (next < 0) next = 0;
+      const cap = Number(prod.totalStock);
+      if (direction < 0 && !isNaN(cap) && cap > 0 && next > cap) next = cap;  // restoring: don't exceed the edition
+      prod.remainingStock = next;
+      touched = true;
+    });
+    if (touched) {
+      dbWrite("shop-catalog", cat);
+      if (typeof renderShop === "function") renderShop();
+      if (typeof renderAdminShop === "function") renderAdminShop();
+    }
+  } catch (e) { /* stock bookkeeping must never break an order */ }
+}
+
+// ── Seats are REAL too: deleting a booking hands its places back. ──
+function releaseWorkshopSeats(b) {
+  try {
+    const caps = dbRead("workshops-capacities", {});
+    const key = b && b.workshop;
+    if (key && caps[key]) {
+      caps[key].booked = Math.max(0, Number(caps[key].booked || 0) - (Number(b.tickets) || 1));
+      dbWrite("workshops-capacities", caps);
+      if (typeof renderWorkshops === "function") renderWorkshops();
+      if (typeof renderAdminWorkshops === "function") renderAdminWorkshops();
+    }
+  } catch (e) {}
 }
 function orderTotalNum(o) { return parseFloat(o.totalPrice || o.price || 0) || 0; }
 function orderDateNum(o) { return new Date(o.reservedAt || o.date || o.orderedAt || 0).getTime() || 0; }
@@ -4718,7 +4771,8 @@ function renderAdminShopOrders() {
               ${statusOptionsHtml}
             </select>
           </td>
-          <td style="text-align:center;">
+          <td style="text-align:center;white-space:nowrap;">
+            <button type="button" class="admin-mini-btn" style="padding:4px 8px;font-size:0.72rem;" onclick="adminViewOrder('${esc(id)}')">View</button>
             <button type="button" class="admin-action-btn-danger" style="padding:4px 8px;font-size:0.75rem;" onclick="deleteOrder('${id}')">Delete</button>
           </td>
         </tr>
@@ -4797,7 +4851,16 @@ function renderAdminWorkshopBookings() {
       wsKeys.map(w => '<option value="' + esc(w) + '"' + (adminBookingsWorkshop === w ? " selected" : "") + '>' + esc(w) + ' (' + wsCounts[w] + ')</option>').join("");
     const ppOpts = [25, 50, 100].map(n => '<option value="' + n + '"' + (adminBookingsPerPage === n ? " selected" : "") + '>' + n + '</option>').join("") + '<option value="0"' + (adminBookingsPerPage === 0 ? " selected" : "") + '>All</option>';
     const bwChip = (key, label, n) => '<button type="button" class="alc-chip' + (adminBookingsWhen === key ? " is-active" : "") + '" data-bwhen="' + key + '">' + label + ' <span class="alc-n">' + n + '</span></button>';
+    // One line per workshop: seats taken vs capacity, at a glance.
+    const seatCaps = dbRead("workshops-capacities", {});
+    const sessChips = Object.keys(wsCounts).sort().map(k => {
+      const cap = seatCaps[k];
+      const seats = cap ? (Number(cap.booked) || 0) + "/" + (Number(cap.total) || 0) + " seats" : wsCounts[k] + " booked";
+      const full = cap && Number(cap.booked) >= Number(cap.total);
+      return '<span class="session-chip' + (full ? " is-full" : "") + '"><strong>' + esc(k) + '</strong> · ' + esc(seats) + '</span>';
+    }).join("");
     controls.innerHTML =
+      (sessChips ? '<div class="session-summary">' + sessChips + '</div>' : '') +
       '<div class="alc-chips">' + bwChip("all", "All", allCount) + bwChip("upcoming", "Upcoming", upcomingCount) + '</div>' +
       '<div class="alc-right">' +
         '<label class="alc-field">Workshop <select id="bookings-workshop">' + wsOptions + '</select></label>' +
@@ -5503,7 +5566,7 @@ function renderAdminDesk() {
   const giftsSoon = snailGiftsEndingSoon(14);
 
   const rows = [];
-  const row = (icon, text, n, go, warn) => rows.push({ icon: icon, text: text, n: n, go: go, warn: warn });
+  const row = (icon, text, n, go, warn, act) => rows.push({ icon: icon, text: text, n: n, go: go, warn: warn, act: act });
 
   if (c.newO) row("📦", c.newO + " new order" + (c.newO > 1 ? "s" : "") + " arrived", preparing ? preparing + " to ship" : "", "orders:orders");
   else if (preparing) row("📦", preparing + " order" + (preparing > 1 ? "s" : "") + " waiting to ship", "", "orders:orders");
@@ -5514,7 +5577,7 @@ function renderAdminDesk() {
     if (d < SNAIL_DISPATCH_DAY) when = "post day in " + (SNAIL_DISPATCH_DAY - d) + " day" + (SNAIL_DISPATCH_DAY - d > 1 ? "s" : "");
     else if (d === SNAIL_DISPATCH_DAY) when = "post day is today";
     else when = "past the 5th";
-    row("📮", "Post run · " + snailCycleLabel(cycle) + " — " + due + " letter" + (due > 1 ? "s" : "") + " to send" + (sentThis ? " (" + sentThis + " done)" : ""), when, "snail:admin-sub-snail-postrun", d >= SNAIL_DISPATCH_DAY);
+    row("📮", "Post run · " + snailCycleLabel(cycle) + " — " + due + " letter" + (due > 1 ? "s" : "") + " to send" + (sentThis ? " (" + sentThis + " done)" : ""), when, "snail:admin-sub-snail-postrun", d >= SNAIL_DISPATCH_DAY, { id: "stickers", label: "🖨 Stickers" });
   }
   if (c.newU) row("✿", c.newU + " new email signup" + (c.newU > 1 ? "s" : ""), "", "updates");
   if (c.unreadM) row("💌", c.unreadM + " unread message" + (c.unreadM > 1 ? "s" : ""), "", "updates");
@@ -5532,9 +5595,9 @@ function renderAdminDesk() {
     const lastBackup = safeLocalRead("ubhi-last-backup");
     const daysSince = lastBackup ? Math.floor((today - new Date(lastBackup)) / 86400000) : null;
     if (lastBackup === null || lastBackup === "" ) {
-      row("💾", "No data backup yet — download one from Settings", "", "settings", true);
+      row("💾", "No data backup yet", "", "settings", true, { id: "backup", label: "💾 Back up now" });
     } else if (daysSince > 30) {
-      row("💾", "Last data backup was " + daysSince + " days ago — time for a fresh one", "", "settings", true);
+      row("💾", "Last data backup was " + daysSince + " days ago", "", "settings", true, { id: "backup", label: "💾 Back up now" });
     }
   }
   if ((safeLocalRead("ubhi-admin-pass") || "ubhi123") === "ubhi123") {
@@ -5547,12 +5610,25 @@ function renderAdminDesk() {
         '<span class="desk-ico" aria-hidden="true">' + r.icon + '</span>' +
         '<span class="desk-text">' + esc(r.text) + '</span>' +
         (r.n ? '<span class="desk-n">' + esc(r.n) + '</span>' : '') +
+        (r.act ? '<button type="button" class="desk-act" data-desk-act="' + esc(r.act.id) + '">' + esc(r.act.label) + '</button>' : '') +
         '<span class="desk-go" aria-hidden="true">›</span></li>').join("")
     : '<li class="calm"><span class="desk-ico" aria-hidden="true">🌿</span><span class="desk-text">The desk is clear — nothing waiting. Enjoy the quiet.</span></li>';
 }
 
 // One click (or Enter) on a desk row jumps to the matching tab/sub-tab.
+// Quick-action buttons on a row do their job right there instead.
 document.addEventListener("click", (e) => {
+  const act = e.target.closest("#admin-desk-list [data-desk-act]");
+  if (act) {
+    e.stopPropagation();
+    const kind = act.getAttribute("data-desk-act");
+    if (kind === "stickers") document.getElementById("admin-print-stickers-btn")?.click();
+    if (kind === "backup") {
+      document.getElementById("admin-db-backup-btn")?.click();
+      setTimeout(() => { if (typeof renderAdminDesk === "function") renderAdminDesk(); }, 400);
+    }
+    return;
+  }
   const li = e.target.closest("#admin-desk-list li[data-desk-go]");
   if (!li) return;
   const go = li.getAttribute("data-desk-go");
@@ -5720,29 +5796,40 @@ function setOrderStatus(orderId, value) {
 }
 
 function deleteOrder(orderId) {
-  if (confirm("Are you sure you want to delete this order record? This cannot be undone.")) {
+  if (confirm("Are you sure you want to delete this order record? This cannot be undone.\n(The pieces in it return to stock.)")) {
     const orders = dbRead("shop-orders", []);
     const removed = orders.find(o => (o.reservedAt || o.date || o.orderedAt) === orderId);
     const updated = orders.filter(o => (o.reservedAt || o.date || o.orderedAt) !== orderId);
     dbWrite("shop-orders", updated);
+    if (removed) adjustStockFor(removed, -1);   // put the pieces back on the shelf
     if (removed && removed._sid && window.ubhiDelete) window.ubhiDelete("order", removed._sid);
     renderAdminOrders();
   }
 }
 
 function deleteBooking(reservedAt) {
-  if (confirm("Are you sure you want to delete this booking reservation?")) {
+  if (confirm("Are you sure you want to delete this booking reservation?\n(Its seats return to the workshop.)")) {
     const bookings = dbRead("workshop-reservations", []);
     const removed = bookings.find(b => b.reservedAt === reservedAt);
     const updated = bookings.filter(b => b.reservedAt !== reservedAt);
     dbWrite("workshop-reservations", updated);
+    if (removed) releaseWorkshopSeats(removed);   // free the seats
     if (removed && removed._sid && window.ubhiDelete) window.ubhiDelete("booking", removed._sid);
     renderAdminOrders();
   }
 }
 
+// Safety net: any "clear everything" first downloads a full backup, so the
+// worst case is an undo (restore the file in Settings), never a loss.
+function downloadBackupFirst() {
+  const btn = document.getElementById("admin-db-backup-btn");
+  if (btn) { btn.click(); return true; }
+  return false;
+}
+
 function clearAllOrders() {
-  if (confirm("WARNING: This will clear all shop order logs permanently. Are you sure?")) {
+  const backedUp = downloadBackupFirst();
+  if (confirm("WARNING: This will clear all shop order logs permanently." + (backedUp ? "\n(A full backup was just downloaded — restore it in Settings if you change your mind.)" : "") + "\nAre you sure?")) {
     if (confirm("Please confirm once more: Clear all order logs?")) {
       dbRemove("shop-orders");
       renderAdminOrders();
@@ -5751,13 +5838,15 @@ function clearAllOrders() {
 }
 
 function clearAllBookings() {
-  if (confirm("WARNING: This will clear all workshop booking logs permanently. Are you sure?")) {
+  const backedUp = downloadBackupFirst();
+  if (confirm("WARNING: This will clear all workshop booking logs permanently." + (backedUp ? "\n(A full backup was just downloaded — restore it in Settings if you change your mind.)" : "") + "\nAre you sure?")) {
     if (confirm("Please confirm once more: Clear all booking logs?")) {
       dbRemove("workshop-reservations");
       renderAdminOrders();
     }
   }
 }
+window.downloadBackupFirst = downloadBackupFirst;
 
 // Bind handlers to window for HTML click triggers
 window.deleteGalleryItem = deleteGalleryItem;
@@ -5881,22 +5970,265 @@ function adminToast(msg) {
 window.adminToast = adminToast;
 
 // Bind Submit Forms
+/* ════ EDIT-IN-PLACE ═══════════════════════════════════════════════════
+   Every content list reuses its "add" form as the editor: Edit loads the
+   record into the form, the submit button becomes "Save changes", and a
+   Cancel button appears. Hidden fields (photos, dispatch history, server
+   ids) are merge-preserved — editing never destroys what the form
+   doesn't show. */
+function adminFormEditMode(form, onLabel, cancelFn) {
+  if (!form) return;
+  const submit = form.querySelector('[type="submit"]');
+  if (!submit) return;
+  if (!submit.dataset.origLabel) submit.dataset.origLabel = submit.textContent;
+  let cancel = form.querySelector(".edit-cancel-btn");
+  if (onLabel) {
+    submit.textContent = onLabel;
+    if (!cancel) {
+      cancel = document.createElement("button");
+      cancel.type = "button";
+      cancel.className = "button button-ghost edit-cancel-btn";
+      cancel.style.marginLeft = "10px";
+      cancel.textContent = "Cancel edit";
+      submit.insertAdjacentElement("afterend", cancel);
+    }
+    cancel.onclick = cancelFn;
+    cancel.style.display = "";
+    form.scrollIntoView({ behavior: "smooth", block: "start" });
+  } else {
+    submit.textContent = submit.dataset.origLabel;
+    if (cancel) cancel.style.display = "none";
+  }
+}
+const setFormVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v == null ? "" : v; };
+// Prefill an image-URL field only with real URLs — never a base64 blob.
+const urlishOnly = (v) => (v && String(v).indexOf("data:") !== 0 ? v : "");
+
+let adminGalleryEditIdx = null;
+function adminEditGalleryItem(idx) {
+  const items = dbRead("gallery-items", []);
+  const g = items[idx]; if (!g) return;
+  adminGalleryEditIdx = idx;
+  setFormVal("admin-gallery-url", urlishOnly(g.src));
+  setFormVal("admin-gallery-alt", g.alt);
+  adminFormEditMode(document.getElementById("admin-add-gallery-form"), "Save changes ✓", () => {
+    adminGalleryEditIdx = null;
+    document.getElementById("admin-add-gallery-form").reset();
+    adminFormEditMode(document.getElementById("admin-add-gallery-form"), null);
+  });
+}
+window.adminEditGalleryItem = adminEditGalleryItem;
+
+let adminShopEditIdx = null;
+function adminEditShopProduct(idx) {
+  const list = dbRead("shop-catalog", []);
+  const p = list[idx]; if (!p) return;
+  adminShopEditIdx = idx;
+  setFormVal("admin-shop-name", p.name);
+  setFormVal("admin-shop-eyebrow", p.category);
+  setFormVal("admin-shop-price", p.price);
+  setFormVal("admin-shop-stock-total", p.totalStock);
+  setFormVal("admin-shop-stock-remaining", p.remainingStock);
+  setFormVal("admin-shop-desc-text", p.description);
+  const vec = document.getElementById("admin-shop-vector-theme");
+  if (vec) vec.value = p.vector || vec.value;
+  const urls = (Array.isArray(p.images) ? p.images : [p.image]).filter(Boolean).map(urlishOnly).filter(Boolean);
+  setFormVal("admin-shop-img-url", urls.join(", "));
+  adminFormEditMode(document.getElementById("admin-add-shop-form"), "Save changes ✓", () => {
+    adminShopEditIdx = null;
+    document.getElementById("admin-add-shop-form").reset();
+    adminFormEditMode(document.getElementById("admin-add-shop-form"), null);
+  });
+  adminToast('Editing "' + (p.name || "product") + '"');
+}
+window.adminEditShopProduct = adminEditShopProduct;
+
+let adminWorkshopEditIdx = null;
+function adminEditWorkshop(idx) {
+  const list = dbRead("workshops", []);
+  const w = list[idx]; if (!w) return;
+  adminWorkshopEditIdx = idx;
+  const caps = dbRead("workshops-capacities", {});
+  setFormVal("admin-workshop-title", w.title);
+  setFormVal("admin-workshop-eyebrow", w.eyebrow);
+  setFormVal("admin-workshop-time", w.time);
+  setFormVal("admin-workshop-place", w.place);
+  setFormVal("admin-workshop-price", w.price);
+  setFormVal("admin-workshop-capacity", (caps[w.title] && caps[w.title].total) != null ? caps[w.title].total : w.capacity);
+  setFormVal("admin-workshop-desc", w.desc);
+  setFormVal("admin-workshop-img-url", urlishOnly(w.image));
+  adminFormEditMode(document.getElementById("admin-add-workshop-form"), "Save changes ✓", () => {
+    adminWorkshopEditIdx = null;
+    document.getElementById("admin-add-workshop-form").reset();
+    adminFormEditMode(document.getElementById("admin-add-workshop-form"), null);
+  });
+  adminToast('Editing "' + (w.title || "workshop") + '"');
+}
+window.adminEditWorkshop = adminEditWorkshop;
+
+let adminJournalEditIdx = null;
+function adminEditJournalPost(idx) {
+  const list = dbRead("journal-posts", []);
+  const post = list[idx]; if (!post) return;
+  adminJournalEditIdx = idx;
+  setFormVal("admin-journal-title", post.title);
+  setFormVal("admin-journal-tag", post.tag);
+  setFormVal("admin-journal-date", post.date);
+  // written essays flow back into the textarea; image-posts keep their image
+  const plain = (post.body || "").indexOf("<img") === -1
+    ? String(post.body || "").replace(/<\/p>\s*<p>/g, "\n\n").replace(/<\/?p>/g, "").trim()
+    : "";
+  setFormVal("admin-journal-content", plain);
+  adminFormEditMode(document.getElementById("admin-add-journal-form"), "Save changes ✓", () => {
+    adminJournalEditIdx = null;
+    document.getElementById("admin-add-journal-form").reset();
+    adminFormEditMode(document.getElementById("admin-add-journal-form"), null);
+  });
+  adminToast('Editing "' + (post.title || "post") + '"');
+}
+window.adminEditJournalPost = adminEditJournalPost;
+
+let adminMemberEditIdx = null;
+function adminEditSnailMemberByEmail(email) {
+  const members = dbRead("snail-members", []);
+  const idx = members.findIndex(m => String(m.email || "").toLowerCase() === String(email).toLowerCase());
+  if (idx === -1) return;
+  const m = members[idx];
+  adminMemberEditIdx = idx;
+  // the form lives in the "Add Member" sub-tab — open it first
+  const sb = document.querySelector('button[data-subtab="admin-sub-snail-addmember"]');
+  if (sb) sb.click();
+  setFormVal("admin-m-name", m.name);
+  setFormVal("admin-m-email", m.email);
+  setFormVal("admin-m-contact", m.contact);
+  setFormVal("admin-m-plan", m.plan);
+  setFormVal("admin-m-billing", m.billing);
+  setFormVal("admin-m-date", m.dateSubscribed);
+  setFormVal("admin-m-address", m.address);
+  adminFormEditMode(document.getElementById("admin-add-member-form"), "Save changes ✓", () => {
+    adminMemberEditIdx = null;
+    document.getElementById("admin-add-member-form").reset();
+    adminFormEditMode(document.getElementById("admin-add-member-form"), null);
+  });
+  adminToast('Editing "' + (m.name || m.email) + '" — their letter history is kept');
+}
+window.adminEditSnailMemberByEmail = adminEditSnailMemberByEmail;
+
+// ── Restock in one click: −/+ stepper on the Shop list (0 … total). ──
+function adminStepStock(idx, delta) {
+  const list = dbRead("shop-catalog", []);
+  const p = list[idx]; if (!p) return;
+  let next = (Number(p.remainingStock) || 0) + delta;
+  if (next < 0) next = 0;
+  const cap = Number(p.totalStock);
+  if (!isNaN(cap) && cap > 0 && next > cap) next = cap;
+  p.remainingStock = next;
+  dbWrite("shop-catalog", list);
+  renderAdminShop();
+  if (typeof renderShop === "function") renderShop();
+  if (typeof renderAdminOverview === "function") renderAdminOverview();
+}
+window.adminStepStock = adminStepStock;
+
+// ── Duplicate: most new pieces are variants of old ones. ──
+function adminDuplicateProduct(idx) {
+  const list = dbRead("shop-catalog", []);
+  const p = list[idx]; if (!p) return;
+  const copy = Object.assign({}, p, { name: (p.name || "Product") + " (copy)" });
+  delete copy._sid;
+  list.splice(idx + 1, 0, copy);
+  dbWrite("shop-catalog", list);
+  renderAdminShop();
+  if (typeof renderShop === "function") renderShop();
+  adminToast('✓ Duplicated — now edit "' + copy.name + '"');
+}
+window.adminDuplicateProduct = adminDuplicateProduct;
+
+function adminDuplicateWorkshop(idx) {
+  const list = dbRead("workshops", []);
+  const w = list[idx]; if (!w) return;
+  const copy = Object.assign({}, w, { title: (w.title || "Workshop") + " (copy)" });
+  list.splice(idx + 1, 0, copy);
+  dbWrite("workshops", list);
+  const caps = dbRead("workshops-capacities", {});
+  const prevCap = caps[w.title];
+  caps[copy.title] = { total: (prevCap && prevCap.total) || w.capacity || 10, booked: 0 };
+  dbWrite("workshops-capacities", caps);
+  renderAdminWorkshops();
+  if (typeof renderWorkshops === "function") renderWorkshops();
+  adminToast('✓ Duplicated — now edit "' + copy.title + '"');
+}
+window.adminDuplicateWorkshop = adminDuplicateWorkshop;
+
+// ── One order, opened: everything needed to pack it, address copy-ready. ──
+function adminViewOrder(orderId) {
+  const o = dbRead("shop-orders", []).find(x => orderRowId(x) === orderId);
+  const box = document.getElementById("admin-order-detail");
+  if (!o || !box) return;
+  const addr = o.shippingAddress || o.address || {};
+  const addrLines = [o.name || o.customerName, addr.street, addr.city, addr.postcode, addr.country].filter(Boolean);
+  const phone = o.phone || o.mobile || o.customerMobile || "";
+  const copyText = addrLines.concat(phone ? [phone] : []).join("\n");
+  const items = orderItems(o);
+  const rowsH = items.length
+    ? items.map(it => `<tr><td>${esc(it.name || "Item")}</td><td style="text-align:center;">× ${esc(it.quantity || 1)}</td><td style="text-align:right;">${it.price != null ? "£" + esc(it.price) : ""}</td></tr>`).join("")
+    : `<tr><td>${esc(o.productName || "Order")}</td><td style="text-align:center;">× 1</td><td></td></tr>`;
+  let placed = "";
+  try { if (o.orderedAt) placed = new Date(o.orderedAt).toLocaleString("en-GB"); } catch (e) {}
+  box.innerHTML = `
+    <div class="admin-card-header-actions">
+      <h4 style="margin:0;">Order ${esc(o.orderRef || o.backendRef || "")} <span class="admin-table-sub">· ${esc(o.status || "Preparing with care")}</span></h4>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="admin-mini-btn" id="order-copy-addr">📋 Copy address</button>
+        <button type="button" class="admin-mini-btn" onclick="document.getElementById('admin-order-detail').style.display='none'">Close ✕</button>
+      </div>
+    </div>
+    <div class="admin-customer-detail-grid">
+      <div><h5>Deliver to</h5><p style="white-space:pre-line;font-size:0.92rem;line-height:1.55;margin:0;">${esc(copyText)}</p></div>
+      <div><h5>Inside the parcel</h5>
+        <table class="admin-table" style="width:100%;"><tbody>${rowsH}</tbody></table>
+        <p style="font-size:0.86rem;margin:8px 0 0;">${o.subtotal != null ? "Subtotal £" + esc(o.subtotal) + " · " : ""}${o.shipping ? "Post £" + esc(o.shipping) + " · " : ""}<strong>Total £${esc(o.totalPrice || o.price || 0)}</strong></p>
+      </div>
+      <div><h5>Contact</h5><p style="font-size:0.88rem;margin:0;line-height:1.6;">${esc(o.email || o.customerEmail || "—")}${placed ? "<br>Placed " + esc(placed) : ""}</p></div>
+    </div>`;
+  box.style.display = "block";
+  const cp = document.getElementById("order-copy-addr");
+  if (cp) cp.onclick = () => {
+    const done = () => { cp.textContent = "✓ Copied"; setTimeout(() => { cp.textContent = "📋 Copy address"; }, 1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(copyText).then(done, () => window.prompt("Copy the address:", copyText.replace(/\n/g, ", ")));
+    } else {
+      window.prompt("Copy the address:", copyText.replace(/\n/g, ", "));
+    }
+  };
+  box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+window.adminViewOrder = adminViewOrder;
+
 const addGalleryForm = document.getElementById("admin-add-gallery-form");
 if (addGalleryForm) {
   addGalleryForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const src = await getFormImageSource("admin-gallery-url", "admin-gallery-file");
     const alt = document.getElementById("admin-gallery-alt")?.value || "";
-    
-    if (!src) {
-      alert("Please enter an image URL or select a local file.");
-      return;
-    }
 
     const items = dbRead("gallery-items", []);
-    items.push({ src, alt });
-    dbWrite("gallery-items", items);
-    
+    if (adminGalleryEditIdx != null && items[adminGalleryEditIdx]) {
+      const prev = items[adminGalleryEditIdx];
+      items[adminGalleryEditIdx] = { src: src || prev.src, alt };
+      dbWrite("gallery-items", items);
+      adminGalleryEditIdx = null;
+      adminFormEditMode(addGalleryForm, null);
+      adminToast("✓ Gallery image updated");
+    } else {
+      if (!src) {
+        alert("Please enter an image URL or select a local file.");
+        return;
+      }
+      items.push({ src, alt });
+      dbWrite("gallery-items", items);
+    }
+
     addGalleryForm.reset();
     renderHomeGallery();
     renderAdminGallery();
@@ -5989,6 +6321,26 @@ if (addWorkshopForm) {
     const desc = document.getElementById("admin-workshop-desc")?.value || "";
 
     const list = dbRead("workshops", []);
+    if (adminWorkshopEditIdx != null && list[adminWorkshopEditIdx]) {
+      // EDIT: merge over the existing workshop; capacity entry follows a
+      // rename and keeps its booked count (never above the new total).
+      const prev = list[adminWorkshopEditIdx];
+      const oldTitle = prev.title;
+      list[adminWorkshopEditIdx] = Object.assign({}, prev, { title, eyebrow, desc, time, place, price, capacity, image: image || prev.image });
+      dbWrite("workshops", list);
+      const capacities = dbRead("workshops-capacities", {});
+      const prevCap = capacities[oldTitle] || { total: capacity, booked: 0 };
+      if (oldTitle !== title) delete capacities[oldTitle];
+      capacities[title] = { total: capacity, booked: Math.min(Number(prevCap.booked) || 0, capacity) };
+      dbWrite("workshops-capacities", capacities);
+      adminWorkshopEditIdx = null;
+      adminFormEditMode(addWorkshopForm, null);
+      addWorkshopForm.reset();
+      renderWorkshops();
+      renderAdminWorkshops();
+      adminToast("✓ Workshop updated");
+      return;
+    }
     list.push({ title, eyebrow, desc, time, place, price, capacity, image });
     dbWrite("workshops", list);
     // Confirm it persisted — a too-large poster can overflow localStorage.
@@ -6023,6 +6375,24 @@ if (addShopForm) {
     const description = document.getElementById("admin-shop-desc-text")?.value || "";
 
     const list = dbRead("shop-catalog", []);
+    if (adminShopEditIdx != null && list[adminShopEditIdx]) {
+      // EDIT: merge over the existing product — photos are kept unless new
+      // ones were provided (the URL field carries existing links through).
+      const prev = list[adminShopEditIdx];
+      list[adminShopEditIdx] = Object.assign({}, prev, {
+        name, category, price, totalStock, remainingStock, vector, description,
+        image: image || prev.image,
+        images: (images && images.length) ? images : prev.images
+      });
+      dbWrite("shop-catalog", list);
+      adminShopEditIdx = null;
+      adminFormEditMode(addShopForm, null);
+      addShopForm.reset();
+      renderShop();
+      renderAdminShop();
+      adminToast("✓ Product updated");
+      return;
+    }
     // Guard against accidental duplicates (e.g. a double-click on Publish).
     const dupe = list.some(p => String(p.name || "").trim().toLowerCase() === name.trim().toLowerCase());
     if (dupe && !confirm('A product called "' + name.trim() + '" already exists. Add it again anyway?')) {
@@ -6156,7 +6526,22 @@ if (addJournalForm) {
     }
 
     const list = dbRead("journal-posts", []);
-    list.push({ title, tag, date, art, body });
+    if (adminJournalEditIdx != null && list[adminJournalEditIdx]) {
+      // EDIT: keep the existing header art unless a new image was chosen, and
+      // keep an image-body when the textarea was left untouched.
+      const prev = list[adminJournalEditIdx];
+      const keepArt = (visualType === "vector") ? prev.art : (art || prev.art);
+      const textareaVal = (document.getElementById("admin-journal-content")?.value || "").trim();
+      const keepBody = (contentType === "image")
+        ? (body || prev.body)
+        : (textareaVal ? body : prev.body);
+      list[adminJournalEditIdx] = Object.assign({}, prev, { title, tag, date, art: keepArt, body: keepBody });
+      adminJournalEditIdx = null;
+      adminFormEditMode(addJournalForm, null);
+      adminToast("✓ Journal entry updated");
+    } else {
+      list.push({ title, tag, date, art, body });
+    }
     dbWrite("journal-posts", list);
 
     journalEssays = list;
@@ -6809,6 +7194,28 @@ function initSnailMailCRMListeners() {
 
       const members = dbRead("snail-members", []);
       
+      // EDIT: merge over the existing member — sentCycles / gift fields /
+      // server id all survive, and the change is PATCHed to the server.
+      if (adminMemberEditIdx != null && members[adminMemberEditIdx]) {
+        const dupe = members.find((m, i) => i !== adminMemberEditIdx && m.email.toLowerCase() === email.toLowerCase());
+        if (dupe) { alert("Another subscriber already uses that email address."); return; }
+        const prev = members[adminMemberEditIdx];
+        members[adminMemberEditIdx] = Object.assign({}, prev, { name, email, contact, plan, billing, address, dateSubscribed });
+        dbWrite("snail-members", members);
+        if (prev._sid && window.ubhiPatch) {
+          window.ubhiPatch("subscriber", prev._sid, { name, email, contact, plan, address, date_subscribed: dateSubscribed });
+        }
+        adminMemberEditIdx = null;
+        adminFormEditMode(addForm, null);
+        addForm.reset();
+        renderAdminSnailMail();
+        adminToast("✓ Subscriber updated — letter history kept");
+        // back to the members sheet
+        const back = document.querySelector('button[data-subtab="admin-sub-snail-members"]');
+        if (back) back.click();
+        return;
+      }
+
       // Check duplicate email
       const duplicate = members.find(m => m.email.toLowerCase() === email.toLowerCase());
       if (duplicate) {
@@ -6999,6 +7406,7 @@ function initOrdersAndBackupListeners() {
       const dropped = allOrders.filter(o => adminOrdersSelected.has(orderRowId(o)));
       const kept = allOrders.filter(o => !adminOrdersSelected.has(orderRowId(o)));
       dbWrite("shop-orders", kept);
+      dropped.forEach(o => adjustStockFor(o, -1));   // pieces return to stock
       if (window.ubhiDelete) dropped.forEach(o => { if (o._sid) window.ubhiDelete("order", o._sid); });
       adminOrdersSelected.clear();
     } else {
@@ -7067,6 +7475,7 @@ function initOrdersAndBackupListeners() {
       const droppedB = allBookings.filter(b => adminBookingsSelected.has(String(b.reservedAt || "")));
       const kept = allBookings.filter(b => !adminBookingsSelected.has(String(b.reservedAt || "")));
       dbWrite("workshop-reservations", kept);
+      droppedB.forEach(b => releaseWorkshopSeats(b));   // seats return to the workshops
       if (window.ubhiDelete) droppedB.forEach(b => { if (b._sid) window.ubhiDelete("booking", b._sid); });
       adminBookingsSelected.clear();
       renderAdminWorkshopBookings();

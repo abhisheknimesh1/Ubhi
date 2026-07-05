@@ -123,7 +123,9 @@
     if (exportBtn) exportBtn.addEventListener('click', exportCsv);
     var clearBtn = document.getElementById('admin-updates-clear-btn');
     if (clearBtn) clearBtn.addEventListener('click', function () {
-      if (confirm('Clear the entire email update list? This cannot be undone.')) {
+      // download a full backup first — the worst case becomes an undo
+      if (typeof window.downloadBackupFirst === 'function') window.downloadBackupFirst();
+      if (confirm('Clear the entire email update list? This cannot be undone.\n(A full backup was just downloaded, in case.)')) {
         // Remove the server copies too, or they'd re-appear on the next pull.
         if (typeof window.ubhiDelete === 'function') {
           read().forEach(function (x) { if (x._sid) window.ubhiDelete('update', x._sid); });
