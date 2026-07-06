@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>Ubhi — every letter we send (email preview gallery)</title>
+<style>
+  body { margin: 0; background: #e7dcc2; font-family: Georgia, 'Times New Roman', serif; color: #2b2018; }
+  .head { text-align: center; padding: 40px 16px 10px; }
+  .head h1 { font-style: italic; font-weight: normal; font-size: 30px; margin: 0 0 6px; }
+  .head p { color: #8a7a5c; font-size: 14px; margin: 0; }
+  .letter { max-width: 700px; margin: 34px auto; padding: 0 12px; }
+  .letter h2 { font-size: 15px; letter-spacing: 0.16em; text-transform: uppercase; color: #a6741f; margin: 0 0 4px; }
+  .letter p.when { font-size: 13px; color: #8a7a5c; margin: 0 0 12px; font-style: italic; }
+  .letter iframe { width: 100%; height: 860px; border: 1px dashed #b39b6a; border-radius: 6px; background: #f0e7d3; }
+  .foot { text-align: center; color: #8a7a5c; font-size: 12px; padding: 10px 0 50px; }
+</style>
+</head>
+<body>
+  <div class="head">
+    <h1>Every letter Ubhi sends</h1>
+    <p>Nine transactional emails, previewed in one place. Open this file in any browser.<br>
+       The <code>{{tokens}}</code> are filled in by the mailer with real names, orders and dates.</p>
+  </div>
+
+  <div class="letter">
+    <h2>1 · Order confirmation</h2>
+    <p class="when">Sends the moment a shop order is placed.</p>
+    <iframe src="order-confirmation.html" title="Order confirmation"></iframe>
+  </div>
+
+  <div class="letter">
+    <h2>2 · Order shipped</h2>
+    <p class="when">Sends when you mark an order “Shipped” in the admin.</p>
+    <iframe src="order-shipped.html" title="Order shipped"></iframe>
+  </div>
+
+  <div class="letter">
+    <h2>3 · Workshop booking confirmation</h2>
+    <p class="when">Sends the moment a place is reserved.</p>
+    <iframe src="booking-confirmation.html" title="Booking confirmation"></iframe>
+  </div>
+
+  <div class="letter">
+    <h2>4 · Snail Mail welcome</h2>
+    <p class="when">Sends when someone joins the Club (non-gift).</p>
+    <iframe src="snail-welcome.html" title="Snail Mail welcome"></iframe>
+  </div>
+
+  <div class="letter">
+    <h2>5 · Monthly dispatch note</h2>
+    <p class="when">Sends to every active member when you complete the post run on the 5th.</p>
+    <iframe src="snail-dispatch.html" title="Monthly dispatch"></iframe>
+  </div>
+
+  <div class="letter">
+    <h2>6 · A gift, announced</h2>
+    <p class="when">Sends to the gift <em>recipient</em> when a gift subscription is placed (rose border, giver’s message framed inside).</p>
+    <iframe src="gift-for-you.html" title="Gift announcement"></iframe>
+  </div>
+
+  <div class="letter">
+    <h2>7 · Gift ending soon</h2>
+    <p class="when">Sends 14 days before a gift term’s final letter — the gentle invitation to continue.</p>
+    <iframe src="gift-ending-soon.html" title="Gift ending soon"></iframe>
+  </div>
+
+  <div class="letter">
+    <h2>8 · Newsletter welcome</h2>
+    <p class="when">Sends on email-list signup.</p>
+    <iframe src="newsletter-welcome.html" title="Newsletter welcome"></iframe>
+  </div>
+
+  <div class="letter">
+    <h2>9 · Contact auto-reply</h2>
+    <p class="when">Sends when a note arrives through the contact form.</p>
+    <iframe src="contact-received.html" title="Contact received"></iframe>
+  </div>
+
+  <div class="foot">Ubhi · sealed by hand in London · ਉਭੀ</div>
+</body>
+</html>
