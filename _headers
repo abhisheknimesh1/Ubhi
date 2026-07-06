@@ -1,0 +1,23 @@
+# Netlify cache headers.
+# CSS/JS/assets are safe to cache for a year: every reference in index.html
+# carries a ?v= version that changes on deploy, so browsers re-fetch exactly
+# when the code changes and never otherwise.
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.css
+  Cache-Control: public, max-age=31536000
+
+/*.js
+  Cache-Control: public, max-age=31536000
+
+/*.svg
+  Cache-Control: public, max-age=31536000, immutable
+
+# The HTML itself must always revalidate — it is what carries the new ?v= tags.
+/
+  Cache-Control: public, max-age=0, must-revalidate
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
